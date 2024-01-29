@@ -1,2 +1,4 @@
 .vscode
 py-api/__pycache__/
+*.pyc
+*__pycache__
