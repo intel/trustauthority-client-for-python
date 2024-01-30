@@ -1,14 +1,19 @@
 [tool.poetry]
 name = "applications-security-amber-trustauthority-client-for-python"
 version = "0.1.0"
-description = "Amber Client in Python"
+description = "Intel Trust Authority Client in Python"
 authors = ["Kamal, Shefali <shefali.kamal@intel.com>"]
 license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
 readme = "README.md"
-packages = [{include = "applications"}]
+exclude = [
+		{ path = "examples" }
+	  ]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
 
 [build-system]
 requires = ["poetry-core"]
