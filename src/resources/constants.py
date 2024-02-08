@@ -13,3 +13,5 @@ RETRY_MAX = "ENV_RETRY_MAX"
 RETRY_WAIT_TIME = "RETRY_WAIT_TIME"
 DEFAULT_RETRY_MAX = 2
 DEFAULT_RETRY_WAIT_TIME = 2
+HTTP_PROXY = "http://proxy-us.intel.com:911"
+HTTPS_PROXY = "http://proxy-us.intel.com:911"

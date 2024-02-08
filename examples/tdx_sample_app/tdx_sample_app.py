@@ -8,10 +8,14 @@ import ctypes
 import sys
 import os
 import base64
+import re
+import uuid
 import logging as log
 from src.resources import logging as logger
 from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
+from src.connector.config import *
+from src.connector.connector import *
 
 
 def main():
@@ -58,24 +62,27 @@ def main():
         log.debug("ENV_RETRY_WAIT_TIME is not provided. Hence, setting default value.")
     retry_wait_time = const.DEFAULT_RETRY_WAIT_TIME
 
-    
+    request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
     # Populate config object
+    retryConfig_obj = RetryConfig()
+    config_obj = Config(trustauthority_base_url, retryConfig_obj, trustAuthority_api_url, trust_authority_api_key)
+    ita_connector = ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
-    adapter = TDXAdapter(user_data, None)
-    # Fetch TDX Quote
-    # nonce = b"cVd1K1gxaFNwU05JbkMvYkpHOERHRWF0TkJRbGxicmpieDBrRUtFeFRPNVJRUVp5Rm9BbFdKQTYxMDVTZGpXaWxRLzZEL0RhSmRPRHdiRFF6cXBDeEE9PQ==" + b"MjAyNC0wMS0zMSAxMTowODoxMSArMDAwMCBVVEM="
-    evidence = adapter.collect_evidence()
-    if evidence is None:
-        log.error("Evidence is not returned.")
+    adapter = TDXAdapter(user_data)
+    policy_ids = []
+    for uuid in trust_authority_policy_id.split(','):
+        pattern = r'[ \[\]"]'
+        policy_ids.append(re.sub(pattern, '', uuid))
+    print("policy ids :",policy_ids, end = '\n\n')
+    attest_args = AttestArgs(adapter , policy_ids, request_id)
+    # Fetch Attestation Token from ITA
+    attestation_token = ita_connector.attest(attest_args)
+    if attestation_token is None:
+        log.error("Attestation Token is not returned.")
         exit(1)
-    # Convert to base64 encoded
-    base64_encoded_quote = base64.b64encode(evidence.quote).decode("utf-8")
-    log.info("Quote value: ".base64_encoded_quote)
-    # call connector with config object
-    # call attest in connector
-    # Print request_id and trace_id
-    # Print token
+    token = attestation_token.token
+    print("Attestation token :", token)
     # verify token- recieved from connector
 
 
