@@ -11,6 +11,7 @@ from src.connector.connector import *
 from src.connector.config import *
 
 def get_connector():
+    """This method creates and returns ITA Connector Instance"""
     retryConfig = RetryConfig()
     config = Config("https://localhost:8080",retryConfig,"https://localhost:8080","apikey")
     ita_connector = ITAConnector(config)
@@ -18,7 +19,10 @@ def get_connector():
 
 
 class ConnectorTestCase(unittest.TestCase):
+    """class ConnectorTestCase that inherits from unittest.TestCase"""
+
     def test_get_nonce(self):
+        """Test method to test get_nonce() from ITA Connector"""
         ita_c = get_connector()
         nonceargs=GetNonceArgs("1234")
         nonce = ita_c.get_nonce(nonceargs)
@@ -26,6 +30,7 @@ class ConnectorTestCase(unittest.TestCase):
             and nonce.nonce.signature == "WswVG3rOPJIuVmMNG2GZ6IF4hD+QfuJ/PigIRaHtQitGAHRCRzgtW8+8UbXe9vJfjnapjw7RQyzpT+vPGVpxRSoiBaj54RsedI38K9ubFd3gPvsMlYltgFRSAtb1ViWZxMhL0yA9+xzgv0D+11mpNEz8nt3HK4oALV5EAxqJYCmKZRzi3/LJe842AY8DVcV9eUZQ8RBx7gNe72Ex1fU3+qF9A9MuOgKqJ41/7HFTY0rCpcBS8k6E1VBSatk4XTj5KNcluI3LoAOvBuiwObgmNKT8Nyc4JAEc+gmf9e9taIgt7QNFEtl3nwPQuiCLIh0FHdXPYumiQ0mclU8nfQL8ZUoe/GqgOd58+fZoHeGvFoeyjQ7Q0Ini1rWEzwOY5gik9yH57/JTEJTI8Evc0L8ggRO4M/sZ2ZTyIq5yRUISB2eDh6qTfbKgSr5LpxW8IRl0y9fp8CEuzhFxKcOeld9p61yb040P+QhemhP/O1E5tf4y4Pz/ISASiKUBFSTh4yYx"
 
     def test_get_token(self):
+        """Test method to test get_token() from ITA Connector"""
         ita_c = get_connector()
         verifier_nonce = VerifierNonce("g9QC7Vx","g9QC7Vx","g9QC7Vx")
         evidence_params = EvidenceParams(0,"","","")
@@ -34,6 +39,7 @@ class ConnectorTestCase(unittest.TestCase):
         assert token.token == "eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXVCIsImtpZCI6IjNmZDc1MWYyZTBkMGY1Mjg0NmMwZWNkNDk3MmM2ZTk5ZGZjNjQyMDUxY2QzMzlkZDliMDQzODFhZ"
 
     def test_get_certs(self):
+        """Test method to test get_certs() from ITA Connector"""
         ita_c = get_connector()
         certs = ita_c.get_token_signing_certificates()
         decoded_string = certs.decode('utf-8')

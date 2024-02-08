@@ -37,4 +37,7 @@ def get_certs():
     return certs
 
 if __name__ == '__main__':
+    """This will Initializes Flask Server tht helps in routing the requests and return
+       mock responses
+    """
     app.run(debug=True, host="0.0.0.0", port=8080)

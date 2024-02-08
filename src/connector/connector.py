@@ -4,15 +4,14 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-from src.resources import constants as constants
 import base64
-from datetime import datetime
 import json
 import jwt
-from src.connector.evidence import Evidence
 import requests
+from datetime import datetime
+from src.connector.evidence import Evidence
+from src.resources import constants as constants
 from src.tdx.tdx_adapter import TDXAdapter
-from requests.auth import HTTPBasicAuth
 from urllib.parse import urljoin
 from uuid import UUID
 from typing import List
@@ -91,13 +90,28 @@ class TokenRequest:
 
 
 class ITAConnector:
-    """ This class creates connector to ITA and provide api endpoints for methods like 
-        get_nonce(), get_token(), 
+    """ 
+    This class creates connector to ITA and provide api endpoints for methods like 
+    get_nonce(), get_token(), get_token_signing_certificates(), verify_token() 
     """
+    
     def __init__(self, cfg) -> None:
+        """Initializes ita connector object
+
+        Args:
+            config(): config object containing connection attributes of ITA
+        """
         self.cfg = cfg
 
     def get_nonce(self, args: GetNonceArgs) -> GetNonceResponse:
+        """This Function calls ITA rest api to get nonce.
+
+        Args:
+            GetNonceArgs(): Instance of GetNonceArgs class
+
+        Returns:
+            GetNonceResponse: object to GetNonceResponse class
+        """
         url = urljoin(self.cfg.api_url, "appraisal/v1/nonce")
         print(url)
         headers = {
@@ -116,6 +130,14 @@ class ITAConnector:
             print(e)
 
     def get_token(self, args: GetTokenArgs) -> GetTokenResponse:
+        """This Function calls ITA rest api to get Attestation Token.
+
+        Args:
+            GetTokenArgs(): Instance of GetTokenArgs class
+
+        Returns:
+            GetTokenResponse: object to GetTokenResponse class
+        """
         url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
         headers = {
             "x-Api-Key": self.cfg.api_key,
@@ -154,6 +176,11 @@ class ITAConnector:
 
 
     def get_crl(self, crl_arr):
+        """This Function make get request to get crl array.
+
+        Args:
+            crl_arr: list of crl distribution points
+        """
         if len(crl_arr) < 1:
             raise Exception("Invalid CDP count present in the certificate")
         crl_url = crl_arr[0]
@@ -168,6 +195,13 @@ class ITAConnector:
         return crl_obj
 
     def verify_crl(self, crl, leaf_cert, ca_cert):
+        """This Function verify certificate against crl
+
+        Args:
+            crl: crl object
+            leaf_cert: leaf certificate
+            ca_cert: ca certificate
+        """
         if leaf_cert is None or ca_cert is None or crl is None:
             raise Exception("Leaf Cert, CA Cert, or CRL is None")
         # Checking CRL signed by CA Certificate
@@ -187,6 +221,11 @@ class ITAConnector:
                 raise Exception("Certificate was Revoked")
 
     def verify_token(self, token):
+        """This Function verify Attestation token issued by ITA
+
+        Args:
+            token: ITA Attestation Token
+        """
         unverified_headers = jwt.get_unverified_header(token)
         kid = unverified_headers.get('kid', None)
         if kid is None:
@@ -284,6 +323,8 @@ class ITAConnector:
         # return pub_key
 
     def get_token_signing_certificates(self):
+        """This Function retrieve token signing certificates from ITA"""
+
         print("-> connector.get_token_signing_certificate()...\n")
         url = urljoin(self.cfg.base_url, "certs")
         headers = {
@@ -297,6 +338,15 @@ class ITAConnector:
             print(e)
 
     def attest(self, args: AttestArgs) -> AttestResponse:
+        """This Function calls ITA Connector endpoints get_nonce(), collect evidence from adapter
+           class, get_token() and return the attestation token. 
+
+        Args:
+            AttestArgs: Instance of AttestArgs class
+
+        Returns:
+            AttestResponse: Instance of AttestResponse class
+        """
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         response.headers = nonce_resp.headers
