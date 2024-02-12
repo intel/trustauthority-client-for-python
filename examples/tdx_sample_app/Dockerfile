@@ -6,7 +6,12 @@
 
 ARG UBUNTU_VERSION
 FROM ubuntu:$UBUNTU_VERSION
-ENV DEBIAN_FRONTEND=noninteractive
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Add intel USER
 ARG USERNAME=intel
@@ -16,7 +21,13 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
-RUN apt-get update; \
+#Adding proxy
+ARG PROXY_URL
+ENV HTTPS_PROXY=$PROXY_URL
+env https_proxy="http://proxy-us.intel.com:911"
+
+# Install system dependencies
+RUN  apt-get update; \
     apt-get upgrade -y; \
     apt-get autoremove -y; \
   apt-get install -y --no-install-recommends gnupg wget make curl git python3 python3-pip
@@ -34,15 +45,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libtdx-attest-dev=${DCAP_VERSION} \
         libtdx-attest=${DCAP_VERSION}
 
-WORKDIR /trustauthority-client-python
+# Install Poetry
+RUN pip3 install --no-cache-dir poetry
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy only the dependency files to avoid invalidating cache unnecessarily
+COPY pyproject.toml poetry.lock ./
+
+ENV PYTHONPATH=/app
+
+# Install project dependencies
+RUN poetry install --no-dev --no-interaction --no-ansi
+
+# Copy the rest of the project files
 COPY . .
-
-WORKDIR /trustauthority-client-python/examples/tdx_sample_app
-RUN pip3 install poetry platformdirs && \
-    poetry config virtualenvs.create false && \
-    poetry install
-
-ENV PYTHONPATH=/trustauthority-client-python
-# Set USER to intel
-USER $USERNAME
+WORKDIR /app/examples/tdx_sample_app
+#TODO: Check why this is not working.
+#USER $USERNAME
+# Specify the command to run your application
 CMD ["poetry", "run", "python3", "tdx_sample_app.py"]

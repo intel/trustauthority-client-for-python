@@ -70,10 +70,11 @@ def main():
     # Create TDX Adapter
     user_data = "data generated inside tee"
     adapter = TDXAdapter(user_data)
-    policy_ids = []
-    for uuid in trust_authority_policy_id.split(','):
-        pattern = r'[ \[\]"]'
-        policy_ids.append(re.sub(pattern, '', uuid))
+    # policy_ids = []
+    # for uuid in trust_authority_policy_id.split(','):
+    #     pattern = r'[ \[\]"]'
+    #     policy_ids.append(re.sub(pattern, '', uuid))
+    policy_ids = json.loads(trust_authority_policy_id)
     print("policy ids :",policy_ids, end = '\n\n')
     attest_args = AttestArgs(adapter , policy_ids, request_id)
     # Fetch Attestation Token from ITA
