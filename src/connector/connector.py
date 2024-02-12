@@ -8,7 +8,9 @@ import base64
 import json
 import jwt
 import requests
-from datetime import datetime
+import logging as log
+from datetime import *
+from src.resources import logging as logger
 from src.connector.evidence import Evidence
 from src.resources import constants as constants
 from src.tdx.tdx_adapter import TDXAdapter
@@ -17,6 +19,7 @@ from uuid import UUID
 from typing import List
 from dataclasses import dataclass
 from cryptography import x509
+from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -175,23 +178,27 @@ class ITAConnector:
             print ("Json exception :", e)
 
 
-    def get_crl(self, crl_arr):
+    def get_crl(self, crl_url):
         """This Function make get request to get crl array.
 
         Args:
             crl_arr: list of crl distribution points
         """
-        if len(crl_arr) < 1:
-            raise Exception("Invalid CDP count present in the certificate")
-        crl_url = crl_arr[0]
+        if crl_url == "":
+            raise Exception("Invalid CRL URL present in the certificate")
+        http_proxy  = constants.HTTP_PROXY
+        https_proxy = constants.HTTPS_PROXY
+        proxies = {
+                "http"  : http_proxy,
+                "https" : https_proxy
+                }
         try:
-            resp = requests.get(crl_url)
+            resp = requests.get(crl_url, proxies = proxies)
         except requests.exceptions.HTTPError as eh:
             print("Exception: ", eh)
         except requests.exceptions.ConnectionError as ec:
             print(ec)
-        crl_bytes = resp.content
-        crl_obj = x509.load_der_x509_crl(crl_bytes, default_backend())
+        crl_obj = x509.load_der_x509_crl(resp.content, default_backend())
         return crl_obj
 
     def verify_crl(self, crl, leaf_cert, ca_cert):
@@ -204,21 +211,20 @@ class ITAConnector:
         """
         if leaf_cert is None or ca_cert is None or crl is None:
             raise Exception("Leaf Cert, CA Cert, or CRL is None")
-        # Checking CRL signed by CA Certificate
-        try:
-            ca_cert.public_key().verify(
-                crl.signature,
-                crl.tbs_certlist_bytes,
-                padding.PKCS1v15(),
-                crl.signature_hash_algorithm,
-            )
-        except Exception as e:
-            raise Exception("CRL signature verification failed") from e
-        if crl.next_update < datetime.utcnow():
-            raise Exception("Outdated CRL")
-        for r_cert in crl:
-            if r_cert.serial_number == leaf_cert.serial_number:
-                raise Exception("Certificate was Revoked")
+        pub_key = ca_cert.public_key()
+        if not(crl.is_signature_valid(pub_key)):
+            log.error("Invalid certificate signature")
+            return False
+        dt = datetime.now(timezone.utc) 
+        utc_time = dt.replace(tzinfo=timezone.utc) 
+        utc_timestamp = utc_time.timestamp()
+        if(crl.next_update_utc.timestamp() < utc_timestamp):
+            log.error("crl has been expired")
+            return False
+        if(crl.get_revoked_certificate_by_serial_number(leaf_cert.serial_number) != None):
+            log.error("certificate has been revoked")
+            return False
+        return True
 
     def verify_token(self, token):
         """This Function verify Attestation token issued by ITA
@@ -238,100 +244,82 @@ class ITAConnector:
         print(jwks_data)
         for key in jwks_data.get("keys", []):
             print("key found: ", key.get("kid"))
-            if key.get("kid") == kid:
-                print("kid found")
-                x5c_certificate = key.get("x5c", [])[0]
-                cert_bytes = base64.b64decode(x5c_certificate)
-                cert = x509.load_pem_x509_certificate(cert_bytes, default_backend())
-                print(cert)
-                public_key = cert.public_key().public_bytes(
-                        encoding=serialization.Encoding.PEM,
-                        format=serialization.PublicFormat.SubjectPublicKeyInfo
-                ).decode("utf-8")
+            x5c_certificate = key.get("x5c", [])
+            
+        root = []
+        intermediate = []
+        leaf_cert = None
+        inter_ca_cert = None
+        root_cert = None
 
-        if public_key:
-            print(f"Public key for kid:\n{public_key}")
-        else:
-            print(f"Public key for kid not found.")
+        for cert in x5c_certificate:
+            # print(cert)
+            cert_inter = load_der_x509_certificate(base64.b64decode(cert))
+            for attribute in cert_inter.subject:
+                if(attribute.oid == x509.NameOID.COMMON_NAME):
+                    common_name_subject = attribute.value
+            for attribute in cert_inter.issuer:
+                if(attribute.oid == x509.NameOID.COMMON_NAME):
+                    common_name_issuer = attribute.value
+            if common_name_subject == common_name_issuer and common_name_subject.find("Root CA") != -1:
+                root.append(cert_inter)
+                root_cert = cert_inter
+            elif common_name_subject != common_name_issuer and common_name_subject.find("Signing CA") != -1:
+                intermediate.append(cert_inter)
+                inter_ca_cert = cert_inter
+            else:
+                leaf_cert = cert_inter
+        print(root, intermediate)
 
-        return public_key
+        cdp_list = inter_ca_cert.extensions.get_extension_for_oid(x509.ExtensionOID.CRL_DISTRIBUTION_POINTS)
+        for cdp in cdp_list.value:
+            for dp in cdp.full_name:
+                print("CRL Distribution Point:", dp.value)
+                inter_ca_crl_url = dp.value
+        print("inter ca crl url :", dp.value)
+        inter_ca_crl_obj = self.get_crl(inter_ca_crl_url)
+        if not self.verify_crl(inter_ca_crl_obj, inter_ca_cert, root_cert):
+            log.error("Inter CA CRL is not valid")
 
+        cdp_list = leaf_cert.extensions.get_extension_for_oid(x509.ExtensionOID.CRL_DISTRIBUTION_POINTS)
+        for cdp in cdp_list.value:
+            for dp in cdp.full_name:
+                print("CRL Distribution Point:", dp.value)
+                leaf_crl_url = dp.value
+        print("leaf crl url :",leaf_crl_url)
+        leaf_crl_obj = self.get_crl(leaf_crl_url)
+        if not self.verify_crl(leaf_crl_obj, leaf_cert, inter_ca_cert):
+            log.error("Leaf CA CRL is not valid")
+        
+        try:
+            jwt.decode(token, leaf_cert.public_key(), unverified_headers.get('alg'))
+        except jwt.ExpiredSignatureError:
+            log.exception("Token has expired.")
+        except jwt.InvalidTokenError:
+            log.exception("Invalid token.")
+        except Exception as exc:
+            log.exception(f"Caught Exception in Token Verification: {exc}")
 
-        # for jwk in jwks['keys']:
-        #     #kid = jwk['kid']
-        #     #print("kid: \n", kid)
-        #     try:
-        #         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-        #         public_keys[jwk['kid']] = public_key
-        #         print(public_keys)
-        #     except KeyError:
-        #         print("key does not exist")
-
-        # kid = jwt.get_unverified_header(token)['kid']
-
-        # jwk_key = public_key
-        # #jwk_key = public_keys.get_key_by_kid(kid)
-        # print(jwk_key)
-        # #jwk_key = public_keys[kid]
-        # #jwk_key = jwk[kid]
-
-        # #payload = jwt.decode(token, key=jwk_key, algorithms=['RS256'])
-        # #print(payload)
-        # #jwk_key = jwk_set.get_key_by_kid(kid)
-        # if jwk_key:
-        #     # Verify the cert chain. x5c field in the JWKS would contain the cert chain
-        #     ats_certs = jwk_key.x5c
-
-        # else:
-        #     raise Exception("Could not find Key matching the key id")
-
-        # root = x509.CertificateRevocationList()
-        # intermediate = x509.CertificateRevocationList()
-        # leaf_cert = None
-        # inter_ca_cert = None
-        # root_cert = None
-
-        # for ats_cert_data in ats_certs:
-        #     ats_cert = x509.load_pem_x509_certificate(ats_cert_data.encode(), default_backend())
-
-        #     if ats_cert.issuer == ats_cert.subject and ats_cert.serial_number == 0:
-        #         root.add_cert(ats_cert)
-        #         root_cert = ats_cert
-        #     elif ats_cert.issuer != ats_cert.subject and ats_cert.basic_constraints.ca:
-        #         intermediate.add_cert(ats_cert)
-        #         inter_ca_cert = ats_cert
-        #     else:
-        #         leaf_cert = ats_cert
-
-        # root_crl = self.get_crl(root_cert.crl_distribution_points)
-        # self.verify_crl(root_crl, inter_ca_cert, root_cert)
-
-        # ats_crl = self.get_crl(leaf_cert.crl_distribution_points)
-        # self.verify_crl(ats_crl, leaf_cert, inter_ca_cert)
-
-        # # Verify the Leaf certificate against the CA
-        # opts = x509.VerifyOptions(
-        #     purpose=x509.Purpose.SERVER_AUTH,
-        #     trust_store=x509.CertificateStore([root]),
-        #     intermediate_store=x509.CertificateStore([intermediate]),
-        # )
-
-        # leaf_cert.public_key().verify(leaf_cert.signature, leaf_cert.tbs_certificate_bytes, padding.PKCS1v15(), leaf_cert.signature_hash_algorithm, opts)
-
-        # # Extract the public key from JWK using exponent and modulus
-        # pub_key = jwk_key.public_key()
-        # return pub_key
+        return leaf_cert.public_key()
+        
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from ITA"""
-
-        print("-> connector.get_token_signing_certificate()...\n")
+        print("-> connector.get_token_signing_certificate(url)...\n")
         url = urljoin(self.cfg.base_url, "certs")
+        http_proxy  = constants.HTTP_PROXY
+        https_proxy = constants.HTTPS_PROXY
+        proxies = {
+              "http"  : http_proxy,
+              "https" : https_proxy
+            }
         headers = {
             'Accept': 'application/json',
         }
         try:
-            response = requests.get(url, headers=headers)
+            print(url)
+            response = requests.get(url, headers=headers, proxies=proxies)
+            print(response.status_code)
             jwks = response.content
             return jwks
         except Exception as e:

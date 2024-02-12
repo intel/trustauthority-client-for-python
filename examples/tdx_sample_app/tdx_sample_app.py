@@ -84,6 +84,12 @@ def main():
     token = attestation_token.token
     print("Attestation token :", token)
     # verify token- recieved from connector
+    print("Token Verification :")
+    pub_key = ita_connector.verify_token(token)
+    if pub_key != None:
+        print("Token Verification Successful")
+        print(pub_key)
+    
 
 
 # main for function call.
