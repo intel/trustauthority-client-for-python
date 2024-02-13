@@ -48,49 +48,42 @@ def main():
     trust_authority_request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
 
     trust_authority_policy_id = os.getenv(const.TRUSTAUTHORITY_POLICY_ID)
-    if trust_authority_policy_id is None:
-        log.error("ENV_TRUSTAUTHORITY_POLICY_ID is not set.")
-        exit(1)
-
-    retry_max = os.getenv(const.RETRY_MAX)
-    if retry_max is None:
-        log.debug("ENV_RETRY_MAX is not provided. Hence, setting default value.")
-        retry_max = const.DEFAULT_RETRY_MAX
-
-    retry_wait_time = os.getenv(const.RETRY_WAIT_TIME)
-    if retry_wait_time is None:
-        log.debug("ENV_RETRY_WAIT_TIME is not provided. Hence, setting default value.")
-    retry_wait_time = const.DEFAULT_RETRY_WAIT_TIME
 
     request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
     # Populate config object
-    retryConfig_obj = RetryConfig()
-    config_obj = Config(trustauthority_base_url, retryConfig_obj, trustAuthority_api_url, trust_authority_api_key)
+    retry_config_obj = RetryConfig()
+    try:
+        config_obj = Config(
+            trustauthority_base_url,
+            retry_config_obj,
+            trustAuthority_api_url,
+            trust_authority_api_key,
+        )
+    except Exception as exc:
+        log.exception(f"Caught Exception in config() instance initialization : {exc}")
     ita_connector = ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
     adapter = TDXAdapter(user_data)
-    # policy_ids = []
-    # for uuid in trust_authority_policy_id.split(','):
-    #     pattern = r'[ \[\]"]'
-    #     policy_ids.append(re.sub(pattern, '', uuid))
-    policy_ids = json.loads(trust_authority_policy_id)
-    print("policy ids :",policy_ids, end = '\n\n')
-    attest_args = AttestArgs(adapter , policy_ids, request_id)
+    if trust_authority_policy_id != None:
+        policy_ids = json.loads(trust_authority_policy_id)
+        attest_args = AttestArgs(adapter, request_id, policy_ids)
+    else:
+        attest_args = AttestArgs(adapter, request_id)
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:
         log.error("Attestation Token is not returned.")
         exit(1)
     token = attestation_token.token
-    print("Attestation token :", token)
+    log.info("Attestation token : %s", token)
+    log.info("Response Headers are: %s", attestation_token.headers)
     # verify token- recieved from connector
-    print("Token Verification :")
+    log.info("Token Verification :")
     pub_key = ita_connector.verify_token(token)
     if pub_key != None:
-        print("Token Verification Successful")
-        print(pub_key)
-    
+        log.info("Token Verification Successful")
+        log.info(pub_key)
 
 
 # main for function call.
