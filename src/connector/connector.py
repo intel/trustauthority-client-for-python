@@ -7,9 +7,11 @@ SPDX-License-Identifier: BSD-3-Clause
 import base64
 import json
 import jwt
+import http
 import requests
 import logging as log
 from datetime import *
+from cryptography.exceptions import InvalidSignature
 from src.resources import logging as logger
 from src.connector.evidence import Evidence
 from src.resources import constants as constants
@@ -119,41 +121,21 @@ class ITAConnector:
         http_proxy = constants.HTTP_PROXY
         https_proxy = constants.HTTPS_PROXY
         proxies = {"http": http_proxy, "https": https_proxy}
-        try:
-            response = requests.get(
-                url,
-                headers=headers,
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
-            )
-            if response.status_code == 500:
-                allowed_retries = self.cfg.retry_cfg.retry_max
-                while allowed_retries > 0:
-                    response = requests.get(
-                        url,
-                        headers=headers,
-                        proxies=proxies,
-                        timeout=self.cfg.retry_cfg.retry_wait_time,
-                    )
-                    allowed_retries -= 1
-                    if response.status_code == 200 or allowed_retries == 0:
-                        break
-                if response.status_code != 200:
-                    log.error(
-                        "get_nonce() failed with error: {}".format(response.content)
-                    )
-                    return None
-            nonce_data = response.json()
-            nonce = VerifierNonce(
-                nonce_data.get("val"),
-                nonce_data.get("iat"),
-                nonce_data.get("signature"),
-            )
-            nonce_response = GetNonceResponse(response.headers, nonce)
-            return nonce_response
-        except Exception as exc:
-            log.exception(f"Caught Exception in get_nonce() get http request: {exc}")
-            return None
+        response = requests.get(
+            url,
+            headers=headers,
+            proxies=proxies,
+            timeout=self.cfg.retry_cfg.retry_wait_time,
+        )
+        response.raise_for_status()
+        nonce_data = response.json()
+        nonce = VerifierNonce(
+            nonce_data.get("val"),
+            nonce_data.get("iat"),
+            nonce_data.get("signature"),
+        )
+        nonce_response = GetNonceResponse(response.headers, nonce)
+        return nonce_response
 
     def get_token(self, args: GetTokenArgs) -> GetTokenResponse:
         """This Function calls ITA rest api to get Attestation Token.
@@ -172,7 +154,7 @@ class ITAConnector:
             "Request-Id": args.request_id,
         }
         encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-        treq = TokenRequest(
+        token_req = TokenRequest(
             quote=encoded_quote,
             verifier_nonce=VerifierNonce(
                 args.nonce.val, args.nonce.iat, args.nonce.signature
@@ -183,54 +165,22 @@ class ITAConnector:
             policy_ids=args.policy_ids,
             event_log=args.evidence.event_log,
         )
-        body = treq.__dict__
+        body = token_req.__dict__
         # body["runtime_data"] = base64.b64encode(body["runtime_data"].encode()).decode('utf-8')
         http_proxy = constants.HTTP_PROXY
         https_proxy = constants.HTTPS_PROXY
         proxies = {"http": http_proxy, "https": https_proxy}
-        try:
-            log.info("making attestation token request to ita ... : %s ", url)
-            response = requests.post(
-                url,
-                headers=headers,
-                data=json.dumps(body),
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
-            )
-            if response.status_code == 500:
-                allowed_retries = self.cfg.retry_cfg.retry_max
-                while allowed_retries > 0:
-                    response = requests.post(
-                        url,
-                        headers=headers,
-                        data=json.dumps(body),
-                        proxies=proxies,
-                        timeout=self.cfg.retry_cfg.retry_wait_time,
-                    )
-                    allowed_retries -= 1
-                    if response.status_code == 200 or allowed_retries == 0:
-                        break
-                if response.status_code != 200:
-                    log.error(
-                        "get_token() failed with error: {}".format(response.content)
-                    )
-                    return None
-        except requests.exceptions.HTTPError as exc:
-            log.exception(f"Caught Http Exception in get_token() http request: {exc}")
-            return None
-        except requests.exceptions.ConnectionError as exc:
-            log.exception(f"Caught Exception in get_token() http request: {exc}")
-            return None
-        try:
-            token_response = AttestationTokenResponse(
-                token=response.json().get("token")
-            )
-            return GetTokenResponse(token_response.token, str(response.headers))
-        except Exception as exc:
-            log.exception(
-                f"Caught Json Exception in get_nonce() get http request: {exc}"
-            )
-            return None
+        log.info("making attestation token request to ita ... : %s ", url)
+        response = requests.post(
+            url,
+            headers=headers,
+            data=json.dumps(body),
+            proxies=proxies,
+            timeout=self.cfg.retry_cfg.retry_wait_time,
+        )
+        response.raise_for_status()
+        token_response = AttestationTokenResponse(token=response.json().get("token"))
+        return GetTokenResponse(token_response.token, str(response.headers))
 
     def get_crl(self, crl_url):
         """This Function make get request to CRL Distribution point and return CRL Object.
@@ -245,14 +195,14 @@ class ITAConnector:
         proxies = {"http": http_proxy, "https": https_proxy}
         try:
             response = requests.get(crl_url, proxies=proxies)
-            if response.status_code != 200:
+            if response.status_code != http.HTTPStatus.OK:
                 log.error("get_crl() failed with error: {}".format(response.content))
                 return None
         except requests.exceptions.HTTPError as exc:
-            log.exception(f"Caught Http Exception in get_crl() http request: {exc}")
+            log.error(f"Caught Http error in get_crl() http request: {exc}")
             return None
         except requests.exceptions.ConnectionError as exc:
-            log.exception(f"Caught Exception in get_token() http request: {exc}")
+            log.error(f"Caught Connection error in get_token() http request: {exc}")
             return None
         crl_obj = x509.load_der_x509_crl(response.content, default_backend())
         return crl_obj
@@ -270,7 +220,7 @@ class ITAConnector:
             return False
         pub_key = ca_cert.public_key()
         if not (crl.is_signature_valid(pub_key)):
-            log.error("Invalid certificate signature")
+            log.error("Invalid CRL signature")
             return False
         dt = datetime.now(timezone.utc)
         utc_time = dt.replace(tzinfo=timezone.utc)
@@ -295,63 +245,76 @@ class ITAConnector:
         unverified_headers = jwt.get_unverified_header(token)
         kid = unverified_headers.get("kid", None)
         if kid is None:
-            raise Exception("Missing key id in token")
-        log.info("kid : %s ", kid)
+            log.error("Missing key id in token")
+            return None
+        log.debug("kid : %s ", kid)
 
         # Get the JWT Signing Certificates from Intel Trust Authority
-        jwks = self.get_token_signing_certificates()
+        try:
+            jwks = self.get_token_signing_certificates()
+        except requests.exceptions.HTTPError as exc:
+            log.error(f"Caught Http Error in get_token_signing_certificates(): {exc}")
+            return None
         if jwks == None:
+            log.error("get_token_signing_certificates failed.")
             return None
         jwks_data = json.loads(jwks)
+        keyid_exists = False
         for key in jwks_data.get("keys", []):
             if key.get("kid") == kid:
-                log.info("key found: %s", key.get("kid"))
+                keyid_exists = True
+                log.debug("key found: %s", key.get("kid"))
                 x5c_certificates = key.get("x5c", [])
                 break
-        if len(x5c_certificates) > constants.ATS_CERTCHAIN_MAXLENGTH:
-            log.error("Token Signing Cert chain has more than %d certificates", constants.AtsCertChainMaxLen)
+        if not (keyid_exists):
+            log.error("Could not find Key matching the key id")
             return None
+        if len(x5c_certificates) > constants.ATS_CERTCHAIN_MAXLENGTH:
+            log.error(
+                "Token Signing Cert chain has more than %d certificates",
+                constants.AtsCertChainMaxLen,
+            )
+            return None
+
         root = []
         intermediate = []
         leaf_cert = None
         inter_ca_cert = None
         root_cert = None
-
         for cert in x5c_certificates:
-            cert_inter = load_der_x509_certificate(base64.b64decode(cert))
-            for attribute in cert_inter.subject:
-                if attribute.oid == x509.NameOID.COMMON_NAME:
-                    common_name_subject = attribute.value
-            for attribute in cert_inter.issuer:
-                if attribute.oid == x509.NameOID.COMMON_NAME:
-                    common_name_issuer = attribute.value
+            cert_data = load_der_x509_certificate(base64.b64decode(cert))
             if (
-                common_name_subject == common_name_issuer
-                and common_name_subject.find("Root CA") != -1
+                cert_data.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
+                == cert_data.issuer.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
+                and cert_data.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[
+                    0
+                ].value.find("Root CA")
+                != -1
             ):
-                root.append(cert_inter)
-                root_cert = cert_inter
+                root.append(cert_data)
+                root_cert = cert_data
             elif (
-                common_name_subject != common_name_issuer
-                and common_name_subject.find("Signing CA") != -1
+                cert_data.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
+                != cert_data.issuer.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
+                and cert_data.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[
+                    0
+                ].value.find("Signing CA")
+                != -1
             ):
-                intermediate.append(cert_inter)
-                inter_ca_cert = cert_inter
+                intermediate.append(cert_data)
+                inter_ca_cert = cert_data
             else:
-                leaf_cert = cert_inter
+                leaf_cert = cert_data
 
         cdp_list = inter_ca_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
-        for cdp in cdp_list.value:
-            for dp in cdp.full_name:
-                log.info("CRL Distribution Point: %s", dp.value)
-                inter_ca_crl_url = dp.value
-        log.info("inter ca crl url : %s", dp.value)
+        inter_ca_crl_url = cdp_list.value[0].full_name[0].value
+        log.debug("inter ca crl url : %s", inter_ca_crl_url)
         try:
             inter_ca_crl_obj = self.get_crl(inter_ca_crl_url)
         except Exception as exc:
-            log.exception(f"Caught Exception in get_crl(): {exc}")
+            log.error(f"Caught Exception in get_crl(): {exc}")
             return None
 
         if not self.verify_crl(inter_ca_crl_obj, inter_ca_cert, root_cert):
@@ -361,34 +324,62 @@ class ITAConnector:
         cdp_list = leaf_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
-        for cdp in cdp_list.value:
-            for dp in cdp.full_name:
-                log.info("CRL Distribution Point: %s", dp.value)
-                leaf_crl_url = dp.value
-        log.info("leaf crl url : %s", leaf_crl_url)
+        leaf_crl_url = cdp_list.value[0].full_name[0].value
+        log.debug("leaf crl url : %s", leaf_crl_url)
         try:
             leaf_crl_obj = self.get_crl(leaf_crl_url)
         except Exception as exc:
-            log.exception(f"Caught Exception in get_crl(): {exc}")
+            log.error(f"Caught Exception in get_crl(): {exc}")
             return None
         if not self.verify_crl(leaf_crl_obj, leaf_cert, inter_ca_cert):
             log.error("Leaf CA CRL is not valid")
             return None
 
+        # verifying the leaf certificate with both the intermediate CA certificate and the root certificate
+        try:
+            root_cert.public_key().verify(
+                inter_ca_cert.signature,
+                inter_ca_cert.tbs_certificate_bytes,
+                padding.PKCS1v15(),
+                inter_ca_cert.signature_hash_algorithm,
+            )
+        except InvalidSignature as exc:
+            log.error(
+                f"Caught Exception in verifying inter ca certificate against root certificate : {exc}"
+            )
+            return None
+        try:
+            inter_ca_cert.public_key().verify(
+                leaf_cert.signature,
+                leaf_cert.tbs_certificate_bytes,
+                padding.PKCS1v15(),
+                leaf_cert.signature_hash_algorithm,
+            )
+        except InvalidSignature as exc:
+            log.error(
+                f"Caught Exception in verifying leaf certificate against inter ca certificate : {exc}"
+            )
+            return None
+        log.debug(
+            "Leaf certificate verification against Root and Inter ca certificate Successful"
+        )
+
         try:
             jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
         except jwt.ExpiredSignatureError:
-            log.exception("Token has expired.")
+            log.error("Token has expired.")
             return None
         except jwt.InvalidTokenError:
-            log.exception("Invalid token.")
+            log.error("Invalid token.")
             return None
         except Exception as exc:
-            log.exception(f"Caught Exception in Token Verification: {exc}")
+            log.error(f"Caught Exception in Token Verification: {exc}")
             return None
         else:
-            return jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
-        
+            return jwt.decode(
+                token, leaf_cert.public_key(), unverified_headers.get("alg")
+            )
+
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from ITA"""
         url = urljoin(self.cfg.base_url, "certs")
@@ -398,42 +389,20 @@ class ITAConnector:
         headers = {
             "Accept": "application/json",
         }
-        try:
-            log.info("Making request to get_token_signing_certificates() url : %s", url)
-            response = requests.get(
-                url,
-                headers=headers,
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
-            )
-            if response.status_code == 500:
-                allowed_retries = self.cfg.retry_cfg.retry_max
-                while allowed_retries > 0:
-                    response = requests.get(
-                        url,
-                        headers=headers,
-                        proxies=proxies,
-                        timeout=self.cfg.retry_cfg.retry_wait_time,
-                    )
-                    allowed_retries -= 1
-                    if response.status_code == 200 or allowed_retries == 0:
-                        break
-                if response.status_code != 200:
-                    log.error(
-                        "get_nonce() failed with error: {}".format(response.content)
-                    )
-                    return None
-            log.info(
-                "get_token_signing_certificates() response status code :%d",
-                response.status_code,
-            )
-            jwks = response.content
-            return jwks
-        except Exception as exc:
-            log.exception(
-                f"Caught Exception in get_token_signing_certificates() http request: {exc}"
-            )
-            return None
+        log.debug("Making request to get_token_signing_certificates() url : %s", url)
+        response = requests.get(
+            url,
+            headers=headers,
+            proxies=proxies,
+            timeout=self.cfg.retry_cfg.retry_wait_time,
+        )
+        response.raise_for_status()
+        log.debug(
+            "get_token_signing_certificates() response status code :%d",
+            response.status_code,
+        )
+        jwks = response.content
+        return jwks
 
     def attest(self, args: AttestArgs) -> AttestResponse:
         """This Function calls ITA Connector endpoints get_nonce(), collect evidence from adapter
@@ -446,21 +415,28 @@ class ITAConnector:
             AttestResponse: Instance of AttestResponse class
         """
         response = AttestResponse
-        nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
-        if nonce_resp == None:
+        try:
+            nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
+        except requests.exceptions.HTTPError as exc:
+            log.error(f"Caught Http Error in get_nonce(): {exc}")
             return None
-        log.info("Nonce : %s", nonce_resp.nonce)
+        log.info("Nonce Retrieved Successfully")
+        log.debug("Nonce : %s", nonce_resp.nonce)
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
         concatenated_nonce = decoded_val + decoded_iat
         evidence = args.adapter.collect_evidence(concatenated_nonce)
         if evidence == None:
             return None
-        log.info("Quote : %s", evidence.quote)
-        token_resp = self.get_token(
-            GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id)
-        )
-        if token_resp == None:
+        log.info("Quote : %s", base64.b64encode(evidence.quote).decode())
+        try:
+            token_resp = self.get_token(
+                GetTokenArgs(
+                    nonce_resp.nonce, evidence, args.policy_ids, args.request_id
+                )
+            )
+        except requests.exceptions.HTTPError as exc:
+            log.error(f"Caught Http Error in get_token(): {exc}")
             return None
         response.token = token_resp.token
         response.headers = token_resp.headers

@@ -29,38 +29,15 @@ def main():
         log.exception("Exception while setting up log: {e}")
         exit(1)
 
-    # get all the environment variables
-    trustauthority_base_url = os.getenv(const.TRUSTAUTHORITY_BASE_URL)
-    if trustauthority_base_url is None:
-        log.error("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
-        exit(1)
-
-    trustAuthority_api_url = os.getenv(const.TRUSTAUTHORITY_API_URL)
-    if trustAuthority_api_url is None:
-        log.error("ENV_TRUSTAUTHORITY_API_URL is not set.")
-        exit(1)
-
-    trust_authority_api_key = os.getenv(const.TRUSTAUTHORITY_API_KEY)
-    if trust_authority_api_key is None:
-        log.error("ENV_TRUSTAUTHORITY_API_KEY is not set.")
-        exit(1)
-
-    trust_authority_request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
-
     trust_authority_policy_id = os.getenv(const.TRUSTAUTHORITY_POLICY_ID)
 
     request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
     # Populate config object
-    retry_config_obj = RetryConfig()
     try:
-        config_obj = Config(
-            trustauthority_base_url,
-            retry_config_obj,
-            trustAuthority_api_url,
-            trust_authority_api_key,
-        )
+        config_obj = Config(RetryConfig())
     except Exception as exc:
-        log.exception(f"Caught Exception in config() instance initialization : {exc}")
+        log.error(f"Error in config() instance initialization : {exc}")
+        exit(1)
     ita_connector = ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
@@ -80,10 +57,15 @@ def main():
     token_headers_json = json.loads(attestation_token.headers.replace('\'','\"'))
     log.info("Request id and Trace id are: %s, %s" ,token_headers_json.get("request-id"), token_headers_json.get("trace-id"))
     # verify token- recieved from connector
-    pub_key = ita_connector.verify_token(token)
-    if pub_key != None:
+    try:
+        verified_token = ita_connector.verify_token(token)
+    except Exception as exc:
+        log.error("Token verification returned exception : %s", exc)
+    if verified_token != None:
         log.info("Token Verification Successful")
-        log.info(pub_key)
+        log.info("Verified Attestation Token : %s",verified_token)
+    else:
+        log.info("Token Verification failed")
 
 
 # main for function call.

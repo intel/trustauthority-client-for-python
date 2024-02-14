@@ -16,7 +16,7 @@ class Config:
     """This class creates config object with ITA attributes i.e base url, api url, api key and
     instance of retry config class to be used in creating connector object"""
 
-    def __init__(self, base_url, retry_cfg, api_url, api_key) -> None:
+    def __init__(self, retry_cfg, base_url=None, api_url=None, api_key=None) -> None:
         """Initialises config object
 
         Args:
@@ -26,22 +26,28 @@ class Config:
             api_key: ITA api key
         """
 
-        base_url_check = (
-            base_url if base_url != "" else os.getenv(constants.TRUSTAUTHORITY_BASE_URL)
+        self.base_url = (
+            base_url
+            if base_url != None
+            else os.getenv(constants.TRUSTAUTHORITY_BASE_URL)
         )
-        if not validate_url(base_url_check):
-            raise ValueError("baseurl format not correct")
-        self.base_url = base_url_check
+        if self.base_url == None:
+            raise Exception("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
+        if not validate_url(self.base_url):
+            raise ValueError("Baseurl format not correct")
         self.retry_cfg = retry_cfg
-        api_url_check = (
-            api_url if api_url != "" else os.getenv(constants.TRUSTAUTHORITY_API_URL)
+        self.api_url = (
+            api_url if api_url != None else os.getenv(constants.TRUSTAUTHORITY_API_URL)
         )
-        if not validate_url(api_url_check):
+        if self.api_url == None:
+            raise Exception("ENV_TRUSTAUTHORITY_API_URL is not set.")
+        if not validate_url(self.api_url):
             raise ValueError("apiurl format not correct")
-        self.api_url = api_url_check
         self.api_key = (
-            api_key if api_key != "" else os.getenv(constants.TRUSTAUTHORITY_API_KEY)
+            api_key if api_key != None else os.getenv(constants.TRUSTAUTHORITY_API_KEY)
         )
+        if self.api_key is None:
+            raise Exception("ENV_TRUSTAUTHORITY_API_KEY is not set.")
 
     # getter methods
     def base_url(self):
@@ -82,7 +88,10 @@ class RetryConfig:
 
 
 def validate_url(url):
-    parsed_url = urlparse(url)
-    if parsed_url.scheme != "https":
-        return False
-    return True
+    parsed_url = validators.url(url)
+    if parsed_url:
+        if urlparse(url).scheme != "https":
+            log.error("URL scheme has to https")
+            return False
+        return True
+    return False
