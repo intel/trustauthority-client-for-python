@@ -29,17 +29,23 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
 @dataclass
 class GetNonceArgs:
+    """GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority"""
+
     request_id: str
 
 
 @dataclass
 class GetNonceResponse:
+    """GetNonceResponse holds the response parameters recieved from nonce endpoint"""
+
     headers: str
     nonce: str
 
 
 @dataclass
 class VerifierNonce:
+    """VerifierNonce holds signed nonce issued from Intel Trust Authority"""
+
     val: str
     iat: str
     signature: str
@@ -47,19 +53,25 @@ class VerifierNonce:
 
 @dataclass
 class AttestArgs:
-    adapter: TDXAdapter()
+    """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
+
+    adapter: TDXAdapter
     request_id: str
     policy_ids: Optional[List[UUID]] = None
 
 
 @dataclass
 class AttestResponse:
+    """AttestResponse holds the response parameters recieved during attestation flow"""
+
     token: str
     headers: str
 
 
 @dataclass
 class GetTokenArgs:
+    """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
+
     nonce: VerifierNonce
     evidence: Evidence
     policy_ids: List[UUID]
@@ -68,17 +80,16 @@ class GetTokenArgs:
 
 @dataclass
 class GetTokenResponse:
+    """GetTokenResponse holds the response parameters recieved from attest endpoint"""
+
     token: str
     headers: str
 
 
 @dataclass
-class AttestationTokenResponse:
-    token: str
-
-
-@dataclass
 class TokenRequest:
+    """TokenRequest holds all the data required for attestation"""
+
     quote: bytearray  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
     runtime_data: str  #'json:"runtime_data"'
@@ -88,8 +99,7 @@ class TokenRequest:
 
 class ITAConnector:
     """
-    This class creates connector to ITA and provide api endpoints for methods like
-    get_nonce(), get_token(), get_token_signing_certificates(), verify_token()
+    Initializes ITA connector object that is used to connect to ITA to get nonce, get attestation token, get CRL and verify CRL, verify Attestation token
     """
 
     def __init__(self, cfg) -> None:
@@ -179,8 +189,7 @@ class ITAConnector:
             timeout=self.cfg.retry_cfg.retry_wait_time,
         )
         response.raise_for_status()
-        token_response = AttestationTokenResponse(token=response.json().get("token"))
-        return GetTokenResponse(token_response.token, str(response.headers))
+        return GetTokenResponse(response.json().get("token"), str(response.headers))
 
     def get_crl(self, crl_url):
         """This Function make get request to CRL Distribution point and return CRL Object.
