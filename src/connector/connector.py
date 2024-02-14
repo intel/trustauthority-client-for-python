@@ -304,9 +304,13 @@ class ITAConnector:
             return None
         jwks_data = json.loads(jwks)
         for key in jwks_data.get("keys", []):
-            log.info("key found: %s", key.get("kid"))
-            x5c_certificates = key.get("x5c", [])
-
+            if key.get("kid") == kid:
+                log.info("key found: %s", key.get("kid"))
+                x5c_certificates = key.get("x5c", [])
+                break
+        if len(x5c_certificates) > constants.ATS_CERTCHAIN_MAXLENGTH:
+            log.error("Token Signing Cert chain has more than %d certificates", constants.AtsCertChainMaxLen)
+            return None
         root = []
         intermediate = []
         leaf_cert = None
@@ -383,8 +387,8 @@ class ITAConnector:
             log.exception(f"Caught Exception in Token Verification: {exc}")
             return None
         else:
-            return leaf_cert.public_key()
-
+            return jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
+        
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from ITA"""
         url = urljoin(self.cfg.base_url, "certs")

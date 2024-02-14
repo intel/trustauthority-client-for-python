@@ -13,7 +13,7 @@ from src.resources import logging as logger
 
 
 class Config:
-    """This class creates config object with ITA attributes i.e base url, api url, api key
+    """This class creates config object with ITA attributes i.e base url, api url, api key and
     instance of retry config class to be used in creating connector object"""
 
     def __init__(self, base_url, retry_cfg, api_url, api_key) -> None:

@@ -77,9 +77,9 @@ def main():
         exit(1)
     token = attestation_token.token
     log.info("Attestation token : %s", token)
-    log.info("Response Headers are: %s", attestation_token.headers)
+    token_headers_json = json.loads(attestation_token.headers.replace('\'','\"'))
+    log.info("Request id and Trace id are: %s, %s" ,token_headers_json.get("request-id"), token_headers_json.get("trace-id"))
     # verify token- recieved from connector
-    log.info("Token Verification :")
     pub_key = ita_connector.verify_token(token)
     if pub_key != None:
         log.info("Token Verification Successful")
