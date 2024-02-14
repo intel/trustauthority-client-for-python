@@ -1,0 +1,30 @@
+name: OnMergeRelease
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release/*'
+    tags:
+      - '**'
+
+jobs:
+  build-test-scan:
+    runs-on: [ ubuntu-20.04 ]
+    env:
+      http_proxy: ${{ secrets.HTTP_PROXY }}
+      https_proxy: ${{ secrets.HTTPS_PROXY }}
+      no_proxy: ${{ secrets.NO_PROXY }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.10'
+
+      - name: Unit Test Coverage
+        run: sh "echo Run UT"
