@@ -7,6 +7,7 @@ SPDX-License-Identifier: BSD-3-Clause
 import base64
 import json
 import jwt
+import os
 import http
 import requests
 import validators
@@ -129,8 +130,8 @@ class ITAConnector:
             "Accept": "application/json",
             "request-id": args.request_id,
         }
-        http_proxy = constants.HTTP_PROXY
-        https_proxy = constants.HTTPS_PROXY
+        http_proxy = os.getenv(constants.HTTP_PROXY)
+        https_proxy = os.getenv(constants.HTTPS_PROXY)
         proxies = {"http": http_proxy, "https": https_proxy}
         try:
             response = requests.get(
@@ -189,8 +190,8 @@ class ITAConnector:
             event_log=args.evidence.event_log,
         )
         body = token_req.__dict__
-        http_proxy = constants.HTTP_PROXY
-        https_proxy = constants.HTTPS_PROXY
+        http_proxy = os.getenv(constants.HTTP_PROXY)
+        https_proxy = os.getenv(constants.HTTPS_PROXY)
         proxies = {"http": http_proxy, "https": https_proxy}
         log.info(
             "making attestation token request to Intel Trust Authority ... : %s ", url
@@ -231,8 +232,8 @@ class ITAConnector:
             log.error("CRL URL missing in the certificate")
             return None
         if validators.url(crl_url):
-            http_proxy = constants.HTTP_PROXY
-            https_proxy = constants.HTTPS_PROXY
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
             try:
                 response = requests.get(crl_url, proxies=proxies)
@@ -425,8 +426,8 @@ class ITAConnector:
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
         url = urljoin(self.cfg.base_url, "certs")
-        http_proxy = constants.HTTP_PROXY
-        https_proxy = constants.HTTPS_PROXY
+        http_proxy = os.getenv(constants.HTTP_PROXY)
+        https_proxy = os.getenv(constants.HTTPS_PROXY)
         proxies = {"http": http_proxy, "https": https_proxy}
         headers = {
             "Accept": "application/json",
