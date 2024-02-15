@@ -13,41 +13,26 @@ from src.resources import logging as logger
 
 
 class Config:
-    """This class creates config object with ITA attributes i.e base url, api url, api key and
+    """This class creates config object with Intel Trust Authority attributes i.e base url, api url, api key and
     instance of retry config class to be used in creating connector object"""
 
-    def __init__(self, retry_cfg, base_url=None, api_url=None, api_key=None) -> None:
+    def __init__(self, retry_cfg, base_url, api_url, api_key) -> None:
         """Initialises config object
 
         Args:
-            base_url: ITA base url
+            base_url: Intel Trust Authority base url
             retry_cfg: Instance of RetryConfig class
-            api_url: ITA api url
-            api_key: ITA api key
+            api_url: Intel Trust Authority api url
+            api_key: Intel Trust Authority api key
         """
-
-        self.base_url = (
-            base_url
-            if base_url != None
-            else os.getenv(constants.TRUSTAUTHORITY_BASE_URL)
-        )
-        if self.base_url == None:
-            raise Exception("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
-        if not validate_url(self.base_url):
-            raise ValueError("Baseurl format not correct")
+        if not validate_url(base_url):
+            log.error("validate_url() failed for Intel Trust Authority Base URL")
+        self.base_url = base_url
+        if not validate_url(api_url):
+            log.error("validate_url() failed for Intel Trust Authority API URL")
+        self.api_url = api_url
         self.retry_cfg = retry_cfg
-        self.api_url = (
-            api_url if api_url != None else os.getenv(constants.TRUSTAUTHORITY_API_URL)
-        )
-        if self.api_url == None:
-            raise Exception("ENV_TRUSTAUTHORITY_API_URL is not set.")
-        if not validate_url(self.api_url):
-            raise ValueError("apiurl format not correct")
-        self.api_key = (
-            api_key if api_key != None else os.getenv(constants.TRUSTAUTHORITY_API_KEY)
-        )
-        if self.api_key is None:
-            raise Exception("ENV_TRUSTAUTHORITY_API_KEY is not set.")
+        self.api_key = api_key
 
     # getter methods
     def base_url(self):

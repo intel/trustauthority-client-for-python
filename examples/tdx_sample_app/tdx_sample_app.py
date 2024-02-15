@@ -29,12 +29,50 @@ def main():
         log.exception("Exception while setting up log: {e}")
         exit(1)
 
-    trust_authority_policy_id = os.getenv(const.TRUSTAUTHORITY_POLICY_ID)
+    # get all the environment variables
+    trustauthority_base_url = os.getenv(const.TRUSTAUTHORITY_BASE_URL)
+    if trustauthority_base_url is None:
+        log.error("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
+        exit(1)
 
-    request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
+    trustAuthority_api_url = os.getenv(const.TRUSTAUTHORITY_API_URL)
+    if trustAuthority_api_url is None:
+        log.error("ENV_TRUSTAUTHORITY_API_URL is not set.")
+        exit(1)
+
+    trust_authority_api_key = os.getenv(const.TRUSTAUTHORITY_API_KEY)
+    if trust_authority_api_key is None:
+        log.error("ENV_TRUSTAUTHORITY_API_KEY is not set.")
+        exit(1)
+
+    trust_authority_request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
+    if trust_authority_request_id is None:
+        log.error("ENV_TRUSTAUTHORITY_REQUEST_ID is not set.")
+        exit(1)
+
+    trust_authority_policy_id = os.getenv(const.TRUSTAUTHORITY_POLICY_ID)
+    if trust_authority_policy_id is None:
+        log.error("ENV_TRUSTAUTHORITY_POLICY_ID is not set.")
+        exit(1)
+
+    retry_max = os.getenv(const.RETRY_MAX)
+    if retry_max is None:
+        log.debug("ENV_RETRY_MAX is not provided. Hence, setting default value.")
+        retry_max = const.DEFAULT_RETRY_MAX
+
+    retry_wait_time = os.getenv(const.RETRY_WAIT_TIME)
+    if retry_wait_time is None:
+        log.debug("ENV_RETRY_WAIT_TIME is not provided. Hence, setting default value.")
+    retry_wait_time = const.DEFAULT_RETRY_WAIT_TIME
+
     # Populate config object
     try:
-        config_obj = Config(RetryConfig())
+        config_obj = Config(
+            RetryConfig(),
+            trustauthority_base_url,
+            trustAuthority_api_url,
+            trust_authority_api_key,
+        )
     except Exception as exc:
         log.error(f"Error in config() instance initialization : {exc}")
         exit(1)
@@ -44,9 +82,9 @@ def main():
     adapter = TDXAdapter(user_data)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
-        attest_args = AttestArgs(adapter, request_id, policy_ids)
+        attest_args = AttestArgs(adapter, trust_authority_request_id, policy_ids)
     else:
-        attest_args = AttestArgs(adapter, request_id)
+        attest_args = AttestArgs(adapter, trust_authority_request_id)
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:
@@ -54,8 +92,12 @@ def main():
         exit(1)
     token = attestation_token.token
     log.info("Attestation token : %s", token)
-    token_headers_json = json.loads(attestation_token.headers.replace('\'','\"'))
-    log.info("Request id and Trace id are: %s, %s" ,token_headers_json.get("request-id"), token_headers_json.get("trace-id"))
+    token_headers_json = json.loads(attestation_token.headers.replace("'", '"'))
+    log.info(
+        "Request id and Trace id are: %s, %s",
+        token_headers_json.get("request-id"),
+        token_headers_json.get("trace-id"),
+    )
     # verify token- recieved from connector
     try:
         verified_token = ita_connector.verify_token(token)
@@ -63,7 +105,7 @@ def main():
         log.error("Token verification returned exception : %s", exc)
     if verified_token != None:
         log.info("Token Verification Successful")
-        log.info("Verified Attestation Token : %s",verified_token)
+        log.info("Verified Attestation Token : %s", verified_token)
     else:
         log.info("Token Verification failed")
 
