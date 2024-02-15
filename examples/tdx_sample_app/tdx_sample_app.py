@@ -59,15 +59,14 @@ def main():
     retry_wait_time = const.DEFAULT_RETRY_WAIT_TIME
 
     # Populate config object
-    try:
-        config_obj = Config(
+    config_obj = Config(
             RetryConfig(retry_max, retry_wait_time),
             trustauthority_base_url,
             trustAuthority_api_url,
             trust_authority_api_key,
         )
-    except Exception as exc:
-        log.error(f"Error in config() instance initialization : {exc}")
+    if config_obj == None:
+        log.error("Error in config() instance initialization")
         exit(1)
     ita_connector = ITAConnector(config_obj)
     # Create TDX Adapter

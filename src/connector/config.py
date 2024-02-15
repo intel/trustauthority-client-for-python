@@ -27,9 +27,11 @@ class Config:
         """
         if not validate_url(base_url):
             log.error("validate_url() failed for Intel Trust Authority Base URL")
+            return None
         self.base_url = base_url
         if not validate_url(api_url):
             log.error("validate_url() failed for Intel Trust Authority API URL")
+            return None
         self.api_url = api_url
         self.retry_cfg = retry_cfg
         self.api_key = api_key
