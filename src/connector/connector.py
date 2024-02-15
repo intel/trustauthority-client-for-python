@@ -142,10 +142,13 @@ class ITAConnector:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exc:
             log.error(f"Http Error occurred in get_nonce request: {exc}")
+            return None
         except requests.exceptions.ConnectionError as exc:
             log.error(f"Connection Error occurred in get_nonce request: {exc}")
+            return None
         except requests.exceptions.Timeout as exc:
             log.error(f"Timeout Error occurred in get_nonce request: {exc}")
+            return None
         except requests.exceptions.RequestException as exc:
             log.error(f"Error occurred in get_nonce request: {exc}")
             return None
@@ -203,10 +206,13 @@ class ITAConnector:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exc:
             log.error(f"Http Error occurred in get_token request: {exc}")
+            return None
         except requests.exceptions.ConnectionError as exc:
             log.error(f"Connection Error occurred in get_token request: {exc}")
+            return None
         except requests.exceptions.Timeout as exc:
             log.error(f"Timeout Error occurred in get_token request: {exc}")
+            return None
         except requests.exceptions.RequestException as exc:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
@@ -233,10 +239,13 @@ class ITAConnector:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
                 log.error(f"Http Error occurred in get_crl request: {exc}")
+                return None
             except requests.exceptions.ConnectionError as exc:
                 log.error(f"Connection Error occurred in get_crl request: {exc}")
+                return None
             except requests.exceptions.Timeout as exc:
                 log.error(f"Timeout Error occurred in get_crl request: {exc}")
+                return None
             except requests.exceptions.RequestException as exc:
                 log.error(f"Error occurred in get_crl request: {exc}")
                 return None
@@ -435,14 +444,17 @@ class ITAConnector:
             log.error(
                 f"Http Error occurred in get_token_signing_certificates request: {exc}"
             )
+            return None
         except requests.exceptions.ConnectionError as exc:
             log.error(
                 f"Connection Error occurred in get_token_signing_certificates request: {exc}"
             )
+            return None
         except requests.exceptions.Timeout as exc:
             log.error(
                 f"Timeout Error occurred in get_token_signing_certificates request: {exc}"
             )
+            return None
         except requests.exceptions.RequestException as exc:
             log.error(
                 f"Error occurred in get_token_signing_certificates request: {exc}"
