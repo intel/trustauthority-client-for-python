@@ -51,18 +51,10 @@ class Config:
 class RetryConfig:
     """This class creates Retry Config object with retry max and retry wait time attributes"""
 
-    def __init__(self) -> None:
+    def __init__(self, retry_max, retry_wait_time) -> None:
         """Initialises Retry config object"""
-        self.retry_max = os.getenv(constants.RETRY_MAX)
-        if self.retry_max is None:
-            log.debug("ENV_RETRY_MAX is not provided. Hence, setting default value.")
-            self.retry_max = constants.DEFAULT_RETRY_MAX
-        self.retry_wait_time = os.getenv(constants.RETRY_WAIT_TIME)
-        if self.retry_wait_time is None:
-            log.debug(
-                "ENV_RETRY_WAIT_TIME is not provided. Hence, setting default value."
-            )
-        self.retry_wait_time = constants.DEFAULT_RETRY_WAIT_TIME
+        self.retry_max = retry_max
+        self.retry_wait_time = retry_wait_time
 
     # getter methods
     def retry_wait_time(self):

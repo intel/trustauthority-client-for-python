@@ -57,7 +57,7 @@ class AttestArgs:
     """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
 
     adapter: TDXAdapter
-    request_id: str
+    request_id: Optional[str] = None
     policy_ids: Optional[List[UUID]] = None
 
 

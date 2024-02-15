@@ -46,14 +46,7 @@ def main():
         exit(1)
 
     trust_authority_request_id = os.getenv(const.TRUSTAUTHORITY_REQUEST_ID)
-    if trust_authority_request_id is None:
-        log.error("ENV_TRUSTAUTHORITY_REQUEST_ID is not set.")
-        exit(1)
-
     trust_authority_policy_id = os.getenv(const.TRUSTAUTHORITY_POLICY_ID)
-    if trust_authority_policy_id is None:
-        log.error("ENV_TRUSTAUTHORITY_POLICY_ID is not set.")
-        exit(1)
 
     retry_max = os.getenv(const.RETRY_MAX)
     if retry_max is None:
@@ -68,7 +61,7 @@ def main():
     # Populate config object
     try:
         config_obj = Config(
-            RetryConfig(),
+            RetryConfig(retry_max, retry_wait_time),
             trustauthority_base_url,
             trustAuthority_api_url,
             trust_authority_api_key,
