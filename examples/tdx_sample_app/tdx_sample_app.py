@@ -8,7 +8,7 @@ import ctypes
 import sys
 import os
 import base64
-import re
+import validators
 import uuid
 import logging as log
 from src.resources import logging as logger
@@ -16,6 +16,24 @@ from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
 from src.connector.config import *
 from src.connector.connector import *
+
+
+def validate_url(url):
+    parsed_url = validators.url(url)
+    if parsed_url:
+        if urlparse(url).scheme != "https":
+            log.error("URL scheme has to https")
+            return False
+        return True
+    return False
+
+
+def validate_uuid(uuid_str):
+    try:
+        uuid.UUID(uuid_str)
+        return True
+    except ValueError:
+        return False
 
 
 def main():
@@ -35,9 +53,17 @@ def main():
         log.error("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
         exit(1)
 
+    if not validate_url(trustauthority_base_url):
+        log.error("validate_url() failed for Intel Trust Authority Base URL")
+        exit(1)
+
     trustAuthority_api_url = os.getenv(const.TRUSTAUTHORITY_API_URL)
     if trustAuthority_api_url is None:
         log.error("ENV_TRUSTAUTHORITY_API_URL is not set.")
+        exit(1)
+
+    if not validate_url(trustAuthority_api_url):
+        log.error("validate_url() failed for Intel Trust Authority API URL")
         exit(1)
 
     trust_authority_api_key = os.getenv(const.TRUSTAUTHORITY_API_KEY)
@@ -60,11 +86,11 @@ def main():
 
     # Populate config object
     config_obj = Config(
-            RetryConfig(retry_max, retry_wait_time),
-            trustauthority_base_url,
-            trustAuthority_api_url,
-            trust_authority_api_key,
-        )
+        RetryConfig(retry_max, retry_wait_time),
+        trustauthority_base_url,
+        trustAuthority_api_url,
+        trust_authority_api_key,
+    )
     if config_obj == None:
         log.error("Error in config() instance initialization")
         exit(1)
@@ -74,6 +100,10 @@ def main():
     adapter = TDXAdapter(user_data)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
+        for uuid_str in policy_ids:
+            if not validate_uuid(uuid_str):
+                log.error("Invalid policy UUID :", uuid_str)
+                exit(1)
         attest_args = AttestArgs(adapter, trust_authority_request_id, policy_ids)
     else:
         attest_args = AttestArgs(adapter, trust_authority_request_id)

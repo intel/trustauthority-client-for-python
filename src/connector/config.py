@@ -25,13 +25,7 @@ class Config:
             api_url: Intel Trust Authority api url
             api_key: Intel Trust Authority api key
         """
-        if not validate_url(base_url):
-            log.error("validate_url() failed for Intel Trust Authority Base URL")
-            return None
         self.base_url = base_url
-        if not validate_url(api_url):
-            log.error("validate_url() failed for Intel Trust Authority API URL")
-            return None
         self.api_url = api_url
         self.retry_cfg = retry_cfg
         self.api_key = api_key
@@ -64,13 +58,3 @@ class RetryConfig:
 
     def retry_max(self):
         return self.retry_max
-
-
-def validate_url(url):
-    parsed_url = validators.url(url)
-    if parsed_url:
-        if urlparse(url).scheme != "https":
-            log.error("URL scheme has to https")
-            return False
-        return True
-    return False
