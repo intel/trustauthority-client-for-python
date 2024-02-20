@@ -365,7 +365,11 @@ class ITAConnector:
         Args:
             token: Intel Trust Authority Attestation Token
         """
-        unverified_headers = jwt.get_unverified_header(token)
+        try:
+            unverified_headers = jwt.get_unverified_header(token)
+        except Exception as exc:
+            log.error(f'caught exception in getting jwt headers : {exc}')
+            return None
         kid = unverified_headers.get("kid", None)
         if kid is None:
             log.error("Missing key id in token")
@@ -379,7 +383,8 @@ class ITAConnector:
                 "getting Token signing certificates from Intel Trust Authority failed"
             )
             return None
-        jwks_data = json.loads(jwks)
+        # jwks_data = json.loads(jwks)
+        jwks_data = jwks
         keyid_exists = False
         for key in jwks_data.get("keys", []):
             if key.get("kid") == kid:
@@ -396,7 +401,6 @@ class ITAConnector:
                 constants.AtsCertChainMaxLen,
             )
             return None
-
         root = []
         intermediate = []
         leaf_cert = None
@@ -452,7 +456,7 @@ class ITAConnector:
         if not self.verify_crl(intermediate_ca_crl_obj, leaf_cert, inter_ca_cert):
             log.error("Failed to check Leaf Certificate against Intermediate CA CRL")
             return None
-
+        
         # verifying the leaf certificate with both the intermediate CA certificate and the root certificate
         try:
             root_cert.public_key().verify(
@@ -562,11 +566,8 @@ class ITAConnector:
         log.debug(
             f"get_token_signing_certificates() response status code :{response.status_code}"
         )
-
-        if response == None:
-            return None
-
-        jwks = response.content
+        # jwks = response.content
+        jwks = response.json()
         return jwks
 
     def attest(self, args: AttestArgs) -> AttestResponse:

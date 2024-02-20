@@ -57,7 +57,6 @@ class TDXAdapter(EvidenceAdapter):
                 c_lib.tdx_att_get_quote
             )  # tdx_att_get_quote is C function to be called
             tdx_report = tdx_report_data_t()
-
             if nonce != None:
                 sha512_hash = hashlib.sha512()
                 sha512_hash.update(nonce)
@@ -104,7 +103,6 @@ class TDXAdapter(EvidenceAdapter):
             # Fetch the quote from pointer passed to c library
             c_uint8_ptr = ctypes.cast(quote_buffer, ctypes.POINTER(ctypes.c_uint8))
             quote = bytearray(c_uint8_ptr[: quote_size.value])
-
             # Free the tdx quote from c memory
             ret = c_lib.tdx_att_free_quote(quote_buffer)
             if ret != 0:
