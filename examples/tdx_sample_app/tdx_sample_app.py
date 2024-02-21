@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import validators
 import uuid
 import logging as log
-
+from urllib.parse import urlparse
 from src.resources import logging as logger
 from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
@@ -45,6 +45,7 @@ def main():
     try:
         logger.setup_logging()
     except ValueError as e:
+        print("Exception: {type(e).__name__}: {e}")
         log.exception(f"Exception while setting up log: {e}")
         exit(1)
 
