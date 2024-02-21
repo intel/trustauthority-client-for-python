@@ -15,6 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      #- name: python linter TODO: Check if innersource provides aby linter.
+       # uses: psf/black@stable
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -25,7 +28,25 @@ jobs:
       - name: Install dependencies via Poetry
         run:  poetry install
 
-      - name: Unit Test Coverage
+      - name: Install Coverage
+        run: pip install coverage
+
+      - name: Run UT with Coverage enabled
+        working-directory: ./test
         run: |
-          echo "TODO: Run UT. Below command should run UT once developed."
-          #poetry run pytest.
+            export PYTHONPATH=$PYTHONPATH:..
+            coverage run -m unittest test_connector.py
+            coverage run -a -m unittest test_config.py
+            coverage run -a -m unittest test_tdx_adapter.py
+      
+      - name: Check coverage percentage
+        working-directory: ./test
+        run: |
+            coverage_percentage=$(coverage report --format=total)
+            if [ $coverage_percentage -lt 80 ]; then
+              echo "Coverage is less than 80%: $coverage_percentage%"
+              exit 1
+            else
+              echo "Coverage is greater than 80, Success"
+            fi
+        
