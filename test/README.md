@@ -2,12 +2,13 @@
 
 ### Prerequisites
 ```
-pip install coverage
+poetry add coverage
+poetry update
 ```
 
 ### Run unit tests with coverage enabled:
 ```
-coverage run -m unittest .\<test_file>
+poetry run coverage run -m unittest discover -s test -p 'test_*.py'
 ```
 
 ### Generate a coverage report:

@@ -383,7 +383,6 @@ class ITAConnector:
                 "getting Token signing certificates from Intel Trust Authority failed"
             )
             return None
-        # jwks_data = json.loads(jwks)
         jwks_data = jwks
         keyid_exists = False
         for key in jwks_data.get("keys", []):
@@ -566,7 +565,6 @@ class ITAConnector:
         log.debug(
             f"get_token_signing_certificates() response status code :{response.status_code}"
         )
-        # jwks = response.content
         jwks = response.json()
         return jwks
 
