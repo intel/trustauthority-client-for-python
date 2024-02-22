@@ -27,16 +27,16 @@ class Config:
         self.api_key = api_key
 
     # getter methods
-    def base_url(self):
+    def get_base_url(self):
         return self.base_url
 
-    def retry_cfg(self):
+    def get_retry_cfg(self):
         return self.retry_cfg
 
-    def api_url(self):
+    def get_api_url(self):
         return self.api_url
 
-    def api_key(self):
+    def get_api_key(self):
         return self.api_key
 
 

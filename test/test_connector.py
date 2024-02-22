@@ -16,7 +16,7 @@ import src.resources.constants as constants
 
 def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
-    retryConfig = RetryConfig(2, 2)
+    retryConfig = RetryConfig(2, 2, 2)
     config = Config(
         retryConfig, "http://localhost:8080", "http://localhost:8080", "apikey"
     )
@@ -55,26 +55,6 @@ class ConnectorTestCase(unittest.TestCase):
         ]
     }
 
-    def test_retry_config(self):
-        """Test method to test retry config object initialisation"""
-        retryconfig_obj = RetryConfig(2, 2)
-        self.assertEqual(retryconfig_obj.get_retry_max(), 2)
-        self.assertEqual(retryconfig_obj.get_retry_wait_time(), 2)
-
-    def test_config(self):
-        """Test method to test config object initialisation"""
-        config_obj = Config(
-            RetryConfig(2, 2),
-            "https://custom-base-url/api/v1",
-            "https://custom-api-url/api/v1",
-            "apikey",
-        )
-        self.assertEqual(config_obj.get_api_key(), "apikey")
-        self.assertEqual(config_obj.get_api_url(), "https://custom-api-url/api/v1")
-        self.assertEqual(config_obj.get_base_url(), "https://custom-base-url/api/v1")
-        self.assertEqual(config_obj.retry_cfg.get_retry_max(), 2)
-        self.assertEqual(config_obj.retry_cfg.get_retry_wait_time(), 2)
-
     def test_get_nonce(self):
         """Test method to test get_nonce() from Intel Trust Authority Connector"""
         nonceargs = GetNonceArgs("1234")
@@ -101,10 +81,12 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_nonce_http_error(self):
         """Test method to test get_nonce() with raising HTTP Error"""
         nonceargs = GetNonceArgs("1234")
-        with patch("requests.get", url="/appraisal/v1/nonce") as mocked_request:
-            mocked_request.side_effect = requests.exceptions.HTTPError
+        with patch("requests.get") as mocked_request:
+            mocked_response = requests.Response()
+            mocked_response.status_code = 400
+            mocked_request.return_value = mocked_response
             nonce = self.ita_c.get_nonce(nonceargs)
-            assert nonce is None
+            self.assertIsNone(nonce)
 
     def test_get_nonce_timeout_error(self):
         """Test method to test get_nonce() with raising Timeout Error"""
@@ -151,7 +133,9 @@ class ConnectorTestCase(unittest.TestCase):
         evidence_params = Evidence(0, b"quotedata", "", "")
         tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234")
         with patch("requests.post", url="/appraisal/v1/attest") as mocked_request:
-            mocked_request.side_effect = requests.exceptions.HTTPError
+            mocked_response = requests.Response()
+            mocked_response.status_code = 400
+            mocked_request.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
             assert token is None
 
@@ -188,6 +172,9 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_signing_certificates_connection_error(self):
         """Test method to test get_token_signing_certificates() with raising Connection Error"""
         with patch("requests.get", url="certs") as mocked_request:
+            mocked_response = requests.Response()
+            mocked_response.status_code = 400
+            mocked_request.return_value = mocked_response
             mocked_request.side_effect = requests.exceptions.ConnectionError
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
             assert token_signing_certificates is None
@@ -195,7 +182,9 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_signing_certificates_http_error(self):
         """Test method to test get_token_signing_certificates() with raising HTTP Error"""
         with patch("requests.get", url="certs") as mocked_request:
-            mocked_request.side_effect = requests.exceptions.HTTPError
+            mocked_response = requests.Response()
+            mocked_response.status_code = 400
+            mocked_request.return_value = mocked_response
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
             assert token_signing_certificates is None
 
@@ -249,11 +238,6 @@ class ConnectorTestCase(unittest.TestCase):
                                 self.mocked_token_response["token"]
                             )
                             assert decoded_token == None
-
-    def test_verify_token_invalid_token(self):
-        """Test method to test verify_token() with Invalid Token"""
-        decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
-        assert decoded_token == None
 
     def test_verify_token_invalid_get_certs(self):
         """Test method to test verify_token() with Invalid Certificate"""

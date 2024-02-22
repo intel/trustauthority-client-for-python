@@ -176,7 +176,6 @@ class ITAConnector:
         except Exception as exc:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
-
         if response == None:
             return None
 
@@ -373,13 +372,12 @@ class ITAConnector:
         log.debug(f"kid : {kid}")
 
         # Get the JWT Signing Certificates from Intel Trust Authority
-        jwks = self.get_token_signing_certificates()
-        if jwks == None:
+        jwks_data = self.get_token_signing_certificates()
+        if jwks_data == None:
             log.error(
                 "getting Token signing certificates from Intel Trust Authority failed"
             )
             return None
-        jwks_data = json.loads(jwks)
         keyid_exists = False
         for key in jwks_data.get("keys", []):
             if key.get("kid") == kid:
@@ -559,14 +557,11 @@ class ITAConnector:
         except Exception as exc:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
-        log.debug(
-            f"get_token_signing_certificates() response status code :{response.status_code}"
-        )
 
         if response == None:
             return None
 
-        jwks = response.content
+        jwks = response.json()
         return jwks
 
     def attest(self, args: AttestArgs) -> AttestResponse:
