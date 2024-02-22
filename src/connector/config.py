@@ -4,12 +4,8 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-import os
-import validators
-import logging as log
-from urllib.parse import urlparse
+from tenacity import wait_exponential
 from src.resources import constants as constants
-from src.resources import logging as logger
 
 
 class Config:
@@ -47,14 +43,37 @@ class Config:
 class RetryConfig:
     """This class creates Retry Config object with retry max and retry wait time attributes"""
 
-    def __init__(self, retry_max, retry_wait_time) -> None:
+    def __init__(
+        self,
+        retry_wait_min: int,
+        retry_wait_max: int,
+        retry_max_num: int,
+        check_retry=None,
+        backoff=None,
+    ) -> None:
         """Initialises Retry config object"""
-        self.retry_max = retry_max
-        self.retry_wait_time = retry_wait_time
+        self.retry_wait_min_sec = (
+            retry_wait_min
+            if retry_wait_min != 0
+            else constants.DEFAULT_RETRY_WAIT_MIN_SEC
+        )
+        self.retry_wait_max_sec = (
+            retry_wait_max
+            if retry_wait_max != 0
+            else constants.DEFAULT_RETRY_WAIT_MAX_SEC
+        )
+        self.retry_max_num = (
+            retry_max_num if retry_max_num != 0 else constants.DEFAULT_RETRY_MAX_NUM
+        )
+        self.backoff = (
+            backoff
+            if backoff != None
+            else wait_exponential(
+                multiplier=1, min=self.retry_wait_min_sec, max=self.retry_wait_max_sec
+            )
+        )
+        self.check_retry = check_retry if check_retry != None else self.retry_policy
 
-    # getter methods
-    def retry_wait_time(self):
-        return self.retry_wait_time
-
-    def retry_max(self):
-        return self.retry_max
+    def retry_policy(self, status_code):
+        retryable_status_code = (500, 503, 504)
+        return status_code in retryable_status_code

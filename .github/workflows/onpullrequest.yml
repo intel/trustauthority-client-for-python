@@ -11,7 +11,7 @@ jobs:
       https_proxy: ${{ secrets.HTTPS_PROXY }}
       no_proxy: ${{ secrets.NO_PROXY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -19,6 +19,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.8.10'
+      - name: Install Poetry
+        run: pip install poetry==1.7.1
+
+      - name: Install dependencies via Poetry
+        run:  poetry install
 
       - name: Unit Test Coverage
-        run: sh "echo Run UT"
+        run: |
+          echo "TODO: Run UT. Below command should run UT once developed."
+          #poetry run pytest.

@@ -5,17 +5,19 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 import ctypes
+import json
 import sys
 import os
 import base64
+from urllib.parse import urlparse
 import validators
 import uuid
 import logging as log
+
 from src.resources import logging as logger
 from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
-from src.connector.config import *
-from src.connector.connector import *
+from src.connector import config, connector
 
 
 def validate_url(url):
@@ -43,8 +45,7 @@ def main():
     try:
         logger.setup_logging()
     except ValueError as e:
-        print("Exception: {type(e).__name__}: {e}")
-        log.exception("Exception while setting up log: {e}")
+        log.exception(f"Exception while setting up log: {e}")
         exit(1)
 
     # get all the environment variables
@@ -77,24 +78,39 @@ def main():
     retry_max = os.getenv(const.RETRY_MAX)
     if retry_max is None:
         log.debug("ENV_RETRY_MAX is not provided. Hence, setting default value.")
-        retry_max = const.DEFAULT_RETRY_MAX
+        retry_max = const.DEFAULT_RETRY_MAX_NUM
 
-    retry_wait_time = os.getenv(const.RETRY_WAIT_TIME)
-    if retry_wait_time is None:
+    retry_wait_time_min = os.getenv(const.RETRY_WAIT_TIME_MIN_SEC)
+    if retry_wait_time_min is None:
         log.debug("ENV_RETRY_WAIT_TIME is not provided. Hence, setting default value.")
-    retry_wait_time = const.DEFAULT_RETRY_WAIT_TIME
+        retry_wait_time_min = const.DEFAULT_RETRY_WAIT_MIN_SEC
 
-    # Populate config object
-    config_obj = Config(
-        RetryConfig(retry_max, retry_wait_time),
-        trustauthority_base_url,
-        trustAuthority_api_url,
-        trust_authority_api_key,
-    )
+    retry_wait_time_max = os.getenv(const.RETRY_WAIT_TIME_MAX_SEC)
+    if retry_wait_time_max is None:
+        log.debug(
+            "ENV_RETRY_WAIT_TIME_MAX is not provided. Hence, setting default value."
+        )
+        retry_wait_time_max = const.DEFAULT_RETRY_WAIT_MAX_SEC
+    try:
+        # Populate config object
+        config_obj = config.Config(
+            config.RetryConfig(
+                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max)
+            ),
+            trustauthority_base_url,
+            trustAuthority_api_url,
+            trust_authority_api_key,
+        )
+    except ValueError as exc:
+        log.error(
+            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valud integer"
+        )
+        exit(1)
+
     if config_obj == None:
         log.error("Error in config() instance initialization")
         exit(1)
-    ita_connector = ITAConnector(config_obj)
+    ita_connector = connector.ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
     adapter = TDXAdapter(user_data)
@@ -102,18 +118,20 @@ def main():
         policy_ids = json.loads(trust_authority_policy_id)
         for uuid_str in policy_ids:
             if not validate_uuid(uuid_str):
-                log.error("Invalid policy UUID :", uuid_str)
+                log.error(f"Invalid policy UUID :{uuid_str}")
                 exit(1)
-        attest_args = AttestArgs(adapter, trust_authority_request_id, policy_ids)
+        attest_args = connector.AttestArgs(
+            adapter, trust_authority_request_id, policy_ids
+        )
     else:
-        attest_args = AttestArgs(adapter, trust_authority_request_id)
+        attest_args = connector.AttestArgs(adapter, trust_authority_request_id)
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:
         log.error("Attestation Token is not returned.")
         exit(1)
     token = attestation_token.token
-    log.info("Attestation token : %s", token)
+    log.info(f"Attestation token : {token}")
     token_headers_json = json.loads(attestation_token.headers.replace("'", '"'))
     log.info(
         "Request id and Trace id are: %s, %s",
@@ -124,10 +142,10 @@ def main():
     try:
         verified_token = ita_connector.verify_token(token)
     except Exception as exc:
-        log.error("Token verification returned exception : %s", exc)
+        log.error(f"Token verification returned exception : {exc}")
     if verified_token != None:
         log.info("Token Verification Successful")
-        log.info("Verified Attestation Token : %s", verified_token)
+        log.info(f"Verified Attestation Token : {verified_token}")
     else:
         log.info("Token Verification failed")
 

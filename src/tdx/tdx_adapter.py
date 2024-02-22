@@ -6,11 +6,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import ctypes
 import hashlib
-import base64
 import logging as log
-from src.resources import logging as logger
-from src.resources import constants as const
 
+from src.resources import constants as const
 from src.connector.evidence import Evidence
 from src.base.evidence_adapter import EvidenceAdapter
 
@@ -50,9 +48,7 @@ class TDXAdapter(EvidenceAdapter):
             c_lib = ctypes.CDLL("libtdx_attest.so")
         except OSError as e:
             log.exception(
-                "Caught Exception in loading the library/calling function: {}".format(
-                    e.mesage
-                )
+                f"Caught Exception in loading the libtdx_attest.so library: {e}"
             )
             return None
 
@@ -102,7 +98,7 @@ class TDXAdapter(EvidenceAdapter):
             if result == 0:
                 log.info("Quote generated successfully:")
             else:
-                log.error("tdx_att_get_quote failed with result: {}".format(result))
+                log.error(f"tdx_att_get_quote failed with result: {result}")
                 return None
 
             # Fetch the quote from pointer passed to c library
@@ -112,7 +108,7 @@ class TDXAdapter(EvidenceAdapter):
             # Free the tdx quote from c memory
             ret = c_lib.tdx_att_free_quote(quote_buffer)
             if ret != 0:
-                log.error("Error: tdx_att_free_quote failed with result %d", ret)
+                log.error(f"Error: tdx_att_free_quote failed with result {ret}")
 
             # Create evidence class object to be returned
             tdx_evidence = Evidence(1, quote, self.user_data, None)

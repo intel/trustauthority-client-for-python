@@ -12,12 +12,9 @@ import http
 import requests
 import validators
 import logging as log
+from tenacity import Retrying, stop_after_attempt, retry_if_exception_type
 from datetime import *
 from cryptography.exceptions import InvalidSignature
-from src.resources import logging as logger
-from src.connector.evidence import Evidence
-from src.resources import constants as constants
-from src.tdx.tdx_adapter import TDXAdapter
 from urllib.parse import urljoin
 from uuid import UUID
 from typing import List, Optional
@@ -25,8 +22,11 @@ from dataclasses import dataclass
 from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
+
+from src.connector.evidence import Evidence
+from src.resources import constants as constants
+from src.tdx.tdx_adapter import TDXAdapter
 
 
 @dataclass
@@ -101,13 +101,13 @@ class TokenRequest:
 
 class ITAConnector:
     """
-    Initializes Intel Trust Authority connector object that is used to connect to Intel Trust Authority to get nonce, get attestation token, get CRL and verify CRL, verify Attestation token
+    Initializes Intel Trust Authority connector object that is used to connect to Intel Trust Authority to get nonce,
+    get attestation token, get CRL and verify CRL and verify Attestation token
     """
 
     def __init__(self, cfg) -> None:
         """Initializes Intel Trust Authority connector object and exposes functionalities for getting nonce,
-           getting Attestation Token, get CRL, verify CRL, verify Attestation Token and
-           Attest.
+           getting Attestation Token, get CRL, verify CRL and verify Attestation Token
 
         Args:
             config(): config object containing connection attributes of Intel Trust Authority
@@ -123,36 +123,63 @@ class ITAConnector:
         Returns:
             GetNonceResponse: object to GetNonceResponse class
         """
-        url = urljoin(self.cfg.api_url, "appraisal/v1/nonce")
-        log.info("get_nonce() http request url: %s ", url)
-        headers = {
-            "x-api-key": self.cfg.api_key,
-            "Accept": "application/json",
-            "request-id": args.request_id,
-        }
-        http_proxy = os.getenv(constants.HTTP_PROXY)
-        https_proxy = os.getenv(constants.HTTPS_PROXY)
-        proxies = {"http": http_proxy, "https": https_proxy}
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+
+        def make_request():
+            url = urljoin(self.cfg.api_url, "appraisal/v1/nonce")
+            log.info(f"get_nonce() http request url: {url}")
+            headers = {
+                "x-api-key": self.cfg.api_key,
+                "Accept": "application/json",
+                "request-id": args.request_id,
+            }
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
+            try:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    proxies=proxies,
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_nonce request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_nonce request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_nonce request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_nonce request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
         try:
-            response = requests.get(
-                url,
-                headers=headers,
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
-            )
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as exc:
-            log.error(f"Http Error occurred in get_nonce request: {exc}")
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
             return None
-        except requests.exceptions.ConnectionError as exc:
-            log.error(f"Connection Error occurred in get_nonce request: {exc}")
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
             return None
-        except requests.exceptions.Timeout as exc:
-            log.error(f"Timeout Error occurred in get_nonce request: {exc}")
+
+        if response == None:
             return None
-        except requests.exceptions.RequestException as exc:
-            log.error(f"Error occurred in get_nonce request: {exc}")
-            return None
+
         nonce_data = response.json()
         nonce = VerifierNonce(
             nonce_data.get("val"),
@@ -170,57 +197,83 @@ class ITAConnector:
         Returns:
             GetTokenResponse: object to GetTokenResponse class
         """
-        url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
-        headers = {
-            "x-Api-Key": self.cfg.api_key,
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Request-Id": args.request_id,
-        }
-        encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-        token_req = TokenRequest(
-            quote=encoded_quote,
-            verifier_nonce=VerifierNonce(
-                args.nonce.val, args.nonce.iat, args.nonce.signature
-            ).__dict__,
-            runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
-                "utf-8"
-            ),
-            policy_ids=args.policy_ids,
-            event_log=args.evidence.event_log,
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
         )
-        body = token_req.__dict__
-        http_proxy = os.getenv(constants.HTTP_PROXY)
-        https_proxy = os.getenv(constants.HTTPS_PROXY)
-        proxies = {"http": http_proxy, "https": https_proxy}
-        log.info(
-            "making attestation token request to Intel Trust Authority ... : %s ", url
-        )
-        try:
-            response = requests.post(
-                url,
-                headers=headers,
-                data=json.dumps(body),
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
+
+        def make_request():
+            url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
+            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
+            headers = {
+                "x-Api-Key": self.cfg.api_key,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Request-Id": args.request_id,
+            }
+            token_req = TokenRequest(
+                quote=encoded_quote,
+                verifier_nonce=VerifierNonce(
+                    args.nonce.val, args.nonce.iat, args.nonce.signature
+                ).__dict__,
+                runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                    "utf-8"
+                ),
+                policy_ids=args.policy_ids,
+                event_log=args.evidence.event_log,
             )
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as exc:
-            log.error(f"Http Error occurred in get_token request: {exc}")
+            body = token_req.__dict__
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
+            log.info(
+                f"making attestation token request to Intel Trust Authority ... : {url}"
+            )
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=json.dumps(body),
+                    proxies=proxies,
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_token request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
+        try:
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
             return None
-        except requests.exceptions.ConnectionError as exc:
-            log.error(f"Connection Error occurred in get_token request: {exc}")
-            return None
-        except requests.exceptions.Timeout as exc:
-            log.error(f"Timeout Error occurred in get_token request: {exc}")
-            return None
-        except requests.exceptions.RequestException as exc:
+        except Exception as exc:
             log.error(f"Error occurred in get_token request: {exc}")
+            return None
+
+        if response == None:
             return None
         return GetTokenResponse(response.json().get("token"), str(response.headers))
 
     def get_crl(self, crl_url):
-        """This Function make get request to CRL Distribution point and return CRL Object.
+        """This Function makes get request to CRL Distribution point and return CRL Object.
 
         Args:
             crl_arr: list of crl distribution points
@@ -228,6 +281,13 @@ class ITAConnector:
         Returns:
             Certificate Authority CRL object
         """
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+
         if crl_url == "":
             log.error("CRL URL missing in the certificate")
             return None
@@ -235,24 +295,40 @@ class ITAConnector:
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
+
+            def make_request():
+                try:
+                    response = requests.get(crl_url, proxies=proxies)
+                    response.raise_for_status()
+                except requests.exceptions.HTTPError as exc:
+                    log.error(f"Http Error occurred in get_crl request: {exc}")
+                    if self.cfg.retry_cfg.check_retry(response.status_code):
+                        raise exc
+                    else:
+                        log.error("Since error is not retryable hence not retrying")
+                        return None
+                except requests.exceptions.ConnectionError as exc:
+                    log.error(f"Connection Error occurred in get_crl request: {exc}")
+                except requests.exceptions.Timeout as exc:
+                    log.error(f"Timeout Error occurred in get_crl request: {exc}")
+                    return None
+                except requests.exceptions.RequestException as exc:
+                    log.error(f"Error occurred in get_crl request: {exc}")
+                    return None
+                crl_obj = x509.load_der_x509_crl(response.content, default_backend())
+                return crl_obj
+
             try:
-                response = requests.get(crl_url, proxies=proxies)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as exc:
-                log.error(f"Http Error occurred in get_crl request: {exc}")
-                return None
-            except requests.exceptions.ConnectionError as exc:
-                log.error(f"Connection Error occurred in get_crl request: {exc}")
-                return None
-            except requests.exceptions.Timeout as exc:
-                log.error(f"Timeout Error occurred in get_crl request: {exc}")
-                return None
+                response = retry_call.__call__(make_request)
             except requests.exceptions.RequestException as exc:
-                log.error(f"Error occurred in get_crl request: {exc}")
                 return None
-            crl_obj = x509.load_der_x509_crl(response.content, default_backend())
-            return crl_obj
-        return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+
+            if response == None:
+                return None
+            return response
 
     def verify_crl(self, crl, leaf_cert, ca_cert):
         """This Function verify certificate against crl object
@@ -294,7 +370,7 @@ class ITAConnector:
         if kid is None:
             log.error("Missing key id in token")
             return None
-        log.debug("kid : %s ", kid)
+        log.debug(f"kid : {kid}")
 
         # Get the JWT Signing Certificates from Intel Trust Authority
         jwks = self.get_token_signing_certificates()
@@ -355,7 +431,7 @@ class ITAConnector:
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
         inter_ca_crl_url = cdp_list.value[0].full_name[0].value
-        log.debug("inter ca crl url : %s", inter_ca_crl_url)
+        log.debug(f"inter ca crl url : {inter_ca_crl_url}")
         root_crl_obj = self.get_crl(inter_ca_crl_url)
         if root_crl_obj == None:
             log.error("Failed to get ROOT CA CRL Object")
@@ -368,7 +444,7 @@ class ITAConnector:
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
         leaf_crl_url = cdp_list.value[0].full_name[0].value
-        log.debug("leaf crl url : %s", leaf_crl_url)
+        log.debug(f"leaf crl url : {leaf_crl_url}")
         intermediate_ca_crl_obj = self.get_crl(leaf_crl_url)
         if intermediate_ca_crl_obj == None:
             log.error("Failed to get INTERMEDIATE CA CRL Object")
@@ -425,46 +501,71 @@ class ITAConnector:
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
-        url = urljoin(self.cfg.base_url, "certs")
-        http_proxy = os.getenv(constants.HTTP_PROXY)
-        https_proxy = os.getenv(constants.HTTPS_PROXY)
-        proxies = {"http": http_proxy, "https": https_proxy}
-        headers = {
-            "Accept": "application/json",
-        }
-        log.debug("Making request to get_token_signing_certificates() url : %s", url)
+
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+
+        def make_request():
+            url = urljoin(self.cfg.base_url, "certs")
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
+            headers = {
+                "Accept": "application/json",
+            }
+            log.debug(f"Making request to get_token_signing_certificates() url : {url}")
+            try:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    proxies=proxies,
+                )
+
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(
+                    f"Http Error occurred in get_token_signing_certificates request: {exc}"
+                )
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(
+                    f"Connection Error occurred in get_token_signing_certificates request: {exc}"
+                )
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(
+                    f"Timeout Error occurred in get_token_signing_certificates request: {exc}"
+                )
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(
+                    f"Error occurred in get_token_signing_certificates request: {exc}"
+                )
+                return None
+            return response
+
         try:
-            response = requests.get(
-                url,
-                headers=headers,
-                proxies=proxies,
-                timeout=self.cfg.retry_cfg.retry_wait_time,
-            )
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as exc:
-            log.error(
-                f"Http Error occurred in get_token_signing_certificates request: {exc}"
-            )
-            return None
-        except requests.exceptions.ConnectionError as exc:
-            log.error(
-                f"Connection Error occurred in get_token_signing_certificates request: {exc}"
-            )
-            return None
-        except requests.exceptions.Timeout as exc:
-            log.error(
-                f"Timeout Error occurred in get_token_signing_certificates request: {exc}"
-            )
-            return None
+            response = retry_call.__call__(make_request)
         except requests.exceptions.RequestException as exc:
-            log.error(
-                f"Error occurred in get_token_signing_certificates request: {exc}"
-            )
+            return None
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
             return None
         log.debug(
-            "get_token_signing_certificates() response status code :%d",
-            response.status_code,
+            f"get_token_signing_certificates() response status code :{response.status_code}"
         )
+
+        if response == None:
+            return None
+
         jwks = response.content
         return jwks
 
@@ -481,10 +582,10 @@ class ITAConnector:
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
-            log.debug("Get Nonce request failed")
+            log.error("Get Nonce request failed")
             return None
         log.info("Nonce Retrieved Successfully")
-        log.debug("Nonce : %s", nonce_resp.nonce)
+        log.debug(f"Nonce : {nonce_resp.nonce}")
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
         concatenated_nonce = decoded_val + decoded_iat

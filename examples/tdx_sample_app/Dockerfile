@@ -21,11 +21,6 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
-#Adding proxy
-ARG PROXY_URL
-ENV HTTPS_PROXY=$PROXY_URL
-env https_proxy="http://proxy-us.intel.com:911"
-
 # Install system dependencies
 RUN  apt-get update; \
     apt-get upgrade -y; \
