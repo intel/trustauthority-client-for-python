@@ -58,7 +58,7 @@ class VerifierNonce:
 class AttestArgs:
     """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
 
-    adapter: TDXAdapter
+    adapter: EvidenceAdapter
     request_id: Optional[str] = None
     policy_ids: Optional[List[UUID]] = None
 
@@ -132,7 +132,7 @@ class ITAConnector:
         )
 
         def make_request():
-            url = urljoin(self.cfg.api_url, "appraisal/v1/nonce")
+            url = urljoin(self.cfg.api_url, self.nonce_url)
             log.info(f"get_nonce() http request url: {url}")
             headers = {
                 "x-api-key": self.cfg.api_key,
@@ -210,7 +210,7 @@ class ITAConnector:
         )
 
         def make_request():
-            url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
+            url = urljoin(self.cfg.api_url, self.token_url)
             encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
             headers = {
                 "x-Api-Key": self.cfg.api_key,
@@ -586,6 +586,8 @@ class ITAConnector:
                     log.error(f"Invalid policy UUID :{uuid_str}")
                     return None
         response = AttestResponse
+        self.nonce_url = args.adapter.ita_url().get("get_nonce_url")
+        self.token_url = args.adapter.ita_url().get("get_token_url")
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
             log.error("Get Nonce request failed")

@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from src.resources import logging as logger
 from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
+from src.tdx.azure_adapter import AzureAdapter
 from src.connector import config, connector
 
 def main():
@@ -86,7 +87,11 @@ def main():
     ita_connector = connector.ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
-    adapter = TDXAdapter(user_data)
+    adapter_type = os.getenv(const.ADAPTER_TYPE)
+    if(adapter_type == "INTEL-TDX"):
+        adapter = TDXAdapter(user_data)
+    if(adapter_type == "AZURE-TDX"):
+        adapter = AzureAdapter(user_data)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
         attest_args = connector.AttestArgs(
