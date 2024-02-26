@@ -15,5 +15,6 @@ services:
       args:
         - UBUNTU_VERSION=${UBUNTU_VERSION}
         - DCAP_VERSION=${DCAP_VERSION}
+        - ADAPTER=${ADAPTER}
     env_file:
       - ../.env

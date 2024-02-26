@@ -87,7 +87,7 @@ def main():
     ita_connector = connector.ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
-    adapter_type = os.getenv(const.ADAPTER_TYPE)
+    adapter_type = os.getenv("adapter_type")
     if(adapter_type == const.INTEL_TDX_ADAPTER):
         adapter = TDXAdapter(user_data)
     if(adapter_type == const.AZURE_TDX_ADAPTER):
