@@ -21,6 +21,7 @@ cryptography = "^42.0.2"
 pyjwt = "^2.8.0"
 tenacity = "^8.2.3"
 coverage = "^7.4.2"
+pytest = "^8.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
