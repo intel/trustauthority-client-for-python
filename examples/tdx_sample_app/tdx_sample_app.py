@@ -88,9 +88,9 @@ def main():
     # Create TDX Adapter
     user_data = "data generated inside tee"
     adapter_type = os.getenv(const.ADAPTER_TYPE)
-    if(adapter_type == "INTEL-TDX"):
+    if(adapter_type == const.INTEL_TDX_ADAPTER):
         adapter = TDXAdapter(user_data)
-    if(adapter_type == "AZURE-TDX"):
+    if(adapter_type == const.AZURE_TDX_ADAPTER):
         adapter = AzureAdapter(user_data)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
