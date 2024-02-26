@@ -46,10 +46,18 @@ class TDXAdapter(EvidenceAdapter):
         try:
             # Load the SGX DCAP library
             c_lib = ctypes.CDLL("libtdx_attest.so")
+        except FileNotFoundError as e:
+            log.exception(
+                f"Caught Exception in loading the libtdx_attest.so library: {e}"
+            )
+            return None
         except OSError as e:
             log.exception(
                 f"Caught Exception in loading the libtdx_attest.so library: {e}"
             )
+            return None
+        except Exception as e:
+            log.exception(f"Caught Exception in loading the libtdx_attest.so library: {e}")
             return None
 
         try:

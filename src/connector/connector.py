@@ -6,6 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import base64
 import json
+import uuid
 import jwt
 import os
 import http
@@ -196,6 +197,11 @@ class ITAConnector:
         Returns:
             GetTokenResponse: object to GetTokenResponse class
         """
+        if args.policy_ids != None:
+            for uuid_str in args.policy_ids:
+                if not validate_uuid(uuid_str):
+                    log.error(f"Invalid policy UUID :{uuid_str}")
+                    return None
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
             wait=self.cfg.retry_cfg.backoff,
@@ -574,6 +580,11 @@ class ITAConnector:
         Returns:
             AttestResponse: Instance of AttestResponse class
         """
+        if args.policy_ids != None:
+            for uuid_str in args.policy_ids:
+                if not validate_uuid(uuid_str):
+                    log.error(f"Invalid policy UUID :{uuid_str}")
+                    return None
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
@@ -597,3 +608,10 @@ class ITAConnector:
         response.token = token_resp.token
         response.headers = token_resp.headers
         return response
+    
+def validate_uuid(uuid_str):
+    try:
+        uuid.UUID(uuid_str)
+        return True
+    except ValueError:
+        return False

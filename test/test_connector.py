@@ -18,7 +18,7 @@ def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
     retryConfig = RetryConfig(2, 2, 2)
     config = Config(
-        retryConfig, "http://localhost:8080", "http://localhost:8080", "apikey"
+        retryConfig, "https://custom-base-url-ITA.com", "https://custom-api-url-ITA.com", "apikey"
     )
     ita_connector = ITAConnector(config)
     return ita_connector
@@ -116,6 +116,14 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
             assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_invalid_policyid(self):
+        """Test method to test get_token() with Invalid UUID's"""
+        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
+        evidence_params = Evidence(0, b"quotedata", "", "")
+        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, ["1234-5678"], "1234")
+        token = self.ita_c.get_token(tokenargs)
+        assert token is None
 
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
@@ -354,6 +362,12 @@ class ConnectorTestCase(unittest.TestCase):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
                     assert decoded_token != None
+    
+    def test_attest_invalid_policyid(self):
+        """Test method to test attest() with Invalid policyid"""
+        attest_args = AttestArgs(TDXAdapter(""), "", ["1234-5678"])
+        decoded_token = self.ita_c.attest(attest_args)
+        assert decoded_token == None
 
     def test_attest_empty_nonce(self):
         """Test method to test attest() with empty Nonce"""

@@ -33,6 +33,12 @@ class TDXAdapterTestCase(unittest.TestCase):
                     evidence = tdx_adapter.collect_evidence("")
                     assert evidence != None
 
+    def test_adpater_file_notfound_error(self):
+        """Test method to test TDX Adapter with File Not found Error"""
+        tdx_adapter = adapter_object()
+        evidence = tdx_adapter.collect_evidence()
+        assert evidence == None
+
     def test_adpater_dcap_load_error(self):
         """Test method to test TDX Adapter with raising Dcap Load Error"""
         tdx_adapter = adapter_object()
@@ -43,6 +49,23 @@ class TDXAdapterTestCase(unittest.TestCase):
         with patch.object(ctypes, "CDLL", new=mock_cdll):
             evidence = tdx_adapter.collect_evidence()
             assert evidence == None
+
+    # def test_adapter_dcap_load_error(self):
+    #     """Test method to test TDX Adapter with raising Dcap Load Error"""
+    #     tdx_adapter = adapter_object()
+
+    #     # Define a mock function for tdx_att_get_quote that returns 0
+    #     def mock_tdx_att_get_quote(tdx_report, _, __, tdx_uuid, quote_buffer, quote_size, ___):
+    #         return 0
+
+    #     # Patch the CDLL constructor to return None
+    #     with patch('ctypes.CDLL', return_value=None):
+    #         # Patch the tdx_att_get_quote function to return 0
+    #         with patch('ctypes.CDLL.tdx_att_get_quote', new=mock_tdx_att_get_quote):
+    #             evidence = tdx_adapter.collect_evidence()
+
+    #     # Assert that the evidence is None
+    #     self.assertIsNone(evidence)
 
     def test_adpater_memory_error(self):
         """Test method to test TDX Adapter with raising Memory Error"""

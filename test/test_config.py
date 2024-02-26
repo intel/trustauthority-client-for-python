@@ -22,17 +22,36 @@ class ConfigTestCase(unittest.TestCase):
         """Test method to test config object initialisation"""
         config_obj = Config(
             RetryConfig(2, 2, 2),
-            "https://custom-base-url/api/v1",
-            "https://custom-api-url/api/v1",
+            "https://custom-base-url-ITA.com",
+            "https://custom-api-url-ITA.com",
             "apikey",
         )
         self.assertEqual(config_obj.get_api_key(), "apikey")
-        self.assertEqual(config_obj.get_api_url(), "https://custom-api-url/api/v1")
-        self.assertEqual(config_obj.get_base_url(), "https://custom-base-url/api/v1")
+        self.assertEqual(config_obj.get_api_url(), "https://custom-api-url-ITA.com")
+        self.assertEqual(config_obj.get_base_url(), "https://custom-base-url-ITA.com")
         self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_wait_max_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_max_num, 2)
 
+    def test_config_invalid_baseurl(self):
+        """Test method to test config object initialisation with Invalid Base URL"""
+        with self.assertRaises(ValueError):
+            config_obj = Config(
+                RetryConfig(2, 2, 2),
+                "httpa://custom-base-url-ITA.com",
+                "https://custom-api-url-ITA.com",
+                "apikey",
+            )
+
+    def test_config_invalid_apiurl(self):
+        """Test method to test config object initialisation with Invalid API URL"""
+        with self.assertRaises(ValueError):
+            config_obj = Config(
+                RetryConfig(2, 2, 2),
+                "https://custom-base-url-ITA.com",
+                "httpa://custom-api-url-ITA.com",
+                "apikey",
+            )
 
 if __name__ == "__main__":
     unittest.main()
