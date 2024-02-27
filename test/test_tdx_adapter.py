@@ -50,22 +50,29 @@ class TDXAdapterTestCase(unittest.TestCase):
             evidence = tdx_adapter.collect_evidence()
             assert evidence == None
 
-    # def test_adapter_dcap_load_error(self):
-    #     """Test method to test TDX Adapter with raising Dcap Load Error"""
-    #     tdx_adapter = adapter_object()
+    def test_adapter_free_quote_error(self):
+        """Test method to test TDX Adapter with raising freeing quote error"""
+        tdx_adapter = adapter_object()
+        mock_cdll = MagicMock()
+        mock_method_get_quote = MagicMock()
+        mock_method_get_quote.argtypes = [
+            ctypes.POINTER(tdx_report_data_t),
+            ctypes.POINTER(tdx_uuid_t),
+            ctypes.c_uint32,
+            ctypes.POINTER(tdx_uuid_t),
+            ctypes.POINTER(ctypes.POINTER(ctypes.c_uint8)),
+            ctypes.POINTER(ctypes.c_uint32),
+            ctypes.c_uint32,
+        ]
+        mock_cdll.tdx_att_get_quote = mock_method_get_quote
+        mock_cdll.tdx_att_get_quote.return_value = 0
+        mock_method_free_quote = MagicMock()
+        mock_cdll.tdx_att_free_quote = mock_method_free_quote
+        mock_cdll.tdx_att_free_quote.return_value = 1
 
-    #     # Define a mock function for tdx_att_get_quote that returns 0
-    #     def mock_tdx_att_get_quote(tdx_report, _, __, tdx_uuid, quote_buffer, quote_size, ___):
-    #         return 0
-
-    #     # Patch the CDLL constructor to return None
-    #     with patch('ctypes.CDLL', return_value=None):
-    #         # Patch the tdx_att_get_quote function to return 0
-    #         with patch('ctypes.CDLL.tdx_att_get_quote', new=mock_tdx_att_get_quote):
-    #             evidence = tdx_adapter.collect_evidence()
-
-    #     # Assert that the evidence is None
-    #     self.assertIsNone(evidence)
+        with unittest.mock.patch('ctypes.CDLL', return_value=mock_cdll):
+            evidence = tdx_adapter.collect_evidence()
+        assert evidence != None
 
     def test_adpater_memory_error(self):
         """Test method to test TDX Adapter with raising Memory Error"""
