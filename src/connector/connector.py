@@ -608,10 +608,15 @@ class ITAConnector:
         response.token = token_resp.token
         response.headers = token_resp.headers
         return response
-    
+
+
 def validate_uuid(uuid_str):
     try:
         uuid.UUID(uuid_str)
         return True
-    except ValueError:
+    except ValueError as exc:
+        log.error(f"ValueError occurred in UUID check request: {exc}")
+        return False
+    except TypeError as exc:
+        log.error(f"TypeError occurred in UUID check request: {exc}")
         return False

@@ -85,6 +85,7 @@ class RetryConfig:
         retryable_status_code = (500, 503, 504)
         return status_code in retryable_status_code
 
+
 def validate_url(url):
     parsed_url = validators.url(url)
     if parsed_url:

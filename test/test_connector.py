@@ -18,7 +18,10 @@ def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
     retryConfig = RetryConfig(2, 2, 2)
     config = Config(
-        retryConfig, "https://custom-base-url-ITA.com", "https://custom-api-url-ITA.com", "apikey"
+        retryConfig,
+        "https://custom-base-url-ITA.com",
+        "https://custom-api-url-ITA.com",
+        "apikey",
     )
     ita_connector = ITAConnector(config)
     return ita_connector
@@ -362,7 +365,7 @@ class ConnectorTestCase(unittest.TestCase):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
                     assert decoded_token != None
-    
+
     def test_attest_invalid_policyid(self):
         """Test method to test attest() with Invalid policyid"""
         attest_args = AttestArgs(TDXAdapter(""), "", ["1234-5678"])

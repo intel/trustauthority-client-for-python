@@ -26,8 +26,7 @@ def main():
     try:
         logger.setup_logging()
     except ValueError as e:
-        log.exception(f"Exception: {type(e).__name__}: {e}")
-        log.exception(f"Exception while setting up log: {e}")
+        log.exception(f"Exception while setting up log : {type(e).__name__}: {e}")
         exit(1)
 
     # get all the environment variables

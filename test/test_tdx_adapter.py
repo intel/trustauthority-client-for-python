@@ -70,7 +70,7 @@ class TDXAdapterTestCase(unittest.TestCase):
         mock_cdll.tdx_att_free_quote = mock_method_free_quote
         mock_cdll.tdx_att_free_quote.return_value = 1
 
-        with unittest.mock.patch('ctypes.CDLL', return_value=mock_cdll):
+        with unittest.mock.patch("ctypes.CDLL", return_value=mock_cdll):
             evidence = tdx_adapter.collect_evidence()
         assert evidence != None
 

@@ -53,5 +53,6 @@ class ConfigTestCase(unittest.TestCase):
                 "apikey",
             )
 
+
 if __name__ == "__main__":
     unittest.main()
