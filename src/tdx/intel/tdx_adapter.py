@@ -139,5 +139,5 @@ class TDXAdapter(EvidenceAdapter):
             log.exception(f"Caught Exception: {e}")
             return None
     
-    def ita_url():
+    def ita_url(self):
         return {"get_nonce_url":"appraisal/v1/nonce","get_token_url":"/appraisal/v1/attest"}

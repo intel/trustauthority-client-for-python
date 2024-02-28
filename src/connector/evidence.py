@@ -8,7 +8,9 @@ SPDX-License-Identifier: BSD-3-Clause
 class Evidence:
     """Contains the attributes to be sent for attestation of platform."""
 
-    def __init__(self, type:int, quote:bytearray, user_data:bytearray, event_log:bytearray) -> None:
+    def __init__(
+        self, type: int, quote: bytearray, user_data: bytearray, event_log: bytearray
+    ) -> None:
         self._type = type
         self._quote = quote
         self._user_data = user_data

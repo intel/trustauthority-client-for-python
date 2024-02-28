@@ -39,7 +39,7 @@ class GetNonceArgs:
 
 @dataclass
 class GetNonceResponse:
-    """GetNonceResponse holds the response parameters recieved from nonce endpoint"""
+    """GetNonceResponse holds the response parameters received from nonce endpoint"""
 
     headers: str
     nonce: str
@@ -177,7 +177,7 @@ class ITAConnector:
         except Exception as exc:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
-        if response == None:
+        if response is None:
             return None
 
         nonce_data = response.json()
@@ -273,7 +273,7 @@ class ITAConnector:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
 
-        if response == None:
+        if response is None:
             return None
         return GetTokenResponse(response.json().get("token"), str(response.headers))
 
@@ -331,7 +331,7 @@ class ITAConnector:
                 log.error(f"Error occurred in get_token request: {exc}")
                 return None
 
-            if response == None:
+            if response is None:
                 return None
             return response
 
@@ -401,6 +401,7 @@ class ITAConnector:
             )
             return None
 
+        # Get Root, Intermediate and Leaf certificates from x5c Token signing certificates list
         root = []
         intermediate = []
         leaf_cert = None
@@ -431,6 +432,7 @@ class ITAConnector:
             else:
                 leaf_cert = cert_data
 
+        # Validate Intermediate CA Certificate against Root CA CRL
         cdp_list = inter_ca_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
@@ -444,6 +446,7 @@ class ITAConnector:
             log.error("Failed to check Intermediate CA Certificate against Root CA CRL")
             return None
 
+        # Validate Leaf certificate against Intermediate CA CRL
         cdp_list = leaf_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
@@ -487,7 +490,8 @@ class ITAConnector:
         )
 
         try:
-            jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
+            # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
+            decoded_token = jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
         except jwt.ExpiredSignatureError:
             log.error("Attestation Token has expired.")
             return None
@@ -499,9 +503,7 @@ class ITAConnector:
             return None
         else:
             log.debug("Attestation Token Verification Successful")
-            return jwt.decode(
-                token, leaf_cert.public_key(), unverified_headers.get("alg")
-            )
+            return decoded_token
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
@@ -564,7 +566,7 @@ class ITAConnector:
             log.error(f"Error occurred in get_token request: {exc}")
             return None
 
-        if response == None:
+        if response is None:
             return None
 
         jwks = response.json()

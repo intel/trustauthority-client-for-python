@@ -23,5 +23,5 @@ class AzureAdapter(EvidenceAdapter):
     def collect_evidence(self, nonce=None) -> Evidence:
         return None
     
-    def ita_url():
+    def ita_url(self):
         return {"get_nonce_url":"appraisal/v1/nonce","get_token_url":"/appraisal/v1/attest/azure/azure/tdxvm"}

@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import validators
 import logging as log
 from tenacity import wait_exponential
-from src.resources import constants as constants
+from src.resources import constants
 
 
 class Config:
@@ -28,24 +28,30 @@ class Config:
             raise ValueError("validate_url() failed for Intel Trust Authority Base URL")
         if not validate_url(api_url):
             raise ValueError("validate_url() failed for Intel Trust Authority API URL")
-        self.base_url = base_url
-        self.api_url = api_url
-        self.retry_cfg = retry_cfg
-        self.api_key = api_key
+        self._base_url = base_url
+        self._api_url = api_url
+        self._retry_cfg = retry_cfg
+        self._api_key = api_key
 
-    # getter methods
-    def get_base_url(self):
-        return self.base_url
-
-    def get_retry_cfg(self):
-        return self.retry_cfg
-
-    def get_api_url(self):
-        return self.api_url
-
-    def get_api_key(self):
-        return self.api_key
-
+    @property
+    def base_url(self):
+        """Getter method."""
+        return self._base_url
+    
+    @property
+    def retry_cfg(self):
+        """Getter method."""
+        return self._retry_cfg
+    
+    @property
+    def api_url(self):
+        """Getter method."""
+        return self._api_url
+    
+    @property
+    def api_key(self):
+        """Getter method."""
+        return self._api_key
 
 class RetryConfig:
     """This class creates Retry Config object with retry max and retry wait time attributes"""

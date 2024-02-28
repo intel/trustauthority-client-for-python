@@ -26,9 +26,9 @@ class ConfigTestCase(unittest.TestCase):
             "https://custom-api-url-ITA.com",
             "apikey",
         )
-        self.assertEqual(config_obj.get_api_key(), "apikey")
-        self.assertEqual(config_obj.get_api_url(), "https://custom-api-url-ITA.com")
-        self.assertEqual(config_obj.get_base_url(), "https://custom-base-url-ITA.com")
+        self.assertEqual(config_obj.api_key, "apikey")
+        self.assertEqual(config_obj.api_url, "https://custom-api-url-ITA.com")
+        self.assertEqual(config_obj.base_url, "https://custom-base-url-ITA.com")
         self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_wait_max_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_max_num, 2)
