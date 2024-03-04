@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
 from src.connector.evidence import Evidence
 from src.resources import constants as constants
-from src.tdx.tdx_adapter import TDXAdapter
+from src.tdx.intel.tdx_adapter import TDXAdapter
 
 
 @dataclass

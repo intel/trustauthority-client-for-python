@@ -22,7 +22,7 @@ class tdx_uuid_t(ctypes.Structure):
 
 
 class TDXAdapter(EvidenceAdapter):
-    """This class creates adapter which collects TDX Quote from TDX platform."""
+    """This class creates adapter which collects TDX Quote from Intel TDX platform."""
 
     def __init__(self, user_data=None, event_log_parser=None) -> None:
         """Initializes tdx adapter object
@@ -38,7 +38,7 @@ class TDXAdapter(EvidenceAdapter):
         """This Function calls DCAP libraries to get TDX quote.
 
         Args:
-            nonce ([]byte]): optional nonce provided by ITA
+            nonce ([]byte]): optional nonce provided by Intel Trust Authority
 
         Returns:
             evidence: object to Evidence class
