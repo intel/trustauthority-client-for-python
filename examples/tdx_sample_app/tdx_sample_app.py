@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from src.resources import logger as logger
 from src.resources import constants as const
 from src.tdx.intel.tdx_adapter import TDXAdapter
-from src.tdx.azure_adapter import AzureTDXAdapter
+from src.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
 from src.connector import config, connector
 from src.base.evidence_adapter import EvidenceAdapter
 
