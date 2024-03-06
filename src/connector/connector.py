@@ -90,14 +90,26 @@ class GetTokenResponse:
 
 
 @dataclass
-class TokenRequest:
-    """TokenRequest holds all the data required for attestation"""
+class IntelTDXTokenRequest:
+    """TokenRequest holds all the data required for Intel TDX attestation"""
 
     quote: bytearray  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    runtime_data: str  #'json:"runtime_data"'
+    user_data: str  #'json:"runtime_data"'
+    runtime_data: str = None #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
+
+
+@dataclass
+class AzureTDXTokenRequest:
+    """TokenRequest holds all the data required for Azure TDX attestation"""
+
+    quote: str  #'json:"quote"'
+    verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
+    user_data: str  #'json:"runtime_data"'
+    runtime_data: str = None #'json:"runtime_data"'
+    policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
 
 
 class ITAConnector:
@@ -132,7 +144,7 @@ class ITAConnector:
         )
 
         def make_request():
-            url = urljoin(self.cfg.api_url, self.nonce_url)
+            url = urljoin(self.cfg.api_url, constants.NONCE_URL)
             log.info(f"get_nonce() http request url: {url}")
             headers = {
                 "x-api-key": self.cfg.api_key,
@@ -210,15 +222,29 @@ class ITAConnector:
         )
 
         def make_request():
-            url = urljoin(self.cfg.api_url, self.token_url)
-            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
             headers = {
                 "x-Api-Key": self.cfg.api_key,
                 "Accept": "application/json",
                 "Content-Type": "application/json",
                 "Request-Id": args.request_id,
             }
-            token_req = TokenRequest(
+            if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
+                url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
+                token_req = AzureTDXTokenRequest(
+                    quote=args.evidence.quote,
+                    verifier_nonce=VerifierNonce(
+                        args.nonce.val, args.nonce.iat, args.nonce.signature
+                    ).__dict__,
+                    user_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                        "utf-8"
+                    ),
+                    runtime_data=None if args.evidence.runtime_data is None else base64.b64encode(args.evidence.runtime_data).decode("utf-8"),
+                    policy_ids=args.policy_ids,
+                )
+            if args.evidence.adapter_type == constants.INTEL_TDX_ADAPTER:
+                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
+                encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
+                token_req = IntelTDXTokenRequest(
                 quote=encoded_quote,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
@@ -228,7 +254,7 @@ class ITAConnector:
                 ),
                 policy_ids=args.policy_ids,
                 event_log=args.evidence.event_log,
-            )
+                )
             body = token_req.__dict__
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
@@ -588,8 +614,6 @@ class ITAConnector:
                     log.error(f"Invalid policy UUID :{uuid_str}")
                     return None
         response = AttestResponse
-        self.nonce_url = args.adapter.ita_url().get("get_nonce_url")
-        self.token_url = args.adapter.ita_url().get("get_token_url")
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
             log.error("Get Nonce request failed")
@@ -602,7 +626,7 @@ class ITAConnector:
         evidence = args.adapter.collect_evidence(concatenated_nonce)
         if evidence == None:
             return None
-        log.info("Quote : %s", base64.b64encode(evidence.quote).decode())
+        log.info("Quote : %s", evidence.quote)
         token_resp = self.get_token(
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id)
         )

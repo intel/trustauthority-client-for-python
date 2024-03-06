@@ -117,7 +117,7 @@ class TDXAdapter(EvidenceAdapter):
                 log.error(f"Error: tdx_att_free_quote failed with result {ret}")
 
             # Create evidence class object to be returned
-            tdx_evidence = Evidence(1, quote, self.user_data, None)
+            tdx_evidence = Evidence(1, quote, self.user_data, None, None, const.INTEL_TDX_ADAPTER)
             return tdx_evidence
 
         except MemoryError as e:
@@ -138,6 +138,3 @@ class TDXAdapter(EvidenceAdapter):
         except Exception as e:
             log.exception(f"Caught Exception: {e}")
             return None
-    
-    def ita_url(self):
-        return {"get_nonce_url":"appraisal/v1/nonce","get_token_url":"/appraisal/v1/attest"}

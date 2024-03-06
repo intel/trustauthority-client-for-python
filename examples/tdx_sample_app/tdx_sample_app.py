@@ -17,8 +17,10 @@ from urllib.parse import urlparse
 from src.resources import logger as logger
 from src.resources import constants as const
 from src.tdx.tdx_adapter import TDXAdapter
-from src.tdx.azure_adapter import AzureAdapter
+from src.tdx.azure_adapter import AzureTDXAdapter
 from src.connector import config, connector
+from src.base.evidence_adapter import EvidenceAdapter
+
 
 def main():
     """Sample App to generate evidence, attest the platform and get the token from ITA."""
@@ -87,11 +89,12 @@ def main():
     ita_connector = connector.ITAConnector(config_obj)
     # Create TDX Adapter
     user_data = "data generated inside tee"
-    adapter_type = os.getenv("adapter_type")
+    adapter_type = os.getenv("ADAPTER_TYPE")
+    adapter = None
     if(adapter_type == const.INTEL_TDX_ADAPTER):
         adapter = TDXAdapter(user_data)
     if(adapter_type == const.AZURE_TDX_ADAPTER):
-        adapter = AzureAdapter(user_data)
+        adapter = AzureTDXAdapter(user_data)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
         attest_args = connector.AttestArgs(

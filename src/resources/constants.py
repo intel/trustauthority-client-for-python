@@ -20,3 +20,8 @@ HTTP_PROXY = "ENV_HTTP_PROXY"
 HTTPS_PROXY = "ENV_HTTPS_PROXY"
 INTEL_TDX_ADAPTER = "INTEL-TDX"
 AZURE_TDX_ADAPTER = "AZURE-TDX"
+
+# Intel Trust Authority URLs
+NONCE_URL = "appraisal/v1/nonce"
+AZURE_TDX_ATTEST_URL = "appraisal/v1/attest/azure/tdxvm"
+INTEL_TDX_ATTEST_URL = "appraisal/v1/attest"
