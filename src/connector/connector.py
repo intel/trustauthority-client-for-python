@@ -95,7 +95,6 @@ class IntelTDXTokenRequest:
 
     quote: bytearray  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    user_data: str  #'json:"runtime_data"'
     runtime_data: str = None #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
@@ -245,15 +244,15 @@ class ITAConnector:
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
                 encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
                 token_req = IntelTDXTokenRequest(
-                quote=encoded_quote,
-                verifier_nonce=VerifierNonce(
-                    args.nonce.val, args.nonce.iat, args.nonce.signature
-                ).__dict__,
-                runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
-                    "utf-8"
-                ),
-                policy_ids=args.policy_ids,
-                event_log=args.evidence.event_log,
+                    quote=encoded_quote,
+                    verifier_nonce=VerifierNonce(
+                        args.nonce.val, args.nonce.iat, args.nonce.signature
+                    ).__dict__,
+                    runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                        "utf-8"
+                    ),
+                    policy_ids=args.policy_ids,
+                    event_log=args.evidence.event_log,
                 )
             body = token_req.__dict__
             http_proxy = os.getenv(constants.HTTP_PROXY)
