@@ -11,7 +11,7 @@ import requests
 from unittest.mock import patch, MagicMock
 from src.connector.connector import *
 from src.connector.config import *
-from src.tdx.tdx_adapter import TDXAdapter
+from src.tdx.intel.tdx_adapter import TDXAdapter
 
 
 def get_connector():

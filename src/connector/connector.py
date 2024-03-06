@@ -24,6 +24,7 @@ from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from src.base.evidence_adapter import EvidenceAdapter
 
 from src.connector.evidence import Evidence
 from src.resources import constants as constants

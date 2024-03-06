@@ -15,6 +15,7 @@ import tempfile
 import os
 
 import logging as log
+import src.resources.constants as const
 from src.connector.evidence import Evidence
 from src.base.evidence_adapter import EvidenceAdapter
 
@@ -125,5 +126,5 @@ class AzureTDXAdapter:
         runtime_data = tpm_report[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET + r_size]
 
         # Create evidence class object to be returned
-        tdx_evidence = Evidence(1, quote, self.user_data, runtime_data, None)
+        tdx_evidence = Evidence(1, quote, self.user_data, runtime_data, None, const.AZURE_TDX_ADAPTER)
         return tdx_evidence
