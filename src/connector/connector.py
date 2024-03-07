@@ -91,26 +91,20 @@ class GetTokenResponse:
 
 
 @dataclass
-class IntelTDXTokenRequest:
-    """TokenRequest holds all the data required for Intel TDX attestation"""
-
-    quote: bytearray  #'json:"quote"'
-    verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    runtime_data: str  #'json:"runtime_data"'
-    policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
-    event_log: Optional[str] = None  #'json:"event_log"'
-
-
-@dataclass
-class AzureTDXTokenRequest:
-    """TokenRequest holds all the data required for Azure TDX attestation"""
+class TDXTokenRequest:
+    """TokenRequest holds all the data required for TDX attestation"""
 
     quote: str  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
     user_data: str  #'json:"runtime_data"'
     runtime_data: str  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
-
+    event_log: Optional[str] = None  #'json:"event_log"'
+    def __post_init__(self):
+        if self.event_log is None:
+            delattr(self, "event_log")
+        if self.runtime_data is None:
+            delattr(self, "runtime_data")
 
 class ITAConnector:
     """
@@ -230,7 +224,7 @@ class ITAConnector:
             }
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
-                token_req = AzureTDXTokenRequest(
+                token_req = TDXTokenRequest(
                     quote=args.evidence.quote,
                     verifier_nonce=VerifierNonce(
                         args.nonce.val, args.nonce.iat, args.nonce.signature
@@ -241,20 +235,23 @@ class ITAConnector:
                     runtime_data=None if args.evidence.runtime_data is None else base64.b64encode(args.evidence.runtime_data).decode("utf-8"),
                     policy_ids=args.policy_ids,
                 )
-            if args.evidence.adapter_type == constants.INTEL_TDX_ADAPTER:
+            elif args.evidence.adapter_type == constants.INTEL_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
                 encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-                token_req = IntelTDXTokenRequest(
+                token_req = TDXTokenRequest(
                     quote=encoded_quote,
                     verifier_nonce=VerifierNonce(
                         args.nonce.val, args.nonce.iat, args.nonce.signature
                     ).__dict__,
-                    runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                    user_data=base64.b64encode(args.evidence.user_data.encode()).decode(
                         "utf-8"
                     ),
                     policy_ids=args.policy_ids,
                     event_log=args.evidence.event_log,
                 )
+            else:
+                log.error("Invalid Adapter type")
+                exit(1)
             body = token_req.__dict__
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
