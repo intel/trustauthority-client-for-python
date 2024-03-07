@@ -90,11 +90,17 @@ def main():
     # Create TDX Adapter
     user_data = "data generated inside tee"
     adapter_type = os.getenv("ADAPTER_TYPE")
+    if adapter_type is None:
+        log.error("ADAPTER_TYPE is not set.")
+        exit(1)
     adapter = None
     if(adapter_type == const.INTEL_TDX_ADAPTER):
         adapter = TDXAdapter(user_data)
-    if(adapter_type == const.AZURE_TDX_ADAPTER):
+    elif(adapter_type == const.AZURE_TDX_ADAPTER):
         adapter = AzureTDXAdapter(user_data)
+    else:
+        log.error("Invalid Adapter Type Selected.")
+        exit(1)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
         attest_args = connector.AttestArgs(

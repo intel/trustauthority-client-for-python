@@ -96,7 +96,7 @@ class IntelTDXTokenRequest:
 
     quote: bytearray  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    runtime_data: str = None #'json:"runtime_data"'
+    runtime_data: str  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
 
@@ -108,7 +108,7 @@ class AzureTDXTokenRequest:
     quote: str  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
     user_data: str  #'json:"runtime_data"'
-    runtime_data: str = None #'json:"runtime_data"'
+    runtime_data: str  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
 
 
