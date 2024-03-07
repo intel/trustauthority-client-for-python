@@ -13,6 +13,7 @@ class EvidenceAdapter(ABC):
     Args:
         ABC (Abstract class object): Helper class that provides a standard way to create an ABC using inheritance.
     """
+
     @abstractmethod
     def collect_evidence(self, nonce):
         pass

@@ -58,7 +58,9 @@ class TDXAdapter(EvidenceAdapter):
             )
             return None
         except Exception as e:
-            log.exception(f"Caught Exception in loading the libtdx_attest.so library: {e}")
+            log.exception(
+                f"Caught Exception in loading the libtdx_attest.so library: {e}"
+            )
             return None
 
         try:
@@ -111,15 +113,19 @@ class TDXAdapter(EvidenceAdapter):
 
             # Fetch the quote from pointer passed to c library
             c_uint8_ptr = ctypes.cast(quote_buffer, ctypes.POINTER(ctypes.c_uint8))
-            quote = base64.b64encode(bytearray(c_uint8_ptr[: quote_size.value])).decode("utf-8")
+            quote = base64.b64encode(bytearray(c_uint8_ptr[: quote_size.value])).decode(
+                "utf-8"
+            )
             # Free the tdx quote from c memory
             ret = c_lib.tdx_att_free_quote(quote_buffer)
             if ret != 0:
                 log.error(f"Error: tdx_att_free_quote failed with result {ret}")
             log.info("Quote : %s", quote)
-            runtime_data=base64.b64encode(self.user_data.encode()).decode("utf-8")
+            runtime_data = base64.b64encode(self.user_data.encode()).decode("utf-8")
             # Create evidence class object to be returned
-            tdx_evidence = Evidence(1, quote, None, runtime_data, None, const.INTEL_TDX_ADAPTER)
+            tdx_evidence = Evidence(
+                1, quote, None, runtime_data, None, const.INTEL_TDX_ADAPTER
+            )
             return tdx_evidence
 
         except MemoryError as e:

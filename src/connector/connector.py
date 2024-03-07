@@ -91,7 +91,7 @@ class GetTokenResponse:
 
 
 @dataclass
-class TDXTokenRequest:
+class TokenRequest:
     """TokenRequest holds all the data required for TDX attestation"""
 
     quote: str  #'json:"quote"'
@@ -100,11 +100,13 @@ class TDXTokenRequest:
     runtime_data: str  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
+
     def __post_init__(self):
         if self.event_log is None:
             delattr(self, "event_log")
         if self.user_data is None:
             delattr(self, "user_data")
+
 
 class ITAConnector:
     """
@@ -229,7 +231,7 @@ class ITAConnector:
             else:
                 log.error("Invalid Adapter type")
                 exit(1)
-            token_req = TDXTokenRequest(
+            token_req = TokenRequest(
                 quote=args.evidence.quote,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
@@ -501,7 +503,9 @@ class ITAConnector:
 
         try:
             # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
-            decoded_token = jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
+            decoded_token = jwt.decode(
+                token, leaf_cert.public_key(), unverified_headers.get("alg")
+            )
         except jwt.ExpiredSignatureError:
             log.error("Attestation Token has expired.")
             return None

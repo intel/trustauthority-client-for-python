@@ -37,21 +37,22 @@ class Config:
     def base_url(self):
         """Getter method."""
         return self._base_url
-    
+
     @property
     def retry_cfg(self):
         """Getter method."""
         return self._retry_cfg
-    
+
     @property
     def api_url(self):
         """Getter method."""
         return self._api_url
-    
+
     @property
     def api_key(self):
         """Getter method."""
         return self._api_key
+
 
 class RetryConfig:
     """This class creates Retry Config object with retry max and retry wait time attributes"""

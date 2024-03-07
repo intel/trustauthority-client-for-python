@@ -26,7 +26,7 @@ RUNTIME_DATA_OFFSET = 1236
 
 
 class AzureTDXAdapter:
-    """ This class creates adapter which collects TDX Quote from Azure TDX platform."""
+    """This class creates adapter which collects TDX Quote from Azure TDX platform."""
 
     def __init__(self, user_data=None, event_log_parser=None) -> None:
         """Initializes azure tdx adapter object
@@ -47,7 +47,7 @@ class AzureTDXAdapter:
         Returns:
             evidence: object to Evidence class
         """
-        
+
         if nonce != None or self.user_data != None:
             sha512_hash = hashlib.sha512()
             if nonce != None:
@@ -125,8 +125,15 @@ class AzureTDXAdapter:
         )[0]
         runtime_data = tpm_report[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET + r_size]
         runtime_data_encoded = base64.b64encode(runtime_data).decode("utf-8")
-        log.info("Quote : %s", base64.b64encode(quote.encode('utf-8')).decode('utf-8'))
+        log.info("Quote : %s", base64.b64encode(quote.encode("utf-8")).decode("utf-8"))
         user_data_encoded = base64.b64encode(self.user_data.encode()).decode("utf-8")
         # Create evidence class object to be returned
-        tdx_evidence = Evidence(1, quote, user_data_encoded, runtime_data_encoded, None, const.AZURE_TDX_ADAPTER)
+        tdx_evidence = Evidence(
+            1,
+            quote,
+            user_data_encoded,
+            runtime_data_encoded,
+            None,
+            const.AZURE_TDX_ADAPTER,
+        )
         return tdx_evidence

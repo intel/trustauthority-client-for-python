@@ -22,19 +22,23 @@ class TDXAdapterTestCase(unittest.TestCase):
         tdx_adapter = adapter_object()
 
         class mock_class:
-            def __init__(self,stdout) -> None:
+            def __init__(self, stdout) -> None:
                 self.stdout = stdout
+
         def mock_subprocess_run(*args, **kwargs):
             return mock_class(b"abaghalsmolamskakakKaaa")
+
         with patch("hashlib.sha512") as mock_sha_hash:
             mock_sha_hash.update = None
             mock_sha_hash.digest = None
             with patch.object(subprocess, "run", new=mock_subprocess_run):
                 with patch("tempfile.NamedTemporaryFile") as mock_tempfile:
                     mock_tempfile.return_value.name = "mock"
-                    with patch("requests.post", url="http://169.254.169.254/acc/tdquote") as mock_post_request:
+                    with patch(
+                        "requests.post", url="http://169.254.169.254/acc/tdquote"
+                    ) as mock_post_request:
                         mocked_response = MagicMock()
-                        mocked_response.json.return_value = {"quote":"wwwwwww"}
+                        mocked_response.json.return_value = {"quote": "wwwwwww"}
                         mock_post_request.return_value = mocked_response
                         with patch("struct.unpack") as mock_unpack:
                             mock_unpack.return_value = [1]
@@ -46,22 +50,24 @@ class TDXAdapterTestCase(unittest.TestCase):
         tdx_adapter = adapter_object()
 
         def mock_subprocess_run(*args, **kwargs):
-            raise subprocess.CalledProcessError(cmd = "",returncode=1, output="Mock Error")
-        
+            raise subprocess.CalledProcessError(
+                cmd="", returncode=1, output="Mock Error"
+            )
+
         with patch("hashlib.sha512") as mock_sha_hash:
             mock_sha_hash.update = None
             mock_sha_hash.digest = None
             with patch.object(subprocess, "run", new=mock_subprocess_run):
                 evidence = tdx_adapter.collect_evidence("")
                 assert evidence == None
-    
+
     def test_adpater_subprocess_Exception(self):
         """Test method to test Azure TDX Adapter with raising subprocess Exception"""
         tdx_adapter = adapter_object()
 
         def mock_subprocess_run(*args, **kwargs):
             raise Exception("Mock Exception")
-        
+
         with patch("hashlib.sha512") as mock_sha_hash:
             mock_sha_hash.update = None
             mock_sha_hash.digest = None

@@ -9,7 +9,13 @@ class Evidence:
     """Contains the attributes to be sent for attestation of platform."""
 
     def __init__(
-        self, type: int, quote: bytearray, user_data: bytearray, runtime_data:bytearray ,event_log: bytearray ,adapter_type: str
+        self,
+        type: int,
+        quote: bytearray,
+        user_data: bytearray,
+        runtime_data: bytearray,
+        event_log: bytearray,
+        adapter_type: str,
     ) -> None:
         self._type = type
         self._quote = quote
@@ -36,7 +42,7 @@ class Evidence:
     def event_log(self):
         """Getter method."""
         return self._event_log
-    
+
     @property
     def runtime_data(self):
         """Getter method."""
