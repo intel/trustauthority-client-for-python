@@ -224,35 +224,21 @@ class ITAConnector:
             }
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
-                token_req = TDXTokenRequest(
-                    quote=args.evidence.quote,
-                    verifier_nonce=VerifierNonce(
-                        args.nonce.val, args.nonce.iat, args.nonce.signature
-                    ).__dict__,
-                    user_data=base64.b64encode(args.evidence.user_data.encode()).decode(
-                        "utf-8"
-                    ),
-                    runtime_data=None if args.evidence.runtime_data is None else base64.b64encode(args.evidence.runtime_data).decode("utf-8"),
-                    policy_ids=args.policy_ids,
-                )
             elif args.evidence.adapter_type == constants.INTEL_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
-                encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-                token_req = TDXTokenRequest(
-                    quote=encoded_quote,
-                    verifier_nonce=VerifierNonce(
-                        args.nonce.val, args.nonce.iat, args.nonce.signature
-                    ).__dict__,
-                    user_data=None,
-                    runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
-                        "utf-8"
-                    ),
-                    policy_ids=args.policy_ids,
-                    event_log=args.evidence.event_log,
-                )
             else:
                 log.error("Invalid Adapter type")
                 exit(1)
+            token_req = TDXTokenRequest(
+                quote=args.evidence.quote,
+                verifier_nonce=VerifierNonce(
+                    args.nonce.val, args.nonce.iat, args.nonce.signature
+                ).__dict__,
+                user_data=args.evidence.user_data,
+                runtime_data=args.evidence.runtime_data,
+                policy_ids=args.policy_ids,
+                event_log=args.evidence.event_log,
+            )
             body = token_req.__dict__
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
