@@ -103,8 +103,8 @@ class TDXTokenRequest:
     def __post_init__(self):
         if self.event_log is None:
             delattr(self, "event_log")
-        if self.runtime_data is None:
-            delattr(self, "runtime_data")
+        if self.user_data is None:
+            delattr(self, "user_data")
 
 class ITAConnector:
     """
@@ -243,7 +243,8 @@ class ITAConnector:
                     verifier_nonce=VerifierNonce(
                         args.nonce.val, args.nonce.iat, args.nonce.signature
                     ).__dict__,
-                    user_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                    user_data=None,
+                    runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
                         "utf-8"
                     ),
                     policy_ids=args.policy_ids,

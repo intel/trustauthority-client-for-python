@@ -29,8 +29,8 @@ RUN  apt-get update; \
 
 #Adding sgx repo to ubuntu focals
 ARG DCAP_VERSION
-ARG ADAPTER
-ENV ADAPTER_TYPE=${ADAPTER}
+ARG ADAPTER_TYPE
+ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list
 RUN curl https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -o /tmp/intel-sgx-deb.key; \
     apt-key add /tmp/intel-sgx-deb.key; \
