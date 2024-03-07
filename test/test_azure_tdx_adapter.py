@@ -11,7 +11,7 @@ from src.tdx.azure.azure_tdx_adapter import *
 
 def adapter_object():
     """This method initializes TDX Adapter object"""
-    return AzureTDXAdapter()
+    return AzureTDXAdapter("user_data")
 
 
 class TDXAdapterTestCase(unittest.TestCase):

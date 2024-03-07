@@ -11,7 +11,7 @@ from src.tdx.intel.tdx_adapter import *
 
 def adapter_object():
     """This method initializes TDX Adapter object"""
-    return TDXAdapter()
+    return TDXAdapter("user_data")
 
 
 class TDXAdapterTestCase(unittest.TestCase):
