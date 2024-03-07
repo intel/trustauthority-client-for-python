@@ -5,6 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 import ctypes
+import base64
 import hashlib
 import logging as log
 
@@ -115,7 +116,7 @@ class TDXAdapter(EvidenceAdapter):
             ret = c_lib.tdx_att_free_quote(quote_buffer)
             if ret != 0:
                 log.error(f"Error: tdx_att_free_quote failed with result {ret}")
-
+            log.info("Quote : %s", base64.b64encode(quote).decode())
             # Create evidence class object to be returned
             tdx_evidence = Evidence(1, quote, self.user_data, None, None, const.INTEL_TDX_ADAPTER)
             return tdx_evidence

@@ -124,7 +124,7 @@ class AzureTDXAdapter:
             "<I", tpm_report[RUNTIME_DATA_SIZE_OFFSET:RUNTIME_DATA_OFFSET]
         )[0]
         runtime_data = tpm_report[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET + r_size]
-
+        log.info("Quote : %s", base64.b64encode(quote.encode('utf-8')).decode('utf-8'))
         # Create evidence class object to be returned
         tdx_evidence = Evidence(1, quote, self.user_data, runtime_data, None, const.AZURE_TDX_ADAPTER)
         return tdx_evidence

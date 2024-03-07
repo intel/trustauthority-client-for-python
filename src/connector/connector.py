@@ -623,7 +623,6 @@ class ITAConnector:
         evidence = args.adapter.collect_evidence(concatenated_nonce)
         if evidence == None:
             return None
-        log.info("Quote : %s", evidence.quote)
         token_resp = self.get_token(
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id)
         )
