@@ -230,7 +230,7 @@ class ITAConnector:
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
             else:
                 log.error("Invalid Adapter type")
-                exit(1)
+                return None
             token_req = TokenRequest(
                 quote=args.evidence.quote,
                 verifier_nonce=VerifierNonce(
