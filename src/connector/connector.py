@@ -92,7 +92,7 @@ class GetTokenResponse:
 
 @dataclass
 class TokenRequest:
-    """TokenRequest holds all the data required for TDX attestation"""
+    """TokenRequest holds all the data required for attestation"""
 
     quote: str  #'json:"quote"'
     verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
