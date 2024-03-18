@@ -40,7 +40,7 @@ class ConnectorTestCase(unittest.TestCase):
     }
 
     mocked_token_response = {
-        "token": "eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXVCIsImtpZCI6IjNmZDc1MWYyZTBkMGY1Mjg0NmMwZWNkNDk3MmM2ZTk5ZGZjNjQyMDUxY2QzMzlkZDliMDQzODFhZjhjMGRkYjgwNDUxNGE3YTFmZWU0NjczYWM4NDRmZDVkYjdmMTVmYiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.Mj4nQgujHiGidoRBkCzVtU6V7RAxD8PxFEpcMWkHHuLe_ZHamT1Sqnpn21JxaT6todQ3L21LAOIKzua_Zcuy-g91UCd501RqGTYQMP2EfoEZYk5uuiNmT37VpPSXSLSiRKAaNzjidpmiaoFkvNgupl8OWKJ9__4CA3W_EAw60mWcbU95ApvQz8m1VWTIGR4si7XMt1qUaPdS7Ey446W6RzU1wr9OAWhnPDLgffKH6ORYLGriBR6gAgCda1tmjMC6WtBZcqr0ub8R7_cfMn8qUsyiOjrQfyjw_3feJ5ooYqofY7Vq6YCzjvw_GSDxq5Ircbsnrm--ggK8FIJ6f6H1EEfZ-kw9Unocbew2Bul2xIM1wyyXvRtL9NDWiiGTL-IEqLqTBm5UBFuZ2VmZA1au0X1HaMDEBSWwWoE31xzGhZd3mYWpbWV7sDnJpJIIkPfHrh-J0e_aUQZfqUFp5uksBClTO7OTqrnV1F_JJXV_BhKdzj1w_esojOIuyypuR2Awr9Rbdx_mtX0gEgN-Cg8eOB46xYDVx50HWMs1HsBki3LFl0bynkpMXRcIKdc8aQDTKv3O-Wvt0PQ6Vf_F0zKy6Nms7gLGsuCSGoNbAFwAu0NkMHMwOYSbeLK7ijyLnOBPv4UDmk6h1L4HopX5OPe1o2qwCWCGpcTPWsJARKqoKx4"
+        "token": "eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXVCIsImtpZCI6IjNmZDcnPDLgffKH6ORYLGriBR6gAgCda1tmjMC6WtBZcqr0ub8R7_cfMn8qUsyiOjrQfyjw_3feJ5ooYqofY7Vq6YCzjvw_GSDxq5Ircbsnrm--ggK8FIJ6f6H1EEfZ-kw9Unocbew2Bul2xIM1wyyXvRtL9NDWiiGTL-IEqLqTBm5UBFuZ2VmZA1au0X1HaMDEBSWwWoE31xzGhZd3mYWpbWV7sDnJpJIIkPfHrh-J0e_aUQZfqUFp5uksBClTO7OTqrnV1F_JJXV_BhKdzj1w_esojOIuyypuR2Awr9Rbdx_mtX0gEgN-Cg8eOB46xYDVx50HWMs1HsBki3LFl0bynkpMXRcIKdc8aQDTKv3O-Wvt0PQ6Vf_F0zKy6Nms7gLGsuCSGoNbAFwAu0NkMHMwOYSbeLK7ijyLnOBPv4UDmk6h1L4HopX5OPe1o2qwCWCGpcTPWsJARKqoKx4"
     }
 
     mocked_cert_data = {
@@ -233,110 +233,120 @@ class ConnectorTestCase(unittest.TestCase):
 
     def test_verify_token(self):
         """Test method to test verify_token() from Intel Trust Authority Connector"""
-        with patch("requests.get", url="certs") as mocked_certs_request:
-            mocked_certs_response = requests.Response()
-            mocked_certs_response.json = lambda: self.mocked_cert_data
-            mocked_certs_response.status_code = 200
-            mocked_certs_request.return_value = mocked_certs_response
-            with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
-                with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
-                    with patch(
-                        "cryptography.x509.Certificate.public_key"
-                    ) as mock_public_key:
-                        mock_verify = mock_public_key.return_value.verify
-                        mock_verify.return_value = True
-                        with patch("jwt.decode") as mock_decode:
-                            mock_decode.return_value = None
-                            decoded_token = self.ita_c.verify_token(
-                                self.mocked_token_response["token"]
-                            )
-                            assert decoded_token is None
+        with patch("jwt.get_unverified_header") as mock_header_decode:
+            mock_header_decode.return_value = {'alg': 'HS256', 'typ': 'JWT', 'kid':'3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb'}
+            with patch("requests.get", url="certs") as mocked_certs_request:
+                mocked_certs_response = requests.Response()
+                mocked_certs_response.json = lambda: self.mocked_cert_data
+                mocked_certs_response.status_code = 200
+                mocked_certs_request.return_value = mocked_certs_response
+                with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
+                    with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
+                        with patch(
+                            "cryptography.x509.Certificate.public_key"
+                        ) as mock_public_key:
+                            mock_verify = mock_public_key.return_value.verify
+                            mock_verify.return_value = True
+                            with patch("jwt.decode") as mock_decode:
+                                mock_decode.return_value = None
+                                decoded_token = self.ita_c.verify_token(
+                                    self.mocked_token_response["token"]
+                                )
+                                assert decoded_token is None
 
     def test_verify_token_invalid_get_certs(self):
         """Test method to test verify_token() with Invalid Certificate"""
-        with patch("requests.get", url="certs") as mocked_certs_request:
-            mocked_certs_response = requests.Response()
-            mocked_certs_response.json = lambda: None
-            mocked_certs_response.status_code = 200
-            mocked_certs_request.return_value = mocked_certs_response
-            decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
-            assert decoded_token is None
+        with patch("jwt.get_unverified_header") as mock_header_decode:
+            mock_header_decode.return_value = {'alg': 'HS256', 'typ': 'JWT', 'kid':'3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb'}
+            with patch("requests.get", url="certs") as mocked_certs_request:
+                mocked_certs_response = requests.Response()
+                mocked_certs_response.json = lambda: None
+                mocked_certs_response.status_code = 200
+                mocked_certs_request.return_value = mocked_certs_response
+                decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
+                assert decoded_token is None
 
     def test_verify_token_jwt_expired_signature_error(self):
         """Test method to test verify_token() with raising JWT Signature Expired Error"""
-        with patch("requests.get", url="certs") as mocked_certs_request:
-            mocked_certs_response = requests.Response()
-            mocked_certs_response.json = lambda: self.mocked_cert_data
-            mocked_certs_response.status_code = 200
-            mocked_certs_request.return_value = mocked_certs_response
-            with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
-                with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
-                    with patch("cryptography.x509.Certificate.public_key") as mock_pk:
-                        mock_pk.return_value.verify.side_effect = InvalidSignature(
-                            "mock exception"
-                        )
-                        with patch("jwt.decode") as mock_decode:
-                            mock_decode.side_effect = jwt.ExpiredSignatureError(
+        with patch("jwt.get_unverified_header") as mock_header_decode:
+            mock_header_decode.return_value = {'alg': 'HS256', 'typ': 'JWT', 'kid':'3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb'} 
+            with patch("requests.get", url="certs") as mocked_certs_request:
+                mocked_certs_response = requests.Response()
+                mocked_certs_response.json = lambda: self.mocked_cert_data
+                mocked_certs_response.status_code = 200
+                mocked_certs_request.return_value = mocked_certs_response
+                with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
+                    with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
+                        with patch("cryptography.x509.Certificate.public_key") as mock_pk:
+                            mock_pk.return_value.verify.side_effect = InvalidSignature(
                                 "mock exception"
                             )
+                            with patch("jwt.decode") as mock_decode:
+                                mock_decode.side_effect = jwt.ExpiredSignatureError(
+                                    "mock exception"
+                                )
+                                decoded_token = self.ita_c.verify_token(
+                                    self.mocked_token_response["token"]
+                                )
+                                assert decoded_token is None
                             decoded_token = self.ita_c.verify_token(
                                 self.mocked_token_response["token"]
                             )
                             assert decoded_token is None
-                        decoded_token = self.ita_c.verify_token(
-                            self.mocked_token_response["token"]
-                        )
-                        assert decoded_token is None
 
     def test_verify_token_jwt_invalid_token_error(self):
         """Test method to test verify_token() with raising JWT Invalid Token Error"""
-        with patch("requests.get", url="certs") as mocked_certs_request:
-            mocked_certs_response = requests.Response()
-            mocked_certs_response.json = lambda: self.mocked_cert_data
-            mocked_certs_response.status_code = 200
-            mocked_certs_request.return_value = mocked_certs_response
-            with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
-                with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
-                    with patch("cryptography.x509.Certificate.public_key") as mock_pk:
-                        mock_pk.return_value.verify.side_effect = InvalidSignature(
-                            "mock exception"
-                        )
-                        with patch("jwt.decode") as mock_decode:
-                            mock_decode.side_effect = jwt.InvalidTokenError(
+        with patch("jwt.get_unverified_header") as mock_header_decode:
+            mock_header_decode.return_value = {'alg': 'HS256', 'typ': 'JWT', 'kid':'3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb'}
+            with patch("requests.get", url="certs") as mocked_certs_request:
+                mocked_certs_response = requests.Response()
+                mocked_certs_response.json = lambda: self.mocked_cert_data
+                mocked_certs_response.status_code = 200
+                mocked_certs_request.return_value = mocked_certs_response
+                with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
+                    with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
+                        with patch("cryptography.x509.Certificate.public_key") as mock_pk:
+                            mock_pk.return_value.verify.side_effect = InvalidSignature(
                                 "mock exception"
                             )
+                            with patch("jwt.decode") as mock_decode:
+                                mock_decode.side_effect = jwt.InvalidTokenError(
+                                    "mock exception"
+                                )
+                                decoded_token = self.ita_c.verify_token(
+                                    self.mocked_token_response["token"]
+                                )
+                                assert decoded_token is None
                             decoded_token = self.ita_c.verify_token(
                                 self.mocked_token_response["token"]
                             )
                             assert decoded_token is None
-                        decoded_token = self.ita_c.verify_token(
-                            self.mocked_token_response["token"]
-                        )
-                        assert decoded_token is None
 
     def test_verify_token_jwt_decode_exception(self):
         """Test method to test verify_token() with raising JWT Decode Exception"""
-        with patch("requests.get", url="certs") as mocked_certs_request:
-            mocked_certs_response = requests.Response()
-            mocked_certs_response.json = lambda: self.mocked_cert_data
-            mocked_certs_response.status_code = 200
-            mocked_certs_request.return_value = mocked_certs_response
-            with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
-                with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
-                    with patch("cryptography.x509.Certificate.public_key") as mock_pk:
-                        mock_pk.return_value.verify.side_effect = InvalidSignature(
-                            "Signature not valid"
-                        )
-                        with patch("jwt.decode") as mock_decode:
-                            mock_decode.side_effect = Exception("mock exception")
+        with patch("jwt.get_unverified_header") as mock_header_decode:
+            mock_header_decode.return_value = {'alg': 'HS256', 'typ': 'JWT', 'kid':'3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb'}
+            with patch("requests.get", url="certs") as mocked_certs_request:
+                mocked_certs_response = requests.Response()
+                mocked_certs_response.json = lambda: self.mocked_cert_data
+                mocked_certs_response.status_code = 200
+                mocked_certs_request.return_value = mocked_certs_response
+                with patch.object(ITAConnector, "get_crl", new=self.mock_get_crl):
+                    with patch.object(ITAConnector, "verify_crl", new=self.mock_verify_crl):
+                        with patch("cryptography.x509.Certificate.public_key") as mock_pk:
+                            mock_pk.return_value.verify.side_effect = InvalidSignature(
+                                "Signature not valid"
+                            )
+                            with patch("jwt.decode") as mock_decode:
+                                mock_decode.side_effect = Exception("mock exception")
+                                decoded_token = self.ita_c.verify_token(
+                                    self.mocked_token_response["token"]
+                                )
+                                assert decoded_token is None
                             decoded_token = self.ita_c.verify_token(
                                 self.mocked_token_response["token"]
                             )
                             assert decoded_token is None
-                        decoded_token = self.ita_c.verify_token(
-                            self.mocked_token_response["token"]
-                        )
-                        assert decoded_token is None
 
     def test_attest(self):
         """Test method to test attest() of Intel Trust Authority Connector"""
