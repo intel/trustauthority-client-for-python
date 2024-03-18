@@ -70,12 +70,19 @@ attestation_token = ita_connector.attest(attest_args)
 
 ### To verify Intel Trust Authority signed token
 ```
-@Manisai
+try:
+    verified_token = connector.verify_token(token)
+except Exception as exc:
+    log.error(f"Token verification returned exception : {exc}")
 ```
 
 ### To download token signing certificates from Intel Trust Authority
 ```
-@Manisai
+certs_data = connector.get_token_signing_certificates()
+if certs_data == None:
+    log.error(
+        "getting Token signing certificates from Intel Trust Authority failed"
+    )
 ```
 
 ### For E2E token collection and signature verification logic refer
