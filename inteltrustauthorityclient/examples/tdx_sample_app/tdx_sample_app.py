@@ -14,12 +14,13 @@ import validators
 import uuid
 import logging as log
 from urllib.parse import urlparse
-from src.resources import logger as logger
-from src.resources import constants as const
-from src.tdx.intel.tdx_adapter import TDXAdapter
-from src.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
-from src.connector import config, connector
-from src.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.src.resources import logger as logger
+from inteltrustauthorityclient.src.resources import constants as const
+from inteltrustauthorityclient.src.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.src.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
+from inteltrustauthorityclient.src.tdx.gcp.gcp_tdx_adapter import GCPTDXAdapter
+from inteltrustauthorityclient.src.connector import config, connector
+from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
 
 def main():
@@ -79,7 +80,7 @@ def main():
         )
     except ValueError as exc:
         log.error(
-            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valud integer"
+            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valid integer"
         )
         exit(1)
 
@@ -98,6 +99,8 @@ def main():
         adapter = TDXAdapter(user_data)
     elif(adapter_type == const.AZURE_TDX_ADAPTER):
         adapter = AzureTDXAdapter(user_data)
+    elif(adapter_type == const.GCP_TDX_ADAPTER):
+        adapter = GCPTDXAdapter(user_data)
     else:
         log.error("Invalid Adapter Type Selected.")
         exit(1)

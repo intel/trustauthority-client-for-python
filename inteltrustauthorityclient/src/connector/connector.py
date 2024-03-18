@@ -24,11 +24,11 @@ from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from src.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
-from src.connector.evidence import Evidence
-from src.resources import constants as constants
-from src.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.src.connector.evidence import Evidence
+from inteltrustauthorityclient.src.resources import constants as constants
+from inteltrustauthorityclient.src.tdx.intel.tdx_adapter import TDXAdapter
 
 
 @dataclass
@@ -226,7 +226,7 @@ class ITAConnector:
             }
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
-            elif args.evidence.adapter_type == constants.INTEL_TDX_ADAPTER:
+            elif args.evidence.adapter_type in  (constants.INTEL_TDX_ADAPTER, constants.GCP_TDX_ADAPTER):
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
             else:
                 log.error("Invalid Adapter type")

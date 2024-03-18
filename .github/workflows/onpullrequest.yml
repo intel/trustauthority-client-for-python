@@ -35,7 +35,7 @@ jobs:
       
       - name: Check coverage percentage
         run: |
-            coverage_percentage=$(coverage report --format=total)
+            coverage_percentage=$(poetry run coverage report --format=total)
             if [ $coverage_percentage -lt 80 ]; then
               echo "Coverage is less than 80%: $coverage_percentage %"
               exit 1

@@ -10,8 +10,8 @@ services:
     image: trust_authority_python_client_tdx_sample_app:${TRUST_AUTHORITY_CLIENT_VERSION}
     container_name: trust_authority_python_client_tdx_sample_app
     build:
-      context: ../../
-      dockerfile: examples/tdx_sample_app/Dockerfile
+      context: ../../..
+      dockerfile: inteltrustauthorityclient/examples/tdx_sample_app/Dockerfile
       args:
         - UBUNTU_VERSION=${UBUNTU_VERSION}
         - DCAP_VERSION=${DCAP_VERSION}

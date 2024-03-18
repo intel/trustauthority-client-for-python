@@ -5,7 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 import unittest
-from src.connector.config import *
+from inteltrustauthorityclient.src.connector.config import *
 
 
 class ConfigTestCase(unittest.TestCase):

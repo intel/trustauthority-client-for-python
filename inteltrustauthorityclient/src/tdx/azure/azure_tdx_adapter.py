@@ -15,9 +15,9 @@ import tempfile
 import os
 
 import logging as log
-import src.resources.constants as const
-from src.connector.evidence import Evidence
-from src.base.evidence_adapter import EvidenceAdapter
+import inteltrustauthorityclient.src.resources.constants as const
+from inteltrustauthorityclient.src.connector.evidence import Evidence
+from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
 TD_REPORT_OFFSET = 32
 TD_REPORT_SIZE = 1024
@@ -47,7 +47,6 @@ class AzureTDXAdapter:
         Returns:
             evidence: object to Evidence class
         """
-
         if nonce != None or self.user_data != None:
             sha512_hash = hashlib.sha512()
             if nonce != None:

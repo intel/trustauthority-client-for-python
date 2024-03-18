@@ -9,9 +9,9 @@ import base64
 import hashlib
 import logging as log
 
-from src.resources import constants as const
-from src.connector.evidence import Evidence
-from src.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.src.resources import constants as const
+from inteltrustauthorityclient.src.connector.evidence import Evidence
+from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
 
 class tdx_report_data_t(ctypes.Structure):

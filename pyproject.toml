@@ -5,10 +5,10 @@ description = "Intel Trust Authority Client in Python"
 authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manisai.bala@intel.com>"]
 license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "inteltrustauthorityclient/src"}]
 
 exclude = [
-                { path = "examples" }
+                { path = "inteltrustauthorityclient/examples" }
           ]
 
 [tool.poetry.dependencies]

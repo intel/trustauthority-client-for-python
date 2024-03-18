@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import validators
 import logging as log
 from tenacity import wait_exponential
-from src.resources import constants
+from inteltrustauthorityclient.src.resources import constants
 
 
 class Config:

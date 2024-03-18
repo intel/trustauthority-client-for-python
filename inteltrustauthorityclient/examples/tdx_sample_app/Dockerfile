@@ -60,7 +60,7 @@ RUN poetry install --no-dev --no-interaction --no-ansi
 
 # Copy the rest of the project files
 COPY . .
-WORKDIR /app/examples/tdx_sample_app
+WORKDIR /app/inteltrustauthorityclient/examples/tdx_sample_app
 #TODO: Check why this is not working.
 #USER $USERNAME
 # Specify the command to run your application
