@@ -13,7 +13,7 @@ it collects a quote from the TD and sends it to Intel Trust Authority to retriev
 │    │    └──────────────────────────┘      │    │                │                │
 │    │                                      │    │                │                │
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
-│    │    │applications_security_amber |    |    |                |                |
+│    │    │applications_security_amber |    |    |                |    Authority   |
 |    |    | _trustauthority_client_    |    |    |                |                |
 |    |    |  for_python-0.1.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
@@ -91,7 +91,7 @@ docker run \
 
 > **Note:**
 >
-> - The proxy setting values for `HTTPS_PROXY_HOST` and `HTTPS_PROXY_PORT` have to be set by the user based on the system proxy settings.
+> - The proxy setting values for `ENV_HTTP_PROXY` and `ENV_HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
 
 ### Output when example is run...
@@ -139,7 +139,7 @@ python tdx_sample_app.py
 
 > **Note:**
 >
-> - The proxy setting values for `HTTPS_PROXY_HOST` and `HTTPS_PROXY_PORT` have to be set by the user based on the system proxy settings.
+> - The proxy setting values for `ENV_HTTP_PROXY` and `ENV_HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
 
 ### Output when example is run...

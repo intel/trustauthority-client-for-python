@@ -53,8 +53,14 @@ ita_connector = connector.ITAConnector(config_obj)
 
 ### To get a Intel Trust Authority signed token with Nonce
 
-Create TDX adapter using
--  [tdx](./src/tdx/README.md)
+- Create Adapter
+    - **TDX**
+        - [Intel TDX](./inteltrustauthorityclient/src/tdx/intel/README.md)
+        - [Azure TDX](./inteltrustauthorityclient/src/tdx/azure/README.md)
+        - [GCP TDX](./inteltrustauthorityclient/src/tdx/gcp/README.md)
+    - **SGX**
+        - [Intel SGX](./inteltrustauthorityclient/src/sgx/intel/README.md)
+
 
 Use the adapter created with following piece of code to get attestation token:
 
@@ -86,8 +92,8 @@ if certs_data == None:
 ```
 
 ### For E2E token collection and signature verification logic refer
-SGX: [SGX Sample App](./examples/sgx_token/README.md)
-TDX: [TDX Sample App](./examples/tdx_token/README.md)
+SGX: [SGX Sample App](./inteltrustauthorityclient/examples/sgx_sample_app/README.md)
+TDX: [TDX Sample App](./inteltrustauthorityclient/examples/tdx_sample_app/README.md)
 
 
 ### Follow below link to run unit tests
