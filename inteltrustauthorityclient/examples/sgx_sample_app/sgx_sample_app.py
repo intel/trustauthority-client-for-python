@@ -14,6 +14,7 @@ from inteltrustauthorityclient.src.sgx.intel.sgx_adapter import SGXAdapter
 
 import logging as log
 
+
 def create_sgx_enclave(enclave_path):
     # try:
     c_lib = ctypes.CDLL("libsgx_urts.so")
@@ -30,7 +31,7 @@ def create_sgx_enclave(enclave_path):
         ctypes.POINTER(sgx_launch_token_t),
         ctypes.POINTER(ctypes.c_int),
         ctypes.POINTER(sgx_enclave_id_t),
-        ctypes.c_void_p
+        ctypes.c_void_p,
     ]
     c_lib.restype = ctypes.c_int
     launch_token = sgx_launch_token_t()
@@ -42,7 +43,7 @@ def create_sgx_enclave(enclave_path):
         ctypes.byref(launch_token),
         ctypes.byref(token_updated),
         ctypes.byref(enclave_id),
-        None
+        None,
     )
     if status != 0:
         print(f"Error creating enclave. SGX error code: {hex(status)}")
@@ -50,6 +51,7 @@ def create_sgx_enclave(enclave_path):
         exit(1)
 
     return enclave_id
+
 
 def loadPublicKey(eid):
     c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
@@ -65,8 +67,11 @@ def loadPublicKey(eid):
     if status != 0:
         print(f"Error creating public key. SGX error code: {hex(status)}")
         exit(1)
-    public_key = ctypes.cast(key_buf, ctypes.POINTER(ctypes.c_uint8 * key_size.value)).contents
+    public_key = ctypes.cast(
+        key_buf, ctypes.POINTER(ctypes.c_uint8 * key_size.value)
+    ).contents
     return bytearray(public_key)
+
 
 def main():
     # Set logging
@@ -76,7 +81,7 @@ def main():
         log.exception(f"Exception while setting up log : {type(e).__name__}: {e}")
         exit(1)
 
-   # get all the environment variables
+    # get all the environment variables
     trustauthority_base_url = os.getenv(const.TRUSTAUTHORITY_BASE_URL)
     if trustauthority_base_url is None:
         log.error("ENV_TRUSTAUTHORITY_BASE_URL is not set.")
@@ -139,7 +144,7 @@ def main():
         log.error("ADAPTER_TYPE is not set.")
         exit(1)
     adapter = None
-    if(adapter_type == const.INTEL_SGX_ADAPTER):
+    if adapter_type == const.INTEL_SGX_ADAPTER:
         c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
         adapter = SGXAdapter(eid, pub_bytes, c_lib.enclave_create_report)
     else:
@@ -175,6 +180,7 @@ def main():
         log.info(f"Verified Attestation Token : {verified_token}")
     else:
         log.info("Token Verification failed")
+
 
 # main for function call.
 if __name__ == "__main__":

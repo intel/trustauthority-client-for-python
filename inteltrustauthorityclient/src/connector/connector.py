@@ -225,7 +225,10 @@ class ITAConnector:
             }
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
-            elif args.evidence.adapter_type in  (constants.INTEL_TDX_ADAPTER, constants.GCP_TDX_ADAPTER):
+            elif args.evidence.adapter_type in (
+                constants.INTEL_TDX_ADAPTER,
+                constants.GCP_TDX_ADAPTER,
+            ):
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
             elif args.evidence.adapter_type == constants.INTEL_SGX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)

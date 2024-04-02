@@ -28,7 +28,7 @@ NONCE_URL = "appraisal/v1/nonce"
 AZURE_TDX_ATTEST_URL = "appraisal/v1/attest/azure/tdxvm"
 INTEL_TDX_ATTEST_URL = "appraisal/v1/attest"
 
-#GCP Specific
+# GCP Specific
 TDX_ATTEST_DEV_PATH = "/dev/tdx_guest"
 REQ_BUF_SIZE = 4 * 4 * 1024
 TD_REPORT_OFFSET = 32

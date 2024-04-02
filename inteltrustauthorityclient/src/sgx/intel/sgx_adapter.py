@@ -20,8 +20,10 @@ class evidenceAdapterResponse:
 class sgx_attributes_t(ctypes.Structure):
     _fields_ = [("flags", ctypes.c_long), ("xfrm", ctypes.c_long)]
 
+
 class sgx_measurement_t(ctypes.Structure):
     _fields_ = [("m", ctypes.c_uint8 * 32)]
+
 
 sgx_config_svn_t = ctypes.c_uint16
 sgx_misc_select_t = ctypes.c_uint32
@@ -37,18 +39,21 @@ class sgx_target_info_t(ctypes.Structure):
         ("misc_select", sgx_misc_select_t),
         ("reserved2", ctypes.c_uint8 * 8),
         ("config_id", sgx_config_id_t),
-        ("reserved3", ctypes.c_uint8 * 384)
+        ("reserved3", ctypes.c_uint8 * 384),
     ]
 
-class sgx_cpu_svn_t(ctypes.Structure): #done
+
+class sgx_cpu_svn_t(ctypes.Structure):  # done
     _fields_ = [("svn", ctypes.c_uint8 * 16)]
 
 
-class sgx_report_data_t(ctypes.Structure): #done
+class sgx_report_data_t(ctypes.Structure):  # done
     _fields_ = [("d", c_uint8 * 64)]
 
-class sgx_isvext_prod_id_t(ctypes.Structure): #done
+
+class sgx_isvext_prod_id_t(ctypes.Structure):  # done
     _fields_ = [("id", ctypes.c_uint8 * 16)]
+
 
 class sgx_report_body_t(ctypes.Structure):
     _fields_ = [
@@ -67,20 +72,23 @@ class sgx_report_body_t(ctypes.Structure):
         ("config_svn", ctypes.c_uint16),
         ("reserved4", ctypes.c_uint8 * 42),
         ("isv_family_id", ctypes.c_uint8 * 16),
-        ("report_data", sgx_report_data_t)
+        ("report_data", sgx_report_data_t),
     ]
 
-class sgx_key_id_t(ctypes.Structure): #done
+
+class sgx_key_id_t(ctypes.Structure):  # done
     _fields_ = [("id", ctypes.c_uint8 * 32)]
+
 
 class sgx_mac_t(ctypes.Structure):
     _fields_ = [("mac", ctypes.c_uint8 * 16)]
+
 
 class sgx_report_t(ctypes.Structure):
     _fields_ = [
         ("body", sgx_report_body_t),
         ("key_id", sgx_key_id_t),
-        ("mac", sgx_mac_t)
+        ("mac", sgx_mac_t),
     ]
 
 
@@ -110,13 +118,19 @@ class SGXAdapter:
             )
             return None
 
-        sgx_dcap_ql.sgx_qe_get_target_info.argtypes = [ctypes.POINTER(sgx_target_info_t)]
+        sgx_dcap_ql.sgx_qe_get_target_info.argtypes = [
+            ctypes.POINTER(sgx_target_info_t)
+        ]
         sgx_dcap_ql.sgx_qe_get_target_info.restype = ctypes.c_int
 
         sgx_dcap_ql.sgx_qe_get_quote_size.argtypes = [ctypes.POINTER(ctypes.c_int)]
         sgx_dcap_ql.sgx_qe_get_quote_size.restype = ctypes.c_int
 
-        sgx_dcap_ql.sgx_qe_get_quote.argtypes = [ctypes.POINTER(sgx_report_t), ctypes.c_int, ctypes.c_void_p]
+        sgx_dcap_ql.sgx_qe_get_quote.argtypes = [
+            ctypes.POINTER(sgx_report_t),
+            ctypes.c_int,
+            ctypes.c_void_p,
+        ]
         sgx_dcap_ql.sgx_qe_get_quote.restype = ctypes.c_int
 
         ret_val = ctypes.c_int(0)
@@ -127,13 +141,22 @@ class SGXAdapter:
         # Fetch target info by calling the respective sgx sdk function
         qe3_ret = sgx_dcap_ql.sgx_qe_get_target_info(ctypes.byref(qe3_target))
         if qe3_ret != 0:
-            raise RuntimeError(f"sgx_qe_get_target_info return error code 0x{qe3_ret:04x}")
+            raise RuntimeError(
+                f"sgx_qe_get_target_info return error code 0x{qe3_ret:04x}"
+            )
 
         # Create Nonce object based on nonce input provided by user
         nonce_ptr = ctypes.create_string_buffer(nonce)
 
         # Call the report function
-        status = self.report_function(self.eid, ctypes.byref(ret_val), ctypes.byref(qe3_target), nonce_ptr, len(nonce), ctypes.byref(p_report))
+        status = self.report_function(
+            self.eid,
+            ctypes.byref(ret_val),
+            ctypes.byref(qe3_target),
+            nonce_ptr,
+            len(nonce),
+            ctypes.byref(p_report),
+        )
         if status != 0:
             raise RuntimeError(f"Report callback returned error code {hex(status)}")
         if ret_val.value != 0:
@@ -145,16 +168,24 @@ class SGXAdapter:
         # Fetch the quote size by calling the respective sgx sdk function
         qe3_ret = sgx_dcap_ql.sgx_qe_get_quote_size(ctypes.byref(quote_size))
         if qe3_ret != 0:
-            raise RuntimeError(f"sgx_qe_get_quote_size return error code {hex(qe3_ret)}")
+            raise RuntimeError(
+                f"sgx_qe_get_quote_size return error code {hex(qe3_ret)}"
+            )
 
         # Create a quote buffer object with the required quote size
         quote_buffer = ctypes.create_string_buffer(quote_size.value)
 
         # Fetch the sgx quote by calling the respective sgx sdk function
-        qe3_ret = sgx_dcap_ql.sgx_qe_get_quote(ctypes.byref(p_report), quote_size.value, quote_buffer)
+        qe3_ret = sgx_dcap_ql.sgx_qe_get_quote(
+            ctypes.byref(p_report), quote_size.value, quote_buffer
+        )
         if qe3_ret != 0:
             raise RuntimeError(f"sgx_qe_get_quote return error code {hex(qe3_ret)}")
 
-        quote_data = base64.b64encode(bytearray(quote_buffer[:quote_size.value])).decode("utf-8")
+        quote_data = base64.b64encode(
+            bytearray(quote_buffer[: quote_size.value])
+        ).decode("utf-8")
         user_data_encoded = base64.b64encode(self.user_data).decode("utf-8")
-        return Evidence(0,quote_data,None, user_data_encoded, None, const.INTEL_SGX_ADAPTER)
+        return Evidence(
+            0, quote_data, None, user_data_encoded, None, const.INTEL_SGX_ADAPTER
+        )
