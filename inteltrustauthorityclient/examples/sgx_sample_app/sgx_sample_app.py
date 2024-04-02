@@ -7,10 +7,10 @@ import ctypes
 import json
 import sys
 import os
-from src.connector import config, connector
-from src.resources import logger as logger
-from src.resources import constants as const
-from src.sgx.intel.sgx_adapter import SGXAdapter
+from inteltrustauthorityclient.src.connector import config, connector
+from inteltrustauthorityclient.src.resources import logger as logger
+from inteltrustauthorityclient.src.resources import constants as const
+from inteltrustauthorityclient.src.sgx.intel.sgx_adapter import SGXAdapter
 
 import logging as log
 
@@ -36,7 +36,6 @@ def create_sgx_enclave(enclave_path):
     launch_token = sgx_launch_token_t()
     enclave_id = sgx_enclave_id_t()
     token_updated = ctypes.c_int(0)
-    print("@@@@@@@@@@@@@@@@@")
     status = c_lib.sgx_create_enclave(
         enclave_path.encode(),
         0,
@@ -50,23 +49,10 @@ def create_sgx_enclave(enclave_path):
         # sgx_lib.sgx_destroy_enclave(enclave_id.handle)
         exit(1)
 
-    return enclave_id, None
-
-
-# except:
-#   print("OS %s not recognized" % (sys.platform))
-#   return None, None
-
+    return enclave_id
 
 def loadPublicKey(eid):
     c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
-
-    #class sgx_enclave_id_t(ctypes.Structure):
-    #    _fields_ = [("handle", ctypes.c_ulonglong)]
-
-    #class sgx_enclave_id_t(ctypes.Structure):
-    #    _fields_ = [("handle", ctypes.c_void_p)]
-
     c_lib.argtypes = [
         ctypes.c_long,
         ctypes.POINTER(ctypes.POINTER(ctypes.c_uint8)),
@@ -79,10 +65,8 @@ def loadPublicKey(eid):
     if status != 0:
         print(f"Error creating public key. SGX error code: {hex(status)}")
         exit(1)
-    byte_array = bytes(key_buf)
     public_key = ctypes.cast(key_buf, ctypes.POINTER(ctypes.c_uint8 * key_size.value)).contents
-    print(public_key)
-    return bytearray(public_key), None
+    return bytearray(public_key)
 
 def main():
     # Set logging
@@ -128,12 +112,10 @@ def main():
         )
         retry_wait_time_max = const.DEFAULT_RETRY_WAIT_MAX_SEC
 
-    # enclave related all work
+    # enclave related work
     enclave_path = "./minimal-enclave/enclave.signed.so"
-    eid, err = create_sgx_enclave(enclave_path)
-    print("@@@@@@@@@@@@   Enclave id  : ", eid)
-    pub_bytes, err = loadPublicKey(eid)
-    print("#################3   public key : ", pub_bytes)
+    eid = create_sgx_enclave(enclave_path)
+    pub_bytes = loadPublicKey(eid)
     try:
         # Populate config object
         config_obj = config.Config(
@@ -151,7 +133,6 @@ def main():
         exit(1)
 
     ita_connector = connector.ITAConnector(config_obj)
-    user_data = "data generated inside tee"
     adapter_type = os.getenv("ADAPTER_TYPE")
     print(adapter_type)
     if adapter_type is None:
@@ -160,7 +141,7 @@ def main():
     adapter = None
     if(adapter_type == const.INTEL_SGX_ADAPTER):
         c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
-        adapter = SGXAdapter(eid, pub_bytes, ctypes.pointer(c_lib.enclave_create_report))
+        adapter = SGXAdapter(eid, pub_bytes, c_lib.enclave_create_report)
     else:
         log.error("Invalid Adapter Type Selected.")
         exit(1)
@@ -176,9 +157,25 @@ def main():
     if attestation_token is None:
         log.error("Attestation Token is not returned.")
         exit(1)
+    token = attestation_token.token
+    log.info(f"Attestation token : {token}")
+    token_headers_json = json.loads(attestation_token.headers.replace("'", '"'))
+    log.info(
+        "Request id and Trace id are: %s, %s",
+        token_headers_json.get("request-id"),
+        token_headers_json.get("trace-id"),
+    )
+    # verify token- recieved from connector
+    try:
+        verified_token = ita_connector.verify_token(token)
+    except Exception as exc:
+        log.error(f"Token verification returned exception : {exc}")
+    if verified_token != None:
+        log.info("Token Verification Successful")
+        log.info(f"Verified Attestation Token : {verified_token}")
+    else:
+        log.info("Token Verification failed")
 
 # main for function call.
 if __name__ == "__main__":
     main()
-    #enclave_path = "./minimal-enclave/enclave.signed.so"
-    #eid, err = create_sgx_enclave(enclave_path)

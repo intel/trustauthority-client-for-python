@@ -45,20 +45,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libsgx-dcap-default-qpl=${DCAP_VERSION} \
     libsgx-quote-ex=${PSW_VERSION}-focal1
- 
-WORKDIR /trustauthority-client-python/
-ENV PYTHONPATH=/trustauthority-client-python
-COPY . .
-COPY ../../pyproject.toml .
-COPY ../../poetry.lock .
-WORKDIR /trustauthority-client-python/examples/sgx_sample_app/minimal-enclave
-RUN make clean all
-#RUN cp /trustauthority-client/minimal-enclave/Enclave_u.* /trustauthority-client/examples/sgx_token/
-WORKDIR /trustauthority-client-python/
-#add python and poetry code here
+
+WORKDIR /app
+
+COPY pyproject.toml poetry.lock ./
+ENV PYTHONPATH=/app
+
 RUN pip3 install --no-cache-dir poetry
-# RUN poetry install --no-dev --no-interaction --no-ansi
-RUN poetry install --no-root
-ENV LD_LIBRARY_PATH=/trustauthority-client-python/examples/sgx_sample_app/minimal-enclave:/usr/local/lib/:/usr/lib/
-WORKDIR /trustauthority-client-python/examples/sgx_sample_app
+RUN poetry install --no-dev --no-interaction --no-ansi
+COPY . .
+WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave
+RUN make clean all
+ENV LD_LIBRARY_PATH=/app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave:/usr/local/lib/:/usr/lib/
+WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app
 ENTRYPOINT ["poetry", "run", "python3", "sgx_sample_app.py"]

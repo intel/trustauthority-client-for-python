@@ -28,7 +28,6 @@ from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
 from inteltrustauthorityclient.src.connector.evidence import Evidence
 from inteltrustauthorityclient.src.resources import constants as constants
-from inteltrustauthorityclient.src.tdx.intel.tdx_adapter import TDXAdapter
 
 
 @dataclass
