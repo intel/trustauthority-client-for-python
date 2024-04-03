@@ -61,7 +61,7 @@ class GCPTDXAdapter:
     def iowr(self, type, nr, size):
         return self.ioc(const.IOC_WRITE | const.IOC_READ, type, nr, size)
 
-    def collect_evidence(self, nonce=None):
+    def collect_evidence(self, nonce=None) -> Evidence:
         """This Function calls the GCP TDX platform to perform I/O calls to get the TDX Quote.
 
         Args:

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 ARG VERSION=v0.0.0
-ARG COMMIT=fffffff
 ARG DCAP_VERSION=0.0
 ARG PSW_VERSION=0.0
 
@@ -11,7 +10,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG ENABLE_DEBUG
 ARG DCAP_VERSION
 ARG PSW_VERSION
-ARG PSW_VERSION=${PSW_VERSION}
 ARG ADAPTER_TYPE
 ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 
@@ -26,7 +24,6 @@ RUN curl https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -o 
     apt-key add /tmp/intel-sgx-deb.key; \
     rm /tmp/intel-sgx-deb.key
 
-RUN apt-get update
 RUN apt-get update -y && apt-get install -y --no-install-recommends build-essential
 
 WORKDIR /opt/intel

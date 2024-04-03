@@ -9,7 +9,6 @@ import json
 import uuid
 import jwt
 import os
-import http
 import requests
 import validators
 import logging as log
@@ -615,7 +614,11 @@ class ITAConnector:
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
         concatenated_nonce = decoded_val + decoded_iat
-        evidence = args.adapter.collect_evidence(concatenated_nonce)
+        try:
+            evidence = args.adapter.collect_evidence(concatenated_nonce)
+        except RuntimeError as err:
+            log.error(f"Runtime Error in Adapter collect_evidence Function :{err}")
+            return None
         if evidence == None:
             return None
         token_resp = self.get_token(

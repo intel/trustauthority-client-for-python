@@ -1,20 +1,10 @@
-import json
 import ctypes
 import base64
-import os
 import logging as log
 from dataclasses import dataclass
 from ctypes import *
 from inteltrustauthorityclient.src.connector.evidence import Evidence
 from inteltrustauthorityclient.src.resources import constants as const
-
-
-@dataclass
-class evidenceAdapterResponse:
-    type: int
-    Evidence: str
-    user_data: str
-    eventLog: str
 
 
 class sgx_attributes_t(ctypes.Structure):
@@ -34,24 +24,24 @@ class sgx_target_info_t(ctypes.Structure):
     _fields_ = [
         ("mr_enclave", sgx_measurement_t),
         ("attributes", sgx_attributes_t),
-        ("reserved1", ctypes.c_uint8 * 2),
+        ("reserved1", ctypes.c_uint8 * const.SGX_TARGET_INFO_RESERVED1_BYTES),
         ("config_svn", sgx_config_svn_t),
         ("misc_select", sgx_misc_select_t),
-        ("reserved2", ctypes.c_uint8 * 8),
+        ("reserved2", ctypes.c_uint8 * const.SGX_TARGET_INFO_RESERVED2_BYTES),
         ("config_id", sgx_config_id_t),
-        ("reserved3", ctypes.c_uint8 * 384),
+        ("reserved3", ctypes.c_uint8 * const.SGX_TARGET_INFO_RESERVED3_BYTES),
     ]
 
 
-class sgx_cpu_svn_t(ctypes.Structure):  # done
+class sgx_cpu_svn_t(ctypes.Structure):
     _fields_ = [("svn", ctypes.c_uint8 * 16)]
 
 
-class sgx_report_data_t(ctypes.Structure):  # done
+class sgx_report_data_t(ctypes.Structure):
     _fields_ = [("d", c_uint8 * 64)]
 
 
-class sgx_isvext_prod_id_t(ctypes.Structure):  # done
+class sgx_isvext_prod_id_t(ctypes.Structure):
     _fields_ = [("id", ctypes.c_uint8 * 16)]
 
 
@@ -59,24 +49,24 @@ class sgx_report_body_t(ctypes.Structure):
     _fields_ = [
         ("cpu_svn", sgx_cpu_svn_t),
         ("misc_select", ctypes.c_uint32),
-        ("reserved1", ctypes.c_uint8 * 12),
+        ("reserved1", ctypes.c_uint8 * const.SGX_REPORT_BODY_RESERVED1_BYTES),
         ("isv_ext_prod_id", ctypes.c_uint8 * 16),
         ("attributes", sgx_attributes_t),
         ("mr_enclave", sgx_measurement_t),
-        ("reserved2", ctypes.c_uint8 * 32),
+        ("reserved2", ctypes.c_uint8 * const.SGX_REPORT_BODY_RESERVED2_BYTES),
         ("mr_signer", sgx_measurement_t),
-        ("reserved3", ctypes.c_uint8 * 32),
+        ("reserved3", ctypes.c_uint8 * const.SGX_REPORT_BODY_RESERVED3_BYTES),
         ("config_id", ctypes.c_uint8 * 64),
         ("isv_prod_id", ctypes.c_uint16),
         ("isv_svn", ctypes.c_uint16),
         ("config_svn", ctypes.c_uint16),
-        ("reserved4", ctypes.c_uint8 * 42),
+        ("reserved4", ctypes.c_uint8 * const.SGX_REPORT_BODY_RESERVED4_BYTES),
         ("isv_family_id", ctypes.c_uint8 * 16),
         ("report_data", sgx_report_data_t),
     ]
 
 
-class sgx_key_id_t(ctypes.Structure):  # done
+class sgx_key_id_t(ctypes.Structure):
     _fields_ = [("id", ctypes.c_uint8 * 32)]
 
 
@@ -93,12 +83,28 @@ class sgx_report_t(ctypes.Structure):
 
 
 class SGXAdapter:
-    def __init__(self, eid, user_data, report_function):
-        self.eid = eid
-        self.user_data = user_data
-        self.report_function = report_function
+    """This class creates adapter which collects SGX Quote from Intel SGX platform."""
 
-    def collect_evidence(self, nonce=None) -> evidenceAdapterResponse:
+    def __init__(self, eid, report_function, user_data=None) -> None:
+        """Initializes Intel sgx adapter object
+        Args:
+            eid (string): Enclave id
+            report_function (function): Function to Get Enclave Report Data
+            user_data (string, optional): User data.
+        """
+        self.eid = eid
+        self.report_function = report_function
+        self.user_data = user_data
+
+    def collect_evidence(self, nonce=None) -> Evidence:
+        """This Function calls Intel SGX Dcap Library Functions to get SGX quote.
+
+        Args:
+            nonce ([]byte]): optional nonce provided by Intel Trust Authority
+
+        Returns:
+            evidence: object to Evidence class
+        """
         try:
             # Load the SGX DCAP library
             sgx_dcap_ql = ctypes.CDLL("libsgx_dcap_ql.so")
@@ -160,8 +166,7 @@ class SGXAdapter:
         if status != 0:
             raise RuntimeError(f"Report callback returned error code {hex(status)}")
         if ret_val.value != 0:
-            raise RuntimeError(f"Report retval returned {hex(ret_val.value)}")
-
+            raise RuntimeError(f"Report retval returned error {hex(ret_val.value)}")
         # Quote size C native object
         quote_size = ctypes.c_int()
 
@@ -181,11 +186,14 @@ class SGXAdapter:
         )
         if qe3_ret != 0:
             raise RuntimeError(f"sgx_qe_get_quote return error code {hex(qe3_ret)}")
-
-        quote_data = base64.b64encode(
-            bytearray(quote_buffer[: quote_size.value])
-        ).decode("utf-8")
-        user_data_encoded = base64.b64encode(self.user_data).decode("utf-8")
+        try:
+            quote_data = base64.b64encode(
+                bytearray(quote_buffer[: quote_size.value])
+            ).decode("utf-8")
+            user_data_encoded = base64.b64encode(self.user_data).decode("utf-8")
+        except Exception as exc:
+            log.error(f"Error while Encoding Data :{exc}")
+            return None
         return Evidence(
             0, quote_data, None, user_data_encoded, None, const.INTEL_SGX_ADAPTER
         )

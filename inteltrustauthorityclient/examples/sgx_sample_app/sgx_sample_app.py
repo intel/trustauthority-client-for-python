@@ -5,7 +5,6 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 import ctypes
 import json
-import sys
 import os
 from inteltrustauthorityclient.src.connector import config, connector
 from inteltrustauthorityclient.src.resources import logger as logger
@@ -16,7 +15,7 @@ import logging as log
 
 
 def create_sgx_enclave(enclave_path):
-    # try:
+    """Create SGX Enclave using SGX Dcap Libraries"""
     c_lib = ctypes.CDLL("libsgx_urts.so")
 
     class sgx_enclave_id_t(ctypes.Structure):
@@ -46,14 +45,14 @@ def create_sgx_enclave(enclave_path):
         None,
     )
     if status != 0:
-        print(f"Error creating enclave. SGX error code: {hex(status)}")
-        # sgx_lib.sgx_destroy_enclave(enclave_id.handle)
+        log.error(f"Error creating enclave. SGX error code: {hex(status)}")
         exit(1)
 
     return enclave_id
 
 
 def loadPublicKey(eid):
+    """Fetch the public key to be passed to SgxAdapter"""
     c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
     c_lib.argtypes = [
         ctypes.c_long,
@@ -133,23 +132,17 @@ def main():
         )
     except ValueError as exc:
         log.error(
-            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valud integer"
+            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valued integer"
         )
         exit(1)
 
     ita_connector = connector.ITAConnector(config_obj)
     adapter_type = os.getenv("ADAPTER_TYPE")
-    print(adapter_type)
     if adapter_type is None:
         log.error("ADAPTER_TYPE is not set.")
         exit(1)
-    adapter = None
-    if adapter_type == const.INTEL_SGX_ADAPTER:
-        c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
-        adapter = SGXAdapter(eid, pub_bytes, c_lib.enclave_create_report)
-    else:
-        log.error("Invalid Adapter Type Selected.")
-        exit(1)
+    c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
+    adapter = SGXAdapter(eid, c_lib.enclave_create_report, pub_bytes)
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
         attest_args = connector.AttestArgs(

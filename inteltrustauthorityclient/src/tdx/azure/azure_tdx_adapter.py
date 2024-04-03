@@ -38,7 +38,7 @@ class AzureTDXAdapter:
         self.user_data = user_data
         self.event_log_parser = event_log_parser
 
-    def collect_evidence(self, nonce=None):
+    def collect_evidence(self, nonce=None) -> Evidence:
         """This Function calls tpm2-tools to get Azure TDX quote.
 
         Args:
