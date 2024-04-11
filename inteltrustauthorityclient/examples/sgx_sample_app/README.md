@@ -1,7 +1,7 @@
 # SGX Attestation Sample App
 The Intel SGX attestation sample app is a Python application that uses the Intel Trust Authority Attestation Python Client packages
 to get an attestation token from Intel Trust Authority. The application contains an example SGX enclave. When run, 
-it collects quote from the enclave and sends it to Intel Trust Authority to retrieve a token.
+it collects quote from the enclave and sends it to Intel Trust Authority to retrieve a token that can be verified.
 
 ```
 ┌────────────────────────────────────────────────┐
@@ -23,7 +23,7 @@ it collects quote from the enclave and sends it to Intel Trust Authority to retr
 |    |    |  for_python-0.1.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
-│    │    └────────────────────────────┘    │    │                │   SERVER       │
+│    │    └────────────────────────────┘    │    │                │     SERVER     │
 │    │                                      │    │                └────────────────┘
 │    │                                      │    │
 │    └──────────────────────────────────────┘    │

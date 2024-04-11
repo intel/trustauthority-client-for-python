@@ -1,19 +1,31 @@
 # Intel Trust Authority Python Client 
-Intel Trust Authority Client provides a set of Python modules for attesting different TEEs with Intel Trust Authority. You can import the Python packages into your application for Intel® TDX attestation from your application or workflow.
+Intel Trust Authority Client provides a set of Python modules for attesting different TEEs with Intel Trust Authority. Users can import the Python packages into their application and make REST calls to Intel Trust Authority for fetching token containing information about the TEE attested that can be verified.
 
 ## System Requirement
 
 Use <b>Ubuntu 20.04</b>. 
 
 ## Installation
-
-Install the latest version of the library with following commands:
-
-Create a wheel package and install using following commands
-poetry shell
-poetry build - this will create a whl package in dist folder.
-pip install <whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl
  
+Install the latest version of the library with following commands:
+ 
+Installation steps:
+1) Install poetry using command `pip3 install --no-cache-dir poetry`
+2) Create a wheel package:
+    Spawn a poetry shell using command poetry shell:
+    ```bash
+    poetry shell
+    ```
+    Build wheel package inside shell using command poetry build:
+    ```bash
+    poetry build
+    ```
+3) Goto  dist folder where a whl package is created.
+4) pip install <whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
+    ```
+    pip install <whl file name>
+    ```
+
 ## Usage
 
 If User has interface to get the quote/evidence and want to attest it with Intel Trust Authority:
@@ -53,7 +65,7 @@ ita_connector = connector.ITAConnector(config_obj)
 
 ### To get a Intel Trust Authority signed token with Nonce
 
-- Create Adapter
+- Create Adapter using:
     - **TDX**
         - [Intel TDX](./inteltrustauthorityclient/src/tdx/intel/README.md)
         - [Azure TDX](./inteltrustauthorityclient/src/tdx/azure/README.md)
@@ -69,26 +81,16 @@ attest_args = connector.AttestArgs(
             **adapter**, trust_authority_request_id, policy_ids
         )
 attestation_token = ita_connector.attest(attest_args)
-    if attestation_token is None:
-        log.error("Attestation Token is not returned.")
-        exit(1)
 ```
 
 ### To verify Intel Trust Authority signed token
 ```
-try:
-    verified_token = connector.verify_token(token)
-except Exception as exc:
-    log.error(f"Token verification returned exception : {exc}")
+verified_token = connector.verify_token(token)
 ```
 
 ### To download token signing certificates from Intel Trust Authority
 ```
 certs_data = connector.get_token_signing_certificates()
-if certs_data == None:
-    log.error(
-        "getting Token signing certificates from Intel Trust Authority failed"
-    )
 ```
 
 ### For E2E token collection and signature verification logic refer
@@ -97,7 +99,7 @@ TDX: [TDX Sample App](./inteltrustauthorityclient/examples/tdx_sample_app/README
 
 
 ### Follow below link to run unit tests
-[Unit_Test.md](./docs/build_ut_tests.md) 
+[Unit Tests](./test/README.md) 
 
 ## License
 
