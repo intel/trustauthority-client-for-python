@@ -4,6 +4,7 @@ to fetch token from Intel Trust Authority. The application is supposed to be run
 it collects a quote from the TD and sends it to Intel Trust Authority to retrieve a token.
 
 ```
+
 ┌────────────────────────────────────────────────┐
 │    ┌──────────────────────────────────────┐    │
 │    │          Docker Container            │    │
@@ -18,7 +19,7 @@ it collects a quote from the TD and sends it to Intel Trust Authority to retriev
 |    |    |  for_python-0.1.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
-│    │    └────────────────────────────┘    │    │                │   SERVER       │
+│    │    └────────────────────────────┘    │    │                │     SERVER     │
 │    │                                      │    │                └────────────────┘
 │    │                                      |    |
 │    │                                      |    |
@@ -26,7 +27,7 @@ it collects a quote from the TD and sends it to Intel Trust Authority to retriev
 │    │                                      │    │
 │    └──────────────────────────────────────┘    │
 │                                                │
-│                  TD VM                         │
+│                  TDX Host                      │
 └────────────────────────────────────────────────┘
 ```
 The diagram above depicts the components used in the TDX Attestation Sample App while running within
