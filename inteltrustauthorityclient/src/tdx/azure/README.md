@@ -1,21 +1,26 @@
 # Intel® Trust Authority Python Azure TDX Adapter
 
-The **tdx/azure** adapter enables a confidential computing client running in an Azure Trust Domain Extensions (Intel® TDX) trust domain (TD) to collect a quote for attestation by Intel Trust Authority. The tdx adapter is used with the [**connector**](../connector/) to request an attestation token. 
+Python package for collecting TDX Quote from MSFT Azure TDX enabled platform. This .py is specifically built to work with Azure TDX stack only. It leverages the TPM2 TSS library (specifically TSS2 ESYS APIs) and tpm2-tools for Quote generation. TPM2 TSS library: https://github.com/tpm2-software/tpm2-tss.
+
+The TPM2 TSS library needs to be installed using [installation steps](https://github.com/tpm2-software/tpm2-tss/blob/master/INSTALL.md) in the build environment to build the adapter. This Azure tdx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
 
 ## Requirements
 
 - Use **Python 3.8 or newer**.
+
+- ### Tools Requirement
+    Please install tpm2-tools before using the library to generate quote.
+
+    ```
+    apt-get install tpm2-tools=4.1.1-1ubuntu0.20.04.1
+    ```
 
 ## Unit Tests
 To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new Azure TDX adapter and use it to get evidence.
-
-**AzureTDXAdapter()** accepts one optional argument: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token.
-
-**collect_evidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, collect_evidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
+### To Create a new Azure TDX adapter, then use the adapter to collect quote from Azure TDX enabled platform.
 
 ```python
 #Create a new tdx adapter

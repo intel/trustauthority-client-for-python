@@ -1,6 +1,8 @@
 # Intel® Trust Authority Python GCP TDX Adapter
 
-The **tdx/gcp** adapter enables a confidential computing client running in an GCP Trust Domain Extensions (Intel® TDX) trust domain (TD) to collect a quote for attestation by Intel Trust Authority. The tdx adapter is used with the [**connector**](../connector/) to request an attestation token. 
+Python package for collecting TDX Quote from GCP TDX enabled platform.
+
+This TDX Adadpter is specifically built to work with Google Cloud TDX stack. It refers Google's [go-tdx-guest](https://github.com/google/go-tdx-guest/tree/main) for Quote generation. This tdx adapter is used with the [**connector**](../connector/) to request an attestation token and verify the same. 
 
 ## Requirements
 
@@ -11,11 +13,7 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new GCP TDX adapter and use it to get evidence.
-
-**GCPTDXAdapter()** accepts one optional argument: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token.
-
-**collect_evidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, collect_evidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
+### To Create a new GCP TDX adapter, then use the adapter to collect quote from Google Cloud TDX enabled platform.
 
 ```python
 #Create a new tdx adapter

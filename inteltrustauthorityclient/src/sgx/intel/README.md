@@ -1,6 +1,6 @@
-# Intel® Trust Authority Python Intel SGX Adapter
+# Intel® Trust Authority Python SGX Adapter
 
-The **tdx/intel** adapter enables a confidential confidential computing client to collect a quote from an Intel SGX enclave for attestation by Intel Trust Authority. The Intel sgx adapter is used with the [**connector**](../../connector/) to request an attestation token. 
+The **sgx/intel** adapter enables a confidential confidential computing client to collect a quote from an SGX enclave for attestation by Intel Trust Authority. This sgx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
 
 ## Requirements
 
@@ -12,15 +12,11 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new Intel SGX adapter and use it to get evidence.
-
-**SGXAdapter()** accepts one optional argument: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token.
-
-**collect_evidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, collect_evidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
+### To Create a new SGX adapter, then use the adapter to collect quote from SGX enabled platform.
 
 ```python
-#Create a new tdx adapter
-adapter = SGXAdapter(user_data, None)
+#Create a new sgx adapter
+adapter = SGXAdapter(enclave_id, report_function, user_data)
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)

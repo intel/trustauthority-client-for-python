@@ -1,6 +1,6 @@
 # Intel® Trust Authority Python Intel TDX Adapter
 
-The **tdx/intel** adapter enables a confidential computing client running in an Intel tdx domain to collect a quote for attestation by Intel Trust Authority. The Intel tdx adapter is used with the [**connector**](../../connector/) to request an attestation token. 
+This is the beta version of Python TDX Adapter for collecting Quote from TDX enabled platform. This library leverages Intel [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives) for Quote generation. This Intel tdx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
 
 ## Requirements
 
@@ -11,11 +11,7 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new Intel TDX adapter and use it to get evidence.
-
-**TDXAdapter()** accepts one optional argument: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token.
-
-**collect_evidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, collect_evidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
+### To Create a new Intel TDX adapter, then use the adapter to collect quote from Intel TDX enabled platform.
 
 ```python
 #Create a new tdx adapter
