@@ -12,17 +12,20 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new SGX adapter, then use the adapter to collect quote from SGX enabled platform.
+To Create a new SGX adapter, then use the adapter to collect quote from SGX enabled platform.
 
 ```python
 #Create a new sgx adapter
+# enclave_id: SGX Enclave id
+# report_function: Callback Report function to get Enclave Report Data.
+    ## returns: SGX Enclave Report Data
 adapter = SGXAdapter(enclave_id, report_function, user_data)
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)
 if evidence == None:
-            return None #error condition
-``
+    return None #error condition
+```
 
 ## License
 

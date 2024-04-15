@@ -1,6 +1,6 @@
 # SGX Attestation Sample App
 The Intel SGX attestation sample app is a Python application that uses the Intel Trust Authority Attestation Python Client packages
-to get an attestation token from Intel Trust Authority. The application contains an example SGX enclave. When run, 
+to fetch attestation token from Intel Trust Authority. The Sample Application contains an example SGX enclave. When run, 
 it collects quote from the enclave and sends it to Intel Trust Authority to retrieve a token that can be verified.
 
 ```
@@ -18,12 +18,12 @@ it collects quote from the enclave and sends it to Intel Trust Authority to retr
 |    |                                      |    |                |                |
 |    |                                      |    |                |                |
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
-│    │    │applications_security_amber |    |    |                |    Authority   |
-|    |    | _trustauthority_client_    |    |    |                |                |
-|    |    |  for_python-0.1.0-py3-none |    |    |                |                |
+│    │    │applications_security_amber |    |    |                |    AUTHORITY   |
+|    |    | _trustauthority_client_    |    |    |                |     SERVER     |
+|    |    |  for_python-1.0.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
-│    │    └────────────────────────────┘    │    │                │     SERVER     │
+│    │    └────────────────────────────┘    │    │                │                │
 │    │                                      │    │                └────────────────┘
 │    │                                      │    │
 │    └──────────────────────────────────────┘    │
@@ -31,26 +31,28 @@ it collects quote from the enclave and sends it to Intel Trust Authority to retr
 │                  SGX Host                      │
 └────────────────────────────────────────────────┘
 ```
-The diagram above depicts the components used in the Intel SGX attestation sample app while running within
+The diagram above depicts the components used in the SGX attestation sample app while running within
 a Docker container. The Intel SGX sample app can also be run directly on an Intel SGX host, provided that dependencies such as Intel SGX DCAP have been installed. 
 
 
-## Usage for running TDX Attestation Sample App as a docker container
+## Usage for running SGX Attestation Sample App as a docker container
 
 The [SGX Attestation Sample App](/inteltrustauthorityclient/examples/sgx_sample_app/sgx_sample_app.py) can be encapsulated as a container, enabling it to be executed in containerized environments.
 
 ### Prerequisites
 
-Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running these applications within Docker containers.
+- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running this application within Docker container.
 
-Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
+    - Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
+    - Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
+- A production SGX host with the SGX driver Installed and can generate quotes.
+- A running instance of Intel Trust Authority.
 
-Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
 
 
 ### Build Instructions
 
-Once `Docker` and `docker-compose` are installed, build the docker image with the following command:
+Once `docker` and `docker-compose` are installed, build the Sample Application Docker image in **/examples/sgx_sample_app/** with the following command:
 
 ```sh
 docker-compose --env-file ../.env build
@@ -62,7 +64,7 @@ Once the image is built using the above `docker-compose build` command,
 the `SGX Attestation Sample App` can be run using the following commands:
 
 ```sh
-# Creating tdx_token.env file
+# Creating sgx_token.env file
 cat <<EOF | tee sgx_token.env
 ENV_HTTP_PROXY=<http-proxy-host>
 ENV_HTTPS_PROXY=<https-proxy-host>
@@ -75,10 +77,8 @@ ENV_RETRY_MAX=<max-number-of-retries>
 ENV_RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
 ENV_RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 LOG_LEVEL=<log-level>
+SGX_AESM_ADDR=1
 EOF
-
-# Make sure the Intel(R) SGX driver device is set with the following permissions:
-# crw-rw---- root <user-group> /dev/tdx_guest
 
 # Use docker to run the SGX Sample App...
 sudo docker run \
@@ -102,9 +102,9 @@ sudo docker run \
 - When successful, the token and other information will be displayed...
 
 
-## Usage for running TDX Attestation Sample App as a native application
+## Usage for running SGX Attestation Sample App as a native application
 
-### Get the package containing `connector` and `tdx` with the following command:
+### Build the Python wheel package containing connector and adapter packages with the following command:
 
 ```sh
 cd ../../ && \
@@ -113,8 +113,10 @@ poetry build
 
 ### Compile the Sample App with the following command:
 
-```sh
-install the wheel file generated and run tdx_sample_app.py
+- Goto  dist folder where a whl package is created.
+- pip install < whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
+```
+pip install <whl file name>
 ```
 
 ### Run the Sample App with the following command:
@@ -131,8 +133,9 @@ export ENV_TRUSTAUTHORITY_REQUEST_ID=<TRUSTAUTHORITY_REQUEST_ID>
 export ENV_TRUSTAUTHORITY_POLICY_ID=<TRUSTAUTHORITY_POLICY_ID>
 export ENV_RETRY_MAX=<MAX_NUMBER_OF_RETRIES>
 export ENV_RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
-ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
+export ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export LOG_LEVEL=<LOG_LEVEL>
+export SGX_AESM_ADDR=1
 ```
 
 Run the Sample App after setting the environment variables with the following command:
@@ -142,7 +145,6 @@ python sgx_sample_app.py
 ```
 
 > **Note:**
->
 > - The proxy setting values for `ENV_HTTP_PROXY` and `ENV_HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
 

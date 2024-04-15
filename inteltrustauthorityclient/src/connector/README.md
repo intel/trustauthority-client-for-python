@@ -19,7 +19,13 @@ ita_connector = ITAConnector(config_obj)
 ```
 
 ### To attest and verify TEE with Intel Trust Authority using TEE Adapter
-To create adapter refer [tdx](../tdx/README.md), [sgx](../sgx/README.md):
+To create adapter refer:
+- **TDX**
+    - [Intel TDX](../tdx/intel/README.md)
+    - [Azure TDX](../tdx/azure/README.md)
+    - [GCP TDX](../tdx/gcp/README.md)
+- **SGX**
+    - [Intel SGX](../sgx/intel/README.md)
 
 ```python
 // Initialize AttestArgs required for attestation

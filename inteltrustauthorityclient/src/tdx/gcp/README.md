@@ -13,17 +13,17 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new GCP TDX adapter, then use the adapter to collect quote from Google Cloud TDX enabled platform.
+To Create a new GCP TDX adapter, then use the adapter to collect quote from Google Cloud TDX enabled platform.
 
 ```python
 #Create a new tdx adapter
-adapter = GCPTDXAdapter(user_data, None)
+adapter = GCPTDXAdapter(user_data, event_log_parser)
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)
 if evidence == None:
-            return None #error condition
-``
+    return None #error condition
+```
 
 ## License
 

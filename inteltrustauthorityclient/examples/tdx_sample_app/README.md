@@ -14,12 +14,12 @@ it collects a quote from the TD and sends it to Intel Trust Authority to retriev
 │    │    └──────────────────────────┘      │    │                │                │
 │    │                                      │    │                │                │
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
-│    │    │applications_security_amber |    |    |                |    Authority   |
-|    |    | _trustauthority_client_    |    |    |                |                |
-|    |    |  for_python-0.1.0-py3-none |    |    |                |                |
+│    │    │applications_security_amber |    |    |                |    AUTHORITY   |
+|    |    | _trustauthority_client_    |    |    |                |     SERVER     |
+|    |    |  for_python-1.0.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
-│    │    └────────────────────────────┘    │    │                │     SERVER     │
+│    │    └────────────────────────────┘    │    │                │                │
 │    │                                      │    │                └────────────────┘
 │    │                                      |    |
 │    │                                      |    |
@@ -41,16 +41,20 @@ The [TDX Attestation Sample App](tdx_sample_app.py) can be encapsulated as a con
 
 ### Prerequisites
 
-Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running these applications within Docker containers.
+- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running these applications within Docker containers.
 
-Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
+  - Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
 
-Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
+  - Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
+
+- A pre-production TDX host with the TDX kernel and TD installed.
+- The TDX host must be able to generate quotes.
+- A running instance of Intel Trust Authority 
 
 
 ### Build Instructions
 
-Once `Docker` and `docker-compose` are installed, build the docker image with the following command:
+Once `Docker` and `docker-compose` are installed, build the Sample Application Docker image in **/examples/tdx_sample_app/** with the following command:
 
 ```sh
 docker-compose --env-file ../.env build
@@ -77,6 +81,8 @@ ENV_RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 LOG_LEVEL=<log-level>
 EOF
 
+# adapter_type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
+
 # Make sure the Intel(R) TDX driver device is set with the following permissions:
 # crw-rw---- root <user-group> /dev/tdx_guest
 
@@ -101,7 +107,7 @@ docker run \
 
 ## Usage for running TDX Attestation Sample App as a native application
 
-### Get the package containing `connector` and `tdx` with the following command:
+### Build the Python wheel package containing connector and adapter packages with the following command:
 
 ```sh
 cd ../../ && \
@@ -110,9 +116,12 @@ poetry build
 
 ### Compile the Sample App with the following command:
 
-```sh
-install the wheel file generated and run tdx_sample_app.py
+- Goto  dist folder where a whl package is created.
+```Python
+pip install <whl file name>
 ```
+- In this case it is `applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl` inteltrustauthorityclient package is installed in site-packages:
+
 
 ### Run the Sample App with the following command:
 
@@ -128,9 +137,12 @@ export ENV_TRUSTAUTHORITY_REQUEST_ID=<TRUSTAUTHORITY_REQUEST_ID>
 export ENV_TRUSTAUTHORITY_POLICY_ID=<TRUSTAUTHORITY_POLICY_ID>
 export ENV_RETRY_MAX=<MAX_NUMBER_OF_RETRIES>
 export ENV_RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
-ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
+export ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export LOG_LEVEL=<LOG_LEVEL>
+
+# adapter_type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
 ```
+
 
 Run the Sample App after setting the environment variables with the following command:
 

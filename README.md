@@ -38,6 +38,9 @@ access different parts of the Intel Trust Authority API.
 #Create a config object that contains all parameters to connect to Intel Trust Authority and retry if there is 5XX error.
 # base_url: Intel Trust Authority base url
 # retry_cfg: Instance of RetryConfig class. Where retry_config has:
+    # retry_wait_time_min: Minimum wait time between retries
+    # retry_wait_time_max: Maximum wait time between retries
+    # retry_max: Maximum number of Retries Allowed
 # api_url: Intel Trust Authority api url
 # api_key: Intel Trust Authority api key
 
@@ -49,15 +52,6 @@ config_obj = config.Config(
             trustAuthority_api_url,
             trust_authority_api_key,
         )
-    except ValueError as exc:
-        log.error(
-            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valud integer"
-        )
-        exit(1)
-
-    if config_obj == None:
-        log.error("Error in config() instance initialization")
-        exit(1)
 
 #object to the connector
 ita_connector = connector.ITAConnector(config_obj)
@@ -77,14 +71,23 @@ ita_connector = connector.ITAConnector(config_obj)
 Use the adapter created with following piece of code to get attestation token:
 
 ```Python
+# Generate the Attestation args instance
+# adapter: Adapter object based on TEE
+# trust_authority_request_id: Request id string
+# policy_ids: List of policies to use in generating the token
+
 attest_args = connector.AttestArgs(
             **adapter**, trust_authority_request_id, policy_ids
         )
+
+# Get the Attestation Token from Intel Trust Authority
 attestation_token = ita_connector.attest(attest_args)
 ```
 
 ### To verify Intel Trust Authority signed token
-```
+```Python
+#token: Attestation token returned by Intel Trust Authority
+
 verified_token = connector.verify_token(token)
 ```
 

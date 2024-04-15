@@ -20,17 +20,17 @@ To run the tests, refer [Readme](../../../../test/).
 
 ## Usage
 
-### To Create a new Azure TDX adapter, then use the adapter to collect quote from Azure TDX enabled platform.
+To Create a new Azure TDX adapter, then use the adapter to collect quote from Azure TDX enabled platform.
 
 ```python
 #Create a new tdx adapter
-adapter = AzureTDXAdapter(user_data, None)
+adapter = AzureTDXAdapter(user_data, event_log_parser)
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)
 if evidence == None:
-            return None #error condition
-``
+    return None #error condition
+```
 
 ## License
 
