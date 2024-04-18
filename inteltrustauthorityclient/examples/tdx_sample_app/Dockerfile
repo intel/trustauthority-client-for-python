@@ -36,13 +36,16 @@ RUN curl https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -o 
     apt-key add /tmp/intel-sgx-deb.key; \
     rm /tmp/intel-sgx-deb.key
 
-#Installing linux TDX sdk
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        libtdx-attest-dev=${DCAP_VERSION} \
-        libtdx-attest=${DCAP_VERSION}
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
-RUN apt-get install -y tpm2-tools
+#Installing linux TDX sdk
+RUN if [ "${ADAPTER_TYPE}" = "INTEL-TDX" ]; then \
+        apt-get install -y --no-install-recommends libtdx-attest-dev=${DCAP_VERSION} libtdx-attest=${DCAP_VERSION}; \
+    fi
+
+RUN if [ "${ADAPTER_TYPE}" = "AZURE-TDX" ]; then \
+        apt-get install -y --no-install-recommends tpm2-tools; \
+    fi
 
 # Install Poetry
 RUN pip3 install --no-cache-dir poetry
