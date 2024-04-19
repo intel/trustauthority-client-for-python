@@ -1,7 +1,7 @@
 # TDX Attestation Sample App
 The TDX Attestation Sample App is a Python application that uses the Intel Trust Authority Attestation Python Client packages
 to fetch token from Intel Trust Authority. The application is supposed to be run inside a TD. When run,
-it collects a quote from the TD and sends it to Intel Trust Authority to retrieve a token.
+it collects a quote from the TD and sends it to Intel Trust Authority to retrieve a token and verify the same.
 
 ```
 
@@ -37,7 +37,7 @@ the appropriate dependencies like DCAP have been installed).
 
 ## Usage for running TDX Attestation Sample App as a docker container
 
-The [TDX Attestation Sample App](tdx_sample_app.py) can be encapsulated as a container, enabling it to be executed in containerized environments.
+The [TDX Attestation Sample App](../tdx_sample_app/tdx_sample_app.py) can be encapsulated as a container, enabling it to be executed in containerized environments.
 
 ### Prerequisites
 
@@ -54,16 +54,24 @@ The [TDX Attestation Sample App](tdx_sample_app.py) can be encapsulated as a con
 
 ### Build Instructions
 
-Once `Docker` and `docker-compose` are installed, build the Sample Application Docker image in **/examples/tdx_sample_app/** with the following command:
+Once `Docker` and `docker-compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/tdx_sample_app/** with the following command:
 
 ```sh
-docker-compose --env-file ../.env build
+cat <<EOF | tee .env
+UBUNTU_VERSION=20.04
+TRUST_AUTHORITY_CLIENT_VERSION=<Sample app Docker Image version>
+DCAP_VERSION=<sgx sdk dcap version>
+ADAPTER_TYPE=<Adapter_type>
+EOF
+
+docker-compose --env-file .env build
 ```
+**change Adapter_type based on TD being used. Adapter_Type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX**
 
 ### Deployment Instructions
 
 Once the image is built using the above `docker-compose build` command,
-the `TDX Attestation Sample App` can be run using the following commands:
+the `TDX Attestation Sample App` image can be run using the following commands:
 
 ```sh
 # Creating tdx_token.env file
@@ -80,8 +88,6 @@ ENV_RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
 ENV_RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 LOG_LEVEL=<log-level>
 EOF
-
-# adapter_type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
 
 # Make sure the Intel(R) TDX driver device is set with the following permissions:
 # crw-rw---- root <user-group> /dev/tdx_guest
@@ -107,20 +113,21 @@ docker run \
 
 ## Usage for running TDX Attestation Sample App as a native application
 
-### Build the Python wheel package containing connector and adapter packages with the following command:
+#### Build the Python wheel package containing connector and adapter packages from **/applications.security.amber.trustauthority-client-for-python** folder containing poetry configuration files using the following command:
 
 ```sh
-cd ../../ && \
+cd /inteltrustauthorityclient && \
+poetry shell && \
 poetry build
 ```
 
 ### Compile the Sample App with the following command:
 
-- Goto  dist folder where a whl package is created.
+- Go to  dist folder where a whl package is created.
 ```Python
 pip install <whl file name>
 ```
-- In this case it is `applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl` inteltrustauthorityclient package is installed in site-packages:
+- In this case it is `applications_security_amber_trustauthority_client_for_python-1.0.0-py3-none-any.whl` inteltrustauthorityclient package is installed in site-packages:
 
 
 ### Run the Sample App with the following command:
@@ -139,12 +146,12 @@ export ENV_RETRY_MAX=<MAX_NUMBER_OF_RETRIES>
 export ENV_RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
 export ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export LOG_LEVEL=<LOG_LEVEL>
-
-# adapter_type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
+export ADAPTER_TYPE=<ADAPTER_TYPE>
+# ADAPTER_TYPE can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
 ```
 
 
-Run the Sample App after setting the environment variables with the following command:
+Run the Sample App in **/inteltrustauthorityclient/examples/tdx_sample_app/** after setting the environment variables using the following command:
 
 ```sh
 python tdx_sample_app.py

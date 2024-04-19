@@ -37,7 +37,7 @@ a Docker container. The Intel SGX sample app can also be run directly on an Inte
 
 ## Usage for running SGX Attestation Sample App as a docker container
 
-The [SGX Attestation Sample App](/inteltrustauthorityclient/examples/sgx_sample_app/sgx_sample_app.py) can be encapsulated as a container, enabling it to be executed in containerized environments.
+The [SGX Attestation Sample App](../sgx_sample_app/sgx_sample_app.py) can be encapsulated as a container, enabling it to be executed in containerized environments.
 
 ### Prerequisites
 
@@ -52,10 +52,18 @@ The [SGX Attestation Sample App](/inteltrustauthorityclient/examples/sgx_sample_
 
 ### Build Instructions
 
-Once `docker` and `docker-compose` are installed, build the Sample Application Docker image in **/examples/sgx_sample_app/** with the following command:
+Once `docker` and `docker-compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/sgx_sample_app/** with the following command:
 
 ```sh
-docker-compose --env-file ../.env build
+cat <<EOF | tee .env
+UBUNTU_VERSION=20.04
+TRUST_AUTHORITY_CLIENT_VERSION=<Sample app Docker Image version>
+DCAP_VERSION=<sgx sdk dcap version>
+PSW_VERSION=<sgx sdk psw version>
+ADAPTER_TYPE=INTEL-SGX
+EOF
+
+docker-compose --env-file .env build
 ```
 
 ### Deployment Instructions
@@ -104,17 +112,18 @@ sudo docker run \
 
 ## Usage for running SGX Attestation Sample App as a native application
 
-### Build the Python wheel package containing connector and adapter packages with the following command:
+### Build the Python wheel package containing connector and adapter packages from **/applications.security.amber.trustauthority-client-for-python** folder containing poetry configuration files using the following command:
 
 ```sh
 cd ../../ && \
+poetry shell && \
 poetry build
 ```
 
 ### Compile the Sample App with the following command:
 
 - Goto  dist folder where a whl package is created.
-- pip install < whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
+- pip install < whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-1.0.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
 ```
 pip install <whl file name>
 ```
@@ -136,9 +145,10 @@ export ENV_RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
 export ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export LOG_LEVEL=<LOG_LEVEL>
 export SGX_AESM_ADDR=1
+export ADAPTER_TYPE="INTEL-SGX"
 ```
 
-Run the Sample App after setting the environment variables with the following command:
+Run the Sample App in **/inteltrustauthorityclient/examples/sgx_sample_app/** after setting the environment variables using the following command:
 
 ```sh
 python sgx_sample_app.py
