@@ -9,9 +9,9 @@ import json
 import unittest
 import requests
 from unittest.mock import patch, MagicMock
-from inteltrustauthorityclient.src.connector.connector import *
-from inteltrustauthorityclient.src.connector.config import *
-from inteltrustauthorityclient.src.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.connector.connector import *
+from inteltrustauthorityclient.connector.config import *
+from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
 
 
 def get_connector():

@@ -11,9 +11,9 @@ import ctypes
 import base64
 
 import logging as log
-import inteltrustauthorityclient.src.resources.constants as const
-from inteltrustauthorityclient.src.connector.evidence import Evidence
-from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
+import inteltrustauthorityclient.resources.constants as const
+from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
 
 class tdx_report_request(ctypes.Structure):

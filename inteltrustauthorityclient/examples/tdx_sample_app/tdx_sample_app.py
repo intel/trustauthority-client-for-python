@@ -14,13 +14,13 @@ import validators
 import uuid
 import logging as log
 from urllib.parse import urlparse
-from inteltrustauthorityclient.src.resources import logger as logger
-from inteltrustauthorityclient.src.resources import constants as const
-from inteltrustauthorityclient.src.tdx.intel.tdx_adapter import TDXAdapter
-from inteltrustauthorityclient.src.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
-from inteltrustauthorityclient.src.tdx.gcp.gcp_tdx_adapter import GCPTDXAdapter
-from inteltrustauthorityclient.src.connector import config, connector
-from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.resources import logger as logger
+from inteltrustauthorityclient.resources import constants as const
+from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
+from inteltrustauthorityclient.tdx.gcp.gcp_tdx_adapter import GCPTDXAdapter
+from inteltrustauthorityclient.connector import config, connector
+from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
 
 def main():

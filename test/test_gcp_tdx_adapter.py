@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
 from unittest.mock import patch, MagicMock
-from inteltrustauthorityclient.src.tdx.gcp.gcp_tdx_adapter import *
+from inteltrustauthorityclient.tdx.gcp.gcp_tdx_adapter import *
 
 
 def adapter_object():

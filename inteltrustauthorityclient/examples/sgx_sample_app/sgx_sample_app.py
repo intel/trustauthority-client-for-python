@@ -6,10 +6,10 @@ SPDX-License-Identifier: BSD-3-Clause
 import ctypes
 import json
 import os
-from inteltrustauthorityclient.src.connector import config, connector
-from inteltrustauthorityclient.src.resources import logger as logger
-from inteltrustauthorityclient.src.resources import constants as const
-from inteltrustauthorityclient.src.sgx.intel.sgx_adapter import SGXAdapter
+from inteltrustauthorityclient.connector import config, connector
+from inteltrustauthorityclient.resources import logger as logger
+from inteltrustauthorityclient.resources import constants as const
+from inteltrustauthorityclient.sgx.intel.sgx_adapter import SGXAdapter
 
 import logging as log
 

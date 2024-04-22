@@ -23,10 +23,10 @@ from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
-from inteltrustauthorityclient.src.connector.evidence import Evidence
-from inteltrustauthorityclient.src.resources import constants as constants
+from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.resources import constants as constants
 
 
 @dataclass

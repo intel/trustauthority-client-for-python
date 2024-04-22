@@ -3,8 +3,8 @@ import base64
 import logging as log
 from dataclasses import dataclass
 from ctypes import *
-from inteltrustauthorityclient.src.connector.evidence import Evidence
-from inteltrustauthorityclient.src.resources import constants as const
+from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.resources import constants as const
 
 
 class sgx_attributes_t(ctypes.Structure):
