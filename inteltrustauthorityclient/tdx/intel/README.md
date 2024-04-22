@@ -1,13 +1,13 @@
 # Intel® Trust Authority Python Intel TDX Adapter
 
-Python package for collecting Quote from TDX enabled platform. This library leverages Intel [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives) for Quote generation. This Intel tdx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
+Python package for collecting Quote from TDX enabled platform. This library leverages Intel [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives) for Quote generation. This Intel tdx adapter is used with the [**connector**](../../connector/README.md) to request an attestation token and verify the same. 
 
 ## Requirements
 
 - Use **Python 3.8 or newer**.
 
 ## Unit Tests
-To run the tests, refer [Readme](../../../../test/).
+To run the tests, refer [Readme](../../../test/README.md).
 
 ## Usage
 
@@ -25,5 +25,5 @@ if evidence == None:
 
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
 file.

@@ -61,11 +61,11 @@ ita_connector = connector.ITAConnector(config_obj)
 
 - Create Adapter using:
     - **TDX**
-        - [Intel TDX](./inteltrustauthorityclient/src/tdx/intel/README.md)
-        - [Azure TDX](./inteltrustauthorityclient/src/tdx/azure/README.md)
-        - [GCP TDX](./inteltrustauthorityclient/src/tdx/gcp/README.md)
+        - [Intel TDX](./inteltrustauthorityclient/tdx/intel/README.md)
+        - [Azure TDX](./inteltrustauthorityclient/tdx/azure/README.md)
+        - [GCP TDX](./inteltrustauthorityclient/tdx/gcp/README.md)
     - **SGX**
-        - [Intel SGX](./inteltrustauthorityclient/src/sgx/intel/README.md)
+        - [Intel SGX](./inteltrustauthorityclient/sgx/intel/README.md)
 
 
 Use the adapter created with following piece of code to get attestation token:

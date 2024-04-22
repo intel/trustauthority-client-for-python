@@ -115,7 +115,7 @@ sudo docker run \
 ### Build the Python wheel package containing connector and adapter packages from **/applications.security.amber.trustauthority-client-for-python** folder containing poetry configuration files using the following command:
 
 ```sh
-cd ../../ && \
+cd ../../.. && \
 poetry shell && \
 poetry build
 ```

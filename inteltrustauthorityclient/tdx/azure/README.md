@@ -2,7 +2,7 @@
 
 Python package for collecting TDX Quote from MSFT Azure TDX enabled platform. This .py is specifically built to work with Azure TDX stack only. It leverages the TPM2 TSS library (specifically TSS2 ESYS APIs) and tpm2-tools for Quote generation. TPM2 TSS library: https://github.com/tpm2-software/tpm2-tss.
 
-The TPM2 TSS library needs to be installed using [installation steps](https://github.com/tpm2-software/tpm2-tss/blob/master/INSTALL.md) in the build environment to build the adapter. This Azure tdx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
+The TPM2 TSS library needs to be installed using [installation steps](https://github.com/tpm2-software/tpm2-tss/blob/master/INSTALL.md) in the build environment to build the adapter. This Azure tdx adapter is used with the [**connector**](../../connector/README.md) to request an attestation token and verify the same. 
 
 ## Requirements
 
@@ -16,7 +16,7 @@ The TPM2 TSS library needs to be installed using [installation steps](https://gi
     ```
 
 ## Unit Tests
-To run the tests, refer [Readme](../../../../test/).
+To run the tests, refer [Readme](../../../test/README.md).
 
 ## Usage
 
@@ -34,5 +34,5 @@ if evidence == None:
 
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
 file.

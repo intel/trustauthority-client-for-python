@@ -14,7 +14,7 @@ poetry update
 
 ### Run unit tests from **/applications.security.amber.trustauthority-client-for-python/test** with coverage enabled:
 ```
-poetry run coverage run --source=/inteltrustauthorityclient/src/ -m unittest discover -p 'test_*.py'
+poetry run coverage run -m unittest discover -p 'test_*.py'
 ```
 
 ### Generate coverage report:

@@ -1,6 +1,6 @@
 # Intel® Trust Authority Python SGX Adapter
 
-The **sgx/intel** adapter enables a confidential confidential computing client to collect a quote from an SGX enclave for attestation by Intel Trust Authority. This sgx adapter is used with the [**connector**](../../connector/) to request an attestation token and verify the same. 
+The **sgx/intel** adapter enables a confidential confidential computing client to collect a quote from an SGX enclave for attestation by Intel Trust Authority. This sgx adapter is used with the [**connector**](../../connector/README.md) to request an attestation token and verify the same. 
 
 ## Requirements
 
@@ -8,7 +8,7 @@ The **sgx/intel** adapter enables a confidential confidential computing client t
 - Intel® SGX DCAP for quote generation. For more information, see https://github.com/intel/SGXDataCenterAttestationPrimitives
 
 ## Unit Tests
-To run the tests, refer [Readme](../../../../test/).
+To run the tests, refer [Readme](../../../test/README.md).
 
 ## Usage
 
@@ -29,5 +29,5 @@ if evidence == None:
 
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
 file.
