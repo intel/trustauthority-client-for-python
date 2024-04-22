@@ -57,12 +57,12 @@ class AzureTDXAdapter:
         else:
             digest = bytearray(64)
 
-        # Check if tpm2_nvreadpublic 0x01400002
-        # If no define it
+        # Check if tpm2_nvreadpublic 0x01400002 is defined
+        # If not then define it
         command = ["tpm2_nvreadpublic", "0x01400002"]
         try:
             subprocess.run(command, check=True)
-        except Exception as exc:
+        except Exception as e:
             log.info("Creating nv_index as it is not defined already")
             try:
                 command = ["tpm2_nvdefine", "-C", "o", "0x01400002", "-s", "64"]
@@ -74,35 +74,35 @@ class AzureTDXAdapter:
                 log.error(f"issue in creating nv_index: {e}")
                 return None
 
-        # Write user_Data+ nonce to report: "tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-"
+        # Write user_Data + nonce to report: "tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-"
         try:
-            with tempfile.NamedTemporaryFile(mode="wb", delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(mode="wb", delete=True) as temp_file:
                 temp_filename = temp_file.name
                 temp_file.write(digest)
             command = ["tpm2_nvwrite", "-C", "o", "0x01400002", "-i", temp_filename]
             result = subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
-            log.error(f"issue in creating nv_index: {e}")
+            log.error(f"issue in writing to nv_index: {e}")
             return None
         except Exception as e:
             log.error(f"issue in writing to nv_index {e}")
             return None
 
-        # Read the final report: "tpm2_nvread", "-C", "o", "0x01400001").Output()
+        # Read the final report at "0x01400001"
         try:
             command = ["tpm2_nvread", "-C", "o", "0x01400001"]
             result = subprocess.run(command, capture_output=True)
             tpm_report = result.stdout
         except subprocess.CalledProcessError as e:
-            log.error(f"issue in creating nv_index: {e}")
+            log.error(f"issue in reading nv_index: {e}")
             return None
         except Exception as e:
-            log.error(f"issue in reading to nv_index {e}")
+            log.error(f"issue in reading nv_index {e}")
             return None
 
         td_report = tpm_report[TD_REPORT_OFFSET : TD_REPORT_OFFSET + TD_REPORT_SIZE]
 
-        # give the report to azure to get the quote
+        # give the report to azure as input to get the quote
         payload = base64.b64encode(td_report).decode("utf-8")
         # send report to Azure
         url = "http://169.254.169.254/acc/tdquote"
@@ -112,10 +112,10 @@ class AzureTDXAdapter:
         try:
             response = requests.post(url, data=payload_json, headers=headers)
         except requests.HTTPError as e:
-            log.error(f"Got http error: {e.code} {e.reason}")
+            log.error(f"got http error: {e.code} {e.reason}")
             return None
         except Exception as e:
-            log.error(f"Got error in post request: {e}")
+            log.error(f"got error in post request: {e}")
             return None
         resp_quote = response.json()
         quote = resp_quote.get("quote")

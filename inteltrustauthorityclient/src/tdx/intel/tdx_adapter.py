@@ -108,7 +108,7 @@ class TDXAdapter(EvidenceAdapter):
             if result == 0:
                 log.info("Quote generated successfully:")
             else:
-                log.error(f"tdx_att_get_quote failed with result: {result}")
+                log.error(f"tdx_att_get_quote failed with result {hex(result)}")
                 return None
 
             # Fetch the quote from pointer passed to c library
@@ -119,7 +119,7 @@ class TDXAdapter(EvidenceAdapter):
             # Free the tdx quote from c memory
             ret = c_lib.tdx_att_free_quote(quote_buffer)
             if ret != 0:
-                log.error(f"Error: tdx_att_free_quote failed with result {ret}")
+                log.error(f"Error: tdx_att_free_quote failed with result {hex(ret)}")
             log.info("Quote : %s", quote)
             runtime_data = base64.b64encode(self.user_data.encode()).decode("utf-8")
             # Create evidence class object to be returned

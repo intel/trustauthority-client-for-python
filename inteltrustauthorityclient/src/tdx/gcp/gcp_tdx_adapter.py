@@ -18,8 +18,8 @@ from inteltrustauthorityclient.src.base.evidence_adapter import EvidenceAdapter
 
 class tdx_report_request(ctypes.Structure):
     _fields_ = [
-        ("report_data", ctypes.c_uint8 * 64),
-        ("td_report", ctypes.c_uint8 * 1024),
+        ("report_data", ctypes.c_uint8 * const.TDX_REPORT_DATA_LEN),
+        ("td_report", ctypes.c_uint8 * const.TDX_REPORT_SIZE),
     ]
 
 
@@ -29,7 +29,7 @@ class tdx_quote_header(ctypes.Structure):
         ("status", ctypes.c_uint64),
         ("in_len", ctypes.c_uint32),
         ("out_len", ctypes.c_uint32),
-        ("data", ctypes.c_uint8 * 16384),
+        ("data", ctypes.c_uint8 * const.REQ_BUF_SIZE),
     ]
 
 
@@ -97,7 +97,7 @@ class GCPTDXAdapter:
             tdx_quote_h = tdx_quote_header()
             tdx_quote_h.status = 0
             tdx_quote_h.version = 1
-            tdx_quote_h.in_len = const.TD_REPORT_SIZE
+            tdx_quote_h.in_len = const.TDX_REPORT_SIZE
             tdx_quote_h.out_len = 0
             libc.memcpy(
                 tdx_quote_h.data,

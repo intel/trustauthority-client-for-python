@@ -192,7 +192,7 @@ class SGXAdapter:
             ).decode("utf-8")
             user_data_encoded = base64.b64encode(self.user_data).decode("utf-8")
         except Exception as exc:
-            log.error(f"Error while Encoding Data :{exc}")
+            log.error(f"Error while encoding data :{exc}")
             return None
         return Evidence(
             0, quote_data, None, user_data_encoded, None, const.INTEL_SGX_ADAPTER
