@@ -107,6 +107,74 @@ class TDXAdapterTestCase(unittest.TestCase):
                 with patch.object(hashlib, "sha512", new=mock_sha512):
                     evidence = tdx_adapter.collect_evidence("")
                     assert evidence == None
+    
+    def test_adpater_attribute_error(self):
+        """Test method to test TDX Adapter with raising Attribute error"""
+        tdx_adapter = adapter_object()
+
+        def mock_cdll(arg1):
+            return None
+
+        def mock_sha512():
+            raise AttributeError
+
+        with patch.object(ctypes, "CDLL", new=mock_cdll):
+            with patch("ctypes.CDLL") as mock_cdll:
+                mock_cdll.return_value.tdx_att_get_quote.return_value = 0
+                with patch.object(hashlib, "sha512", new=mock_sha512):
+                    evidence = tdx_adapter.collect_evidence("")
+                    assert evidence == None
+
+    def test_adpater_value_error(self):
+        """Test method to test TDX Adapter with raising value Error"""
+        tdx_adapter = adapter_object()
+
+        def mock_cdll(arg1):
+            return None
+
+        def mock_sha512():
+            raise ValueError
+
+        with patch.object(ctypes, "CDLL", new=mock_cdll):
+            with patch("ctypes.CDLL") as mock_cdll:
+                mock_cdll.return_value.tdx_att_get_quote.return_value = 0
+                with patch.object(hashlib, "sha512", new=mock_sha512):
+                    evidence = tdx_adapter.collect_evidence("")
+                    assert evidence == None
+    
+    def test_adpater_Exception(self):
+        """Test method to test TDX Adapter with raising mock Exception"""
+        tdx_adapter = adapter_object()
+
+        def mock_cdll(arg1):
+            return None
+
+        def mock_sha512():
+            raise Exception
+
+        with patch.object(ctypes, "CDLL", new=mock_cdll):
+            with patch("ctypes.CDLL") as mock_cdll:
+                mock_cdll.return_value.tdx_att_get_quote.return_value = 0
+                with patch.object(hashlib, "sha512", new=mock_sha512):
+                    evidence = tdx_adapter.collect_evidence("")
+                    assert evidence == None
+    
+    def test_adpater_ctypes_ArguementError(self):
+        """Test method to test TDX Adapter with raising ctypes Arguement Error"""
+        tdx_adapter = adapter_object()
+
+        def mock_cdll(arg1):
+            return None
+
+        def mock_sha512():
+            raise ctypes.ArgumentError
+
+        with patch.object(ctypes, "CDLL", new=mock_cdll):
+            with patch("ctypes.CDLL") as mock_cdll:
+                mock_cdll.return_value.tdx_att_get_quote.return_value = 0
+                with patch.object(hashlib, "sha512", new=mock_sha512):
+                    evidence = tdx_adapter.collect_evidence("")
+                    assert evidence == None
 
 
 if __name__ == "__main__":
