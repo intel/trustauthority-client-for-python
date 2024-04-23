@@ -15,9 +15,10 @@ jobs:
       http_proxy: ${{ secrets.HTTP_PROXY }}
       https_proxy: ${{ secrets.HTTPS_PROXY }}
       no_proxy: ${{ secrets.NO_PROXY }}
+      PYTHONPATH: ${{ github.workspace }}:$PYTHONPATH
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           
