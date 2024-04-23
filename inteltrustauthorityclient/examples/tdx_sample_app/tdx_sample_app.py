@@ -80,7 +80,7 @@ def main():
         )
     except ValueError as exc:
         log.error(
-            "Either retry_wait_time_min or retry_wait_time_max or retry_max is not a valid integer"
+            f"Value Error in config object creation : {exc}"
         )
         exit(1)
 

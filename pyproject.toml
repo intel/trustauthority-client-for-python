@@ -6,10 +6,7 @@ authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manis
 license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
 readme = "README.md"
 packages = [{include = "inteltrustauthorityclient"}]
-
-exclude = [
-                { path = "examples" }
-          ]
+exclude = ["inteltrustauthorityclient/examples"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
