@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ###########################################
 
-version: '1'
+version: '3'
 services:
   trust_authority_python_client_tdx_sample_app:
     image: trust_authority_python_client_tdx_sample_app:${TRUST_AUTHORITY_CLIENT_VERSION}
