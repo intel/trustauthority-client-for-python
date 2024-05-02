@@ -16,7 +16,7 @@ ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 RUN apt-get update; \
     apt-get upgrade -y; \
     apt-get autoremove -y; \
-    apt-get install -y --no-install-recommends gnupg wget make curl git python pip ca-certificates
+    apt-get install -y --no-install-recommends gnupg wget curl python pip ca-certificates
 
 #Adding sgx repo to ubuntu focals
 RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list

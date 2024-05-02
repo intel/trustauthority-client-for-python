@@ -25,7 +25,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN  apt-get update; \
     apt-get upgrade -y; \
     apt-get autoremove -y; \
-  apt-get install -y --no-install-recommends gnupg wget make curl git python3 python3-pip
+  apt-get install -y --no-install-recommends gnupg wget curl python3 python3-pip
 
 #Adding sgx repo to ubuntu focals
 ARG DCAP_VERSION
