@@ -109,8 +109,15 @@ class AzureTDXAdapter:
         headers = {"Content-Type": "application/json"}
         body = {"report": payload}
         payload_json = json.dumps(body)
+        timeout_sec = (
+            const.DEFAULT_TIMEOUT_SEC
+            if os.getenv(const.TIMEOUT_SEC) is None
+            else os.getenv(const.TIMEOUT_SEC)
+        )
         try:
-            response = requests.post(url, data=payload_json, headers=headers)
+            response = requests.post(
+                url, data=payload_json, headers=headers, timeout=timeout_sec
+            )
         except requests.HTTPError as e:
             log.error(f"got http error: {e.code} {e.reason}")
             return None
