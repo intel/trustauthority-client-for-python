@@ -41,12 +41,13 @@ access different parts of the Intel Trust Authority API.
     # retry_wait_time_min: Minimum wait time between retries
     # retry_wait_time_max: Maximum wait time between retries
     # retry_max: Maximum number of Retries Allowed
+    # timeout_sec: Request timeout seconds
 # api_url: Intel Trust Authority api url
 # api_key: Intel Trust Authority api key
 
 config_obj = config.Config(
             config.RetryConfig(
-                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max)
+                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max), int(timeout_sec)
             ),
             trustauthority_base_url,
             trustAuthority_api_url,

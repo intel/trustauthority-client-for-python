@@ -153,6 +153,7 @@ class ITAConnector:
                     url,
                     headers=headers,
                     proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
@@ -257,6 +258,7 @@ class ITAConnector:
                     headers=headers,
                     data=json.dumps(body),
                     proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
@@ -318,7 +320,7 @@ class ITAConnector:
 
             def make_request():
                 try:
-                    response = requests.get(crl_url, proxies=proxies)
+                    response = requests.get(crl_url, proxies=proxies, timeout=self.cfg.retry_cfg.timeout_sec)
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as exc:
                     log.error(f"Http Error occurred in get_crl request: {exc}")
@@ -546,6 +548,7 @@ class ITAConnector:
                     url,
                     headers=headers,
                     proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
                 )
 
                 response.raise_for_status()

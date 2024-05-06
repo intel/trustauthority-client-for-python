@@ -116,6 +116,11 @@ def main():
         )
         retry_wait_time_max = const.DEFAULT_RETRY_WAIT_MAX_SEC
 
+    timeout_second = os.getenv(const.TIMEOUT_SEC)
+    if timeout_second is None:
+        log.debug("ENV_TIMEOUT_SEC is not provided. Hence, setting default value.")
+        timeout_second = const.DEFAULT_TIMEOUT_SEC
+
     # enclave related work
     enclave_path = "./minimal-enclave/enclave.signed.so"
     eid = create_sgx_enclave(enclave_path)
@@ -124,7 +129,7 @@ def main():
         # Populate config object
         config_obj = config.Config(
             config.RetryConfig(
-                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max)
+                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max), int(timeout_second)
             ),
             trustauthority_base_url,
             trustAuthority_api_url,

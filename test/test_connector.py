@@ -16,7 +16,7 @@ from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
 
 def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
-    retryConfig = RetryConfig(2, 2, 2)
+    retryConfig = RetryConfig(2, 2, 2, 2)
     config = Config(
         retryConfig,
         "https://custom-base-url-ITA.com",
