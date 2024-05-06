@@ -13,6 +13,14 @@ ARG PSW_VERSION
 ARG ADAPTER_TYPE
 ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 
+ARG USERNAME=intel
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+ARG APP_HOME=/app
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m -d $APP_HOME $USERNAME
+
 RUN apt-get update; \
     apt-get upgrade -y; \
     apt-get autoremove -y; \
@@ -20,7 +28,7 @@ RUN apt-get update; \
 
 #Adding sgx repo to ubuntu focals
 RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list
-RUN curl https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -o /tmp/intel-sgx-deb.key; \
+RUN wget https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -O /tmp/intel-sgx-deb.key; \
     apt-key add /tmp/intel-sgx-deb.key; \
     rm /tmp/intel-sgx-deb.key
 
@@ -47,6 +55,9 @@ WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
 ENV PYTHONPATH=/app
+
+RUN chown -R $USERNAME:$USERNAME $APP_HOME
+USER $USERNAME
 
 RUN pip3 install --no-cache-dir poetry
 RUN poetry install --no-dev --no-interaction --no-ansi
