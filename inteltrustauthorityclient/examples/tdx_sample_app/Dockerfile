@@ -15,7 +15,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Add intel USER
 ARG USERNAME=intel
-ARG USER_UID=1001
+ARG USER_UID=2000
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -47,24 +47,17 @@ RUN if [ "${ADAPTER_TYPE}" = "AZURE-TDX" ]; then \
         apt-get install -y --no-install-recommends tpm2-tools; \
     fi
 
-# Install Poetry
-RUN pip3 install --no-cache-dir poetry
-
 # Set the working directory inside the container
 WORKDIR /app
-
-# Copy only the dependency files to avoid invalidating cache unnecessarily
 COPY pyproject.toml poetry.lock ./
-
 ENV PYTHONPATH=/app
+RUN pip3 install --no-cache-dir poetry
+COPY . .
+RUN chown -R $USERNAME:$USERNAME .
+RUN chmod -R 755 .
+USER $USERNAME
 
 # Install project dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
-
-# Copy the rest of the project files
-COPY . .
 WORKDIR /app/inteltrustauthorityclient/examples/tdx_sample_app
-#TODO: Check why this is not working.
-#USER $USERNAME
-# Specify the command to run your application
 CMD ["poetry", "run", "python3", "tdx_sample_app.py"]

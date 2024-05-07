@@ -16,10 +16,9 @@ ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 ARG USERNAME=intel
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
-ARG APP_HOME=/app
 
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m -d $APP_HOME $USERNAME
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
 RUN apt-get update; \
     apt-get upgrade -y; \
@@ -56,12 +55,12 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 ENV PYTHONPATH=/app
 
-RUN chown -R $USERNAME:$USERNAME $APP_HOME
-USER $USERNAME
-
 RUN pip3 install --no-cache-dir poetry
-RUN poetry install --no-dev --no-interaction --no-ansi
 COPY . .
+RUN chown -R $USERNAME:$USERNAME .
+RUN chmod -R 755 .
+USER $USERNAME
+RUN poetry install --no-dev --no-interaction --no-ansi
 WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave
 RUN make clean all
 ENV LD_LIBRARY_PATH=/app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave:/usr/local/lib/:/usr/lib/
