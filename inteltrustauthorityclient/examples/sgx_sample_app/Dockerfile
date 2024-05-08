@@ -57,8 +57,9 @@ ENV PYTHONPATH=/app
 
 RUN pip3 install --no-cache-dir poetry
 COPY . .
-RUN chown -R $USERNAME:$USERNAME .
-RUN chmod -R 755 .
+
+# change permissions for intel user to run make command in /minimal-enclave
+RUN chown -R $USERNAME:$USERNAME /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave
 USER $USERNAME
 RUN poetry install --no-dev --no-interaction --no-ansi
 WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave

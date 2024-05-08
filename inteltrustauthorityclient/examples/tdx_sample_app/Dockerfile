@@ -53,11 +53,7 @@ COPY pyproject.toml poetry.lock ./
 ENV PYTHONPATH=/app
 RUN pip3 install --no-cache-dir poetry
 COPY . .
-RUN chown -R $USERNAME:$USERNAME .
-RUN chmod -R 755 .
 USER $USERNAME
-
-# Install project dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
 WORKDIR /app/inteltrustauthorityclient/examples/tdx_sample_app
 CMD ["poetry", "run", "python3", "tdx_sample_app.py"]
