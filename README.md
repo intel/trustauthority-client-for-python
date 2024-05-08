@@ -41,7 +41,7 @@ access different parts of the Intel Trust Authority API.
     # retry_wait_time_min: Minimum wait time between retries
     # retry_wait_time_max: Maximum wait time between retries
     # retry_max: Maximum number of Retries Allowed
-    # timeout_sec: Request timeout seconds
+    # timeout_sec: Request timeout in seconds
 # api_url: Intel Trust Authority api url
 # api_key: Intel Trust Authority api key
 

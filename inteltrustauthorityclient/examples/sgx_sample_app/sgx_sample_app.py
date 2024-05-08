@@ -3,6 +3,7 @@ Copyright (c) 2023-2024 Intel Corporation
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
+
 import ctypes
 import json
 import os
@@ -118,7 +119,7 @@ def main():
 
     timeout_second = os.getenv(const.TIMEOUT_SEC)
     if timeout_second is None:
-        log.debug("ENV_TIMEOUT_SEC is not provided. Hence, setting default value.")
+        log.debug("ENV_TIMEOUT_SEC is not provided. Hence, setting to default value.")
         timeout_second = const.DEFAULT_TIMEOUT_SEC
 
     # enclave related work
@@ -129,16 +130,17 @@ def main():
         # Populate config object
         config_obj = config.Config(
             config.RetryConfig(
-                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max), int(timeout_second)
+                int(retry_wait_time_min),
+                int(retry_wait_time_max),
+                int(retry_max),
+                int(timeout_second),
             ),
             trustauthority_base_url,
             trustAuthority_api_url,
             trust_authority_api_key,
         )
     except ValueError as exc:
-        log.error(
-            f"Value Error in config object creation : {exc}"
-        )
+        log.error(f"Value Error in config object creation : {exc}")
         exit(1)
 
     ita_connector = connector.ITAConnector(config_obj)

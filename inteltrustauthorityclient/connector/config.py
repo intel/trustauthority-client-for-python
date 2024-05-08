@@ -62,7 +62,7 @@ class RetryConfig:
         retry_wait_min: int,
         retry_wait_max: int,
         retry_max_num: int,
-        timeout_sec: int,
+        timeout_sec: int = None,
         check_retry=None,
         backoff=None,
     ) -> None:
@@ -88,7 +88,9 @@ class RetryConfig:
             )
         )
         self.check_retry = check_retry if check_retry != None else self.retry_policy
-        self.timeout_sec = timeout_sec
+        self.timeout_sec = (
+            timeout_sec if timeout_sec != None else constants.DEFAULT_TIMEOUT_SEC
+        )
 
     def retry_policy(self, status_code):
         retryable_status_code = (500, 503, 504)

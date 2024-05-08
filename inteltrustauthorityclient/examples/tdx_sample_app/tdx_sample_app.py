@@ -71,23 +71,24 @@ def main():
 
     timeout_second = os.getenv(const.TIMEOUT_SEC)
     if timeout_second is None:
-        log.debug("ENV_TIMEOUT_SEC is not provided. Hence, setting default value.")
+        log.debug("ENV_TIMEOUT_SEC is not provided. Hence, setting to default value.")
         timeout_second = const.DEFAULT_TIMEOUT_SEC
 
     try:
         # Populate config object
         config_obj = config.Config(
             config.RetryConfig(
-                int(retry_wait_time_min), int(retry_wait_time_max), int(retry_max), int(timeout_second)
+                int(retry_wait_time_min),
+                int(retry_wait_time_max),
+                int(retry_max),
+                int(timeout_second),
             ),
             trustauthority_base_url,
             trustAuthority_api_url,
             trust_authority_api_key,
         )
     except ValueError as exc:
-        log.error(
-            f"Value Error in config object creation : {exc}"
-        )
+        log.error(f"Value Error in config object creation : {exc}")
         exit(1)
 
     if config_obj == None:
@@ -101,11 +102,11 @@ def main():
         log.error("ADAPTER_TYPE is not set.")
         exit(1)
     adapter = None
-    if(adapter_type == const.INTEL_TDX_ADAPTER):
+    if adapter_type == const.INTEL_TDX_ADAPTER:
         adapter = TDXAdapter(user_data)
-    elif(adapter_type == const.AZURE_TDX_ADAPTER):
+    elif adapter_type == const.AZURE_TDX_ADAPTER:
         adapter = AzureTDXAdapter(user_data)
-    elif(adapter_type == const.GCP_TDX_ADAPTER):
+    elif adapter_type == const.GCP_TDX_ADAPTER:
         adapter = GCPTDXAdapter(user_data)
     else:
         log.error("Invalid Adapter Type Selected.")

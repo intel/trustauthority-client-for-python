@@ -17,6 +17,7 @@ class ConfigTestCase(unittest.TestCase):
         self.assertEqual(retryconfig_obj.retry_wait_min_sec, 2)
         self.assertEqual(retryconfig_obj.retry_wait_max_sec, 2)
         self.assertEqual(retryconfig_obj.retry_max_num, 2)
+        self.assertEqual(retryconfig_obj.timeout_sec, 2)
 
     def test_config(self):
         """Test method to test config object initialisation"""
@@ -32,6 +33,23 @@ class ConfigTestCase(unittest.TestCase):
         self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_wait_max_sec, 2)
         self.assertEqual(config_obj.retry_cfg.retry_max_num, 2)
+        self.assertEqual(config_obj.retry_cfg.timeout_sec, 2)
+
+    def test_config_default_timeout(self):
+        """Test method to test config object initialisation with default timeout setting"""
+        config_obj = Config(
+            RetryConfig(2, 2, 2),
+            "https://custom-base-url-ITA.com",
+            "https://custom-api-url-ITA.com",
+            "apikey",
+        )
+        self.assertEqual(config_obj.api_key, "apikey")
+        self.assertEqual(config_obj.api_url, "https://custom-api-url-ITA.com")
+        self.assertEqual(config_obj.base_url, "https://custom-base-url-ITA.com")
+        self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
+        self.assertEqual(config_obj.retry_cfg.retry_wait_max_sec, 2)
+        self.assertEqual(config_obj.retry_cfg.retry_max_num, 2)
+        self.assertEqual(config_obj.retry_cfg.timeout_sec, 30)
 
     def test_config_invalid_baseurl(self):
         """Test method to test config object initialisation with Invalid Base URL"""
