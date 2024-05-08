@@ -55,15 +55,21 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 ENV PYTHONPATH=/app
 
+# Install poetry
 RUN pip3 install --no-cache-dir poetry
 COPY . .
 
 # change permissions for intel user to run make command in /minimal-enclave
 RUN chown -R $USERNAME:$USERNAME /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave
+# Change current user to intel inside the container
 USER $USERNAME
+#Install project dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
+# Set the working directory inside the container
 WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave
 RUN make clean all
+# Set LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH=/app/inteltrustauthorityclient/examples/sgx_sample_app/minimal-enclave:/usr/local/lib/:/usr/lib/
+# Set the working directory inside the container
 WORKDIR /app/inteltrustauthorityclient/examples/sgx_sample_app
 ENTRYPOINT ["poetry", "run", "python3", "sgx_sample_app.py"]

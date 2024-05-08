@@ -15,7 +15,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Add intel USER
 ARG USERNAME=intel
-ARG USER_UID=2000
+ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -51,9 +51,12 @@ RUN if [ "${ADAPTER_TYPE}" = "AZURE-TDX" ]; then \
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 ENV PYTHONPATH=/app
+# Install poetry
 RUN pip3 install --no-cache-dir poetry
 COPY . .
+# Change current user to intel inside the container
 USER $USERNAME
+#Install project dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
 WORKDIR /app/inteltrustauthorityclient/examples/tdx_sample_app
 CMD ["poetry", "run", "python3", "tdx_sample_app.py"]

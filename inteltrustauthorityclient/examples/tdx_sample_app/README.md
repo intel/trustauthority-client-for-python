@@ -68,9 +68,22 @@ docker-compose --env-file .env build
 ```
 **change Adapter_type based on TD being used. Adapter_Type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX**
 
+
 ### Deployment Instructions
 
-Once the image is built using the above `docker-compose build` command,
+The docker image must be present inside the TD vm.  For example, it can be exported/copied 
+from a build machine as follows...
+```sh
+#Save the tdx sample app Docker image into trust_authority_python_client_tdx_sample_app.tar.gz
+docker save trust_authority_python_client_tdx_sample_app:v1.0.0 > trust_authority_python_client_tdx_sample_app.tar.gz
+#scp trust_authority_python_client_tdx_sample_app.tar.gz to the TD VM.
+#On the TD VM load/import trust_authority_python_client_tdx_sample_app.tar.gz docker image using below command
+docker load -i trust_authority_python_client_tdx_sample_app.tar.gz
+``` 
+
+### Running the Sample Application
+
+Once the image is built using the above `docker-compose build` command or loaded from the tar file,
 the `TDX Attestation Sample App` image can be run using the following commands:
 
 ```sh
