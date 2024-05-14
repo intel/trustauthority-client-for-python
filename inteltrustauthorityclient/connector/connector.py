@@ -603,10 +603,18 @@ class ITAConnector:
             AttestResponse: Instance of AttestResponse class
         """
         if args.policy_ids != None:
+            # policy_ids: An array of one to ten attestation policy IDs.
+            if len(args.policy_ids) > constants.POLICY_IDS_MAX_LEN:
+                log.error("policy count in request must be between 1 - 10")
+                return None
             for uuid_str in args.policy_ids:
                 if not validate_uuid(uuid_str):
                     log.error(f"Invalid policy UUID :{uuid_str}")
                     return None
+        if args.request_id != None:
+            if not validate_requestid(args.request_id):
+                log.error(f"Invalid Request ID :{args.request_id}")
+
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
@@ -645,3 +653,12 @@ def validate_uuid(uuid_str):
     except TypeError as exc:
         log.error(f"TypeError occurred in UUID check request: {exc}")
         return False
+
+def validate_requestid(req_id):
+    # request_id is of maximum of 128 characters, including a-z, A-Z, 0-9, and - (hyphen). Special characters are not allowed
+    if len(req_id)>constants.REQUEST_ID_MAX_LEN:
+        return False
+    for req_char in req_id:
+        if req_char != '-' and req_char.isalnum() == False:
+            return False
+    return True
