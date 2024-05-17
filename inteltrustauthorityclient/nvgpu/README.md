@@ -11,11 +11,11 @@ To run the tests, refer [Readme](../../../test/README.md).
 
 ## Usage
 
-To Create a new NVIDIA GPU adapter, then use the adapter to collect evidence from Intel TDX and NVIDIA H100 Condidential Computing enabled platform.
+To create a new NVIDIA GPU adapter and use the adapter to collect evidence from Intel TDX and NVIDIA H100 Condidential Computing enabled platform.
 
 ```python
 #Create a new GPU adapter
-adapter = GPUAdapter(user_data, event_log_parser)
+adapter = GPUAdapter()
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)

@@ -27,6 +27,7 @@ HTTP_HEADER_REQUEST_ID = "Request-Id"
 NONCE_URL = "appraisal/v1/nonce"
 AZURE_TDX_ATTEST_URL = "appraisal/v1/attest/azure/tdxvm"
 INTEL_TDX_ATTEST_URL = "appraisal/v1/attest"
+COMPOSITE_ATTEST_URL = "appraisal/v2/attest"
 
 # GCP Specific
 TDX_ATTEST_DEV_PATH = "/dev/tdx_guest"

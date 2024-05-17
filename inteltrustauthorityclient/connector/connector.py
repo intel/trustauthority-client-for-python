@@ -91,8 +91,8 @@ class GetTokenGPUArgs:
     """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
 
     vendor: str
+    nonce: VerifierNonce
     gpu_nonce: str
-    #evidence: str
     evidence: Evidence
     policy_ids: List[UUID]
     request_id: str
@@ -109,7 +109,6 @@ class GetTokenResponse:
 @dataclass
 class TokenRequest:
     """TokenRequest holds all the data required for attestation"""
-
     quote: str  #'json:"quote"'
     verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
     user_data: Optional[str]  #'json:"user_data"'
@@ -120,28 +119,22 @@ class TokenRequest:
     policy_must_match: Optional[bool] = None #'json:"policy_must_match"'
 
     def __post_init__(self):
-    if self.event_log is None:
-        delattr(self, "event_log")
-    if self.user_data is None:
-        delattr(self, "user_data")
+        if self.event_log is None:
+            delattr(self, "event_log")
+        if self.user_data is None:
+            delattr(self, "user_data")
 
 @dataclass
 class GPUTokenRequest:
         vendor: str
+        verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
         gpu_nonce: str    #'json:"verifier_nonce"'
         evidence: str                    #'json:"evidence"'
         arch: str
         certificate: str                    #'json:"certificate"'
-        #VerifierNonce: VerifierNonce    #'json:"verifier_nonce"'
-        runtime_data: str              #'json:"runtime_data"'
-        policy_ids: List[UUID]      #'json:"policy_ids"'
-        #EventLog: str                 #'json:"event_log"'
-
-#@dataclass
-#class CombinedTokenRequest:
-#        tee_request: TokenRequest
-#        gpu_token_request: GPUTokenRequest
-
+        #runtime_data: str              #'json:"runtime_data"'
+        policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
+        event_log: Optional[str] = None #'json:"event_log"'
 
 class ITAConnector:
     """
@@ -175,7 +168,6 @@ class ITAConnector:
         )
 
         def make_request():
-            #url = urljoin(self.cfg.api_url, "appraisal/v2/nonce")
             url = urljoin(self.cfg.api_url, constants.NONCE_URL)
             headers = {
                 constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
@@ -233,7 +225,7 @@ class ITAConnector:
         )
         return GetNonceResponse(response.headers, nonce)
 
-    def get_token_composite(self, tdx: GetTokenArgs, gpu: GetTokenGPUArgs) -> GetTokenResponse:
+    def get_token_composite(self, tdx_args: GetTokenArgs, gpu_args: GetTokenGPUArgs) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api to get Attestation Token.
 
         Args:
@@ -242,11 +234,18 @@ class ITAConnector:
         Returns:
             GetTokenResponse: object to GetTokenResponse class
         """
-        if tdx.policy_ids != None:
-            for uuid_str in tdx.policy_ids:
-                if not validate_uuid(uuid_str):
-                    log.error(f"Invalid policy UUID :{uuid_str}")
-                    return None
+        if tdx_args:
+            if tdx_args.policy_ids != None:
+                for uuid_str in tdx_args.policy_ids:
+                    if not validate_uuid(uuid_str):
+                        log.error(f"Invalid policy UUID :{uuid_str}")
+                        return None
+        if gpu_args:
+            if gpu_args.policy_ids != None:
+                for uuid_str in gpu_args.policy_ids:
+                    if not validate_uuid(uuid_str):
+                        log.error(f"Invalid policy UUID :{uuid_str}")
+                        return None
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
             wait=self.cfg.retry_cfg.backoff,
@@ -255,38 +254,65 @@ class ITAConnector:
         )
         
         def make_request():
-            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
-            encoded_quote = base64.b64encode(tdx.evidence.quote).decode("utf-8")
+            #url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
+            url = urljoin(self.cfg.api_url, constants.COMPOSITE_ATTEST_URL)
+            #encoded_quote = base64.b64encode(tdx.evidence.quote).decode("utf-8")
+
+            # Only one request_id is needed
+            if tdx_args:
+                request_id = tdx_args.request_id
+            elif gpu_args:
+                request_id = gpu_args.request_id
+
             headers = {
                 "x-Api-Key": self.cfg.api_key,
                 "Accept": "application/json",
                 "Content-Type": "application/json",
-                "Request-Id": tdx.request_id,
+                "Request-Id": request_id,
             }
-            tdx_treq = TokenRequest(
-                quote=encoded_quote,
-                verifier_nonce=VerifierNonce(
-                    tdx.nonce.val, tdx.nonce.iat, tdx.nonce.signature
-                ).__dict__,
-                runtime_data=base64.b64encode(tdx.evidence.user_data.encode()).decode(
-                    "utf-8"
-                ),
-                policy_ids=tdx.policy_ids,
-                event_log=tdx.evidence.event_log,
-            )
 
-            gpu_treq = GPUTokenRequest(
-                vendor = "nvidia",
-                gpu_nonce = gpu.evidence['nonce'],
-                evidence = gpu.evidence['evidence'],
-                arch = gpu.evidence['arch'],
-                certificate = gpu.evidence['certificate'],
-                runtime_data = None,
-                policy_ids = None
-            )
+            tdx_treq = None
+            gpu_treq = None
 
-            wrapped_req = {"intel_tee": tdx_treq.__dict__,
-                       "nvidia_gpu": gpu_treq.__dict__}
+            if tdx_args:
+                tdx_treq = TokenRequest(
+                    quote=tdx_args.evidence.quote,
+                    verifier_nonce=VerifierNonce(
+                        tdx_args.nonce.val, tdx_args.nonce.iat, tdx_args.nonce.signature
+                    ).__dict__,
+                    user_data=tdx_args.evidence.user_data,
+                    runtime_data=tdx_args.evidence.runtime_data,
+                    policy_ids=tdx_args.policy_ids,
+                    event_log=tdx_args.evidence.event_log,
+                )
+
+            if gpu_args:
+                gpu_treq = GPUTokenRequest(
+                    vendor = "nvidia",
+                    verifier_nonce=VerifierNonce(
+                        gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
+                    ).__dict__,
+                    gpu_nonce = gpu_args.evidence['nonce'],
+                    evidence = gpu_args.evidence['evidence'],
+                    arch = gpu_args.evidence['arch'],
+                    certificate = gpu_args.evidence['certificate'],
+                    #runtime_data = None,
+                    policy_ids = None
+                )
+
+            if tdx_treq:
+                if gpu_treq:
+                    wrapped_req = {"tdx": tdx_treq.__dict__,
+                            "nvgpu": gpu_treq.__dict__}
+                else:
+                    wrapped_req = {"tdx": tdx_treq.__dict__}
+            else:
+                if gpu_treq:
+                    wrapped_req = {"gpu": gpu_treq.__dict__}
+
+                else:
+                    log.error("No attestation argument is provided")
+                    return None
 
             body = json.dumps(wrapped_req)
             #http_proxy = os.getenv(constants.HTTP_PROXY)
@@ -301,189 +327,6 @@ class ITAConnector:
                     url,
                     headers=headers,
                     data=body,
-                    #data=json.dumps(body),
-                )
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as exc:
-                log.error(f"Http Error occurred in get_token request: {exc}")
-                if self.cfg.retry_cfg.check_retry(response.status_code):
-                    raise exc
-                else:
-                    log.error("Since error is not retryable hence not retrying")
-                    return None
-            except requests.exceptions.ConnectionError as exc:
-                log.error(f"Connection Error occurred in get_token request: {exc}")
-                return None
-            except requests.exceptions.Timeout as exc:
-                log.error(f"Timeout Error occurred in get_token request: {exc}")
-                return None
-            except requests.exceptions.RequestException as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
-                return None
-            except Exception as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
-                return None
-            return response
-
-        try:
-            response = retry_call.__call__(make_request)
-        except requests.exceptions.HTTPError:
-            return None
-        except Exception as exc:
-            log.error(f"Error occurred in get_token request: {exc}")
-            return None
-
-        if response is None:
-            return None
-        return GetTokenResponse(response.json().get("token"), str(response.headers))
-
-
-    def get_token_gpu(self, args: GetTokenGPUArgs) -> GetTokenResponse:
-        """This Function calls Intel Trust Authority rest api to get Attestation Token.
-
-        Args:
-            GetTokenArgs(): Instance of GetTokenArgs class
-
-        Returns:
-            GetTokenResponse: object to GetTokenResponse class
-        """
-        if args.policy_ids != None:
-            for uuid_str in args.policy_ids:
-                if not validate_uuid(uuid_str):
-                    log.error(f"Invalid policy UUID :{uuid_str}")
-                    return None
-        retry_call = Retrying(
-            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
-            wait=self.cfg.retry_cfg.backoff,
-            retry=retry_if_exception_type(requests.exceptions.HTTPError),
-            reraise=True,
-        )
-
-        def make_request():
-            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
-            #encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-            headers = {
-                "x-Api-Key": self.cfg.api_key,
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Request-Id": args.request_id,
-            }
-
-            gpu_treq = GPUTokenRequest(
-                vendor = "nvidia",
-                gpu_nonce = args.evidence['nonce'],
-                evidence = args.evidence['evidence'],
-                arch = args.evidence['arch'],
-                certificate = args.evidence['certificate'],
-                runtime_data = None,
-                policy_ids = None
-            )
-
-            wrapped_req = {"nvidia_gpu": gpu_treq.__dict__}
-            body = json.dumps(wrapped_req)
-
-            http_proxy = "http://proxy-us.intel.com:911/" 
-            https_proxy = "http://proxy-us.intel.com:912/" 
-            proxies = {"http": http_proxy, "https": https_proxy}
-            log.info(
-                f"making attestation token request to Intel Trust Authority ... : {url}"
-            )
-
-            try:
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    data=body
-                    #data=json.dumps(body),
-                    #proxies=proxies
-                )
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as exc:
-                log.error(f"Http Error occurred in get_token request: {exc}")
-                if self.cfg.retry_cfg.check_retry(response.status_code):
-                    raise exc
-                else:
-                    log.error("Since error is not retryable hence not retrying")
-                    return None
-            except requests.exceptions.ConnectionError as exc:
-                log.error(f"Connection Error occurred in get_token request: {exc}")
-                return None
-            except requests.exceptions.Timeout as exc:
-                log.error(f"Timeout Error occurred in get_token request: {exc}")
-                return None
-            except requests.exceptions.RequestException as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
-                return None
-            except Exception as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
-                return None
-            return response
-
-        try:
-            response = retry_call.__call__(make_request)
-        except requests.exceptions.HTTPError:
-            return None
-        except Exception as exc:
-            log.error(f"Error occurred in get_token request: {exc}")
-            return None
-
-        if response is None:
-            return None
-        return GetTokenResponse(response.json().get("token"), str(response.headers))
-
-    def get_token_tdx(self, args: GetTokenArgs) -> GetTokenResponse:
-        """This Function calls Intel Trust Authority rest api to get Attestation Token.
-
-        Args:
-            GetTokenArgs(): Instance of GetTokenArgs class
-
-        Returns:
-            GetTokenResponse: object to GetTokenResponse class
-        """
-        if args.policy_ids != None:
-            for uuid_str in args.policy_ids:
-                if not validate_uuid(uuid_str):
-                    log.error(f"Invalid policy UUID :{uuid_str}")
-                    return None
-        retry_call = Retrying(
-            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
-            wait=self.cfg.retry_cfg.backoff,
-            retry=retry_if_exception_type(requests.exceptions.HTTPError),
-            reraise=True,
-        )
-
-        def make_request():
-            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
-            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
-            headers = {
-                "x-Api-Key": self.cfg.api_key,
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Request-Id": args.request_id,
-            }
-            token_req = TokenRequest(
-                quote=encoded_quote,
-                verifier_nonce=VerifierNonce(
-                    args.nonce.val, args.nonce.iat, args.nonce.signature
-                ).__dict__,
-                runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
-                    "utf-8"
-                ),
-                policy_ids=args.policy_ids,
-                event_log=args.evidence.event_log,
-            )
-            #wrapped_req = {"nvidia_gpu": token_req.__dict__}
-            wrapped_req = {"intel_tee": token_req.__dict__}
-            body = json.dumps(wrapped_req)
-            log.info(
-                f"making attestation token request to Intel Trust Authority ... : {url}"
-            )
-            try:
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    data=body,
-                    #data=json.dumps(body),
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
@@ -543,7 +386,6 @@ class ITAConnector:
                 constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
-            #url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
             elif args.evidence.adapter_type in (
@@ -552,12 +394,11 @@ class ITAConnector:
             ):
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
             elif args.evidence.adapter_type == constants.INTEL_SGX_ADAPTER:
-                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)   #URL is correct?
+                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)   
             else:
                 log.error("Invalid Adapter type")
                 return None
 
-            #url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
             encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
             token_req = TokenRequest(
                 quote=encoded_quote,
@@ -865,11 +706,10 @@ class ITAConnector:
         )
 
         def make_request():
-            #url = urljoin(self.cfg.base_url, "certs")
-            url = "https://amber-devops5-user1.project-amber-smas.com/certs"
+            url = urljoin(self.cfg.base_url, "certs")
         #    http_proxy = os.getenv(constants.HTTP_PROXY)
         #    https_proxy = os.getenv(constants.HTTPS_PROXY)
-            #proxies = {"http": http_proxy, "https": https_proxy}
+        #    proxies = {"http": http_proxy, "https": https_proxy}
             headers = {
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
             }
@@ -923,7 +763,7 @@ class ITAConnector:
         return jwks
 
     def attest(self, args: AttestArgs) -> AttestResponse:
-        """This Function calls Intel Trust Authority Connector endpoints get_nonce(), collect evidence from adapter
+        """This Function calls Intel Trust Authority Connector V1 endpoint for get_nonce(), collect evidence from adapter
            class, get_token() and return the attestation token.
 
         Args:
@@ -941,7 +781,11 @@ class ITAConnector:
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
         concatenated_nonce = decoded_val + decoded_iat
-        evidence = args.adapter.collect_evidence(concatenated_nonce)
+        try:
+            evidence = args.adapter.collect_evidence(concatenated_nonce)
+        except RuntimeError as err:
+            log.error(f"Runtime Error in Adapter collect_evidence Function :{err}")
+            return None
         if evidence is None:
             return None
         log.info("Quote : %s", base64.b64encode(evidence.quote).decode())
