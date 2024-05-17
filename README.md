@@ -3,7 +3,7 @@ Intel Trust Authority Client provides a set of Python modules for attesting diff
 
 ## System Requirement
 
-Use <b>Ubuntu 20.04</b>. 
+Use <b>Ubuntu 20.04 or 22.04</b>. 
 
 ## Installation
  

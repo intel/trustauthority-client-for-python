@@ -2,7 +2,7 @@
 Python Package for communicating with Intel Trust Authority via REST APIs
 
 ## System Requirement
-Use <b>Ubuntu 20.04</b>.
+Use <b>Ubuntu 20.04 or 22.04</b>.
 ## Usage
 
 Create a new Connector instance, then use the exposed Functions to
@@ -27,6 +27,9 @@ To create adapter refer:
 - **SGX**
     - [Intel SGX](../sgx/intel/README.md)
 
+- **NVIDIA GPU**
+    - [NVIDIA GPU](../nvgpu/README.md)
+      
 ```python
 // Initialize AttestArgs required for attestation
 attest_args = AttestArgs(adapter , policy_ids, request_id)
