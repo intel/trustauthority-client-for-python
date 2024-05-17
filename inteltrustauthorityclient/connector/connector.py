@@ -8,7 +8,9 @@ import base64
 import json
 import uuid
 import jwt
+import hashlib
 import os
+import http
 import requests
 import validators
 import logging as log
@@ -23,11 +25,11 @@ from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
 from inteltrustauthorityclient.connector.evidence import Evidence
 from inteltrustauthorityclient.resources import constants as constants
-
+from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
 @dataclass
 class GetNonceArgs:
@@ -38,7 +40,7 @@ class GetNonceArgs:
 
 @dataclass
 class GetNonceResponse:
-    """GetNonceResponse holds the response parameters received from nonce endpoint"""
+    """GetNonceResponse holds the response parameters recieved from nonce endpoint"""
 
     headers: str
     nonce: str
@@ -85,6 +87,18 @@ class GetTokenArgs:
 
 
 @dataclass
+class GetTokenGPUArgs:
+    """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
+
+    vendor: str
+    gpu_nonce: str
+    #evidence: str
+    evidence: Evidence
+    policy_ids: List[UUID]
+    request_id: str
+
+
+@dataclass
 class GetTokenResponse:
     """GetTokenResponse holds the response parameters recieved from attest endpoint"""
 
@@ -106,10 +120,27 @@ class TokenRequest:
     policy_must_match: Optional[bool] = None #'json:"policy_must_match"'
 
     def __post_init__(self):
-        if self.event_log is None:
-            delattr(self, "event_log")
-        if self.user_data is None:
-            delattr(self, "user_data")
+    if self.event_log is None:
+        delattr(self, "event_log")
+    if self.user_data is None:
+        delattr(self, "user_data")
+
+@dataclass
+class GPUTokenRequest:
+        vendor: str
+        gpu_nonce: str    #'json:"verifier_nonce"'
+        evidence: str                    #'json:"evidence"'
+        arch: str
+        certificate: str                    #'json:"certificate"'
+        #VerifierNonce: VerifierNonce    #'json:"verifier_nonce"'
+        runtime_data: str              #'json:"runtime_data"'
+        policy_ids: List[UUID]      #'json:"policy_ids"'
+        #EventLog: str                 #'json:"event_log"'
+
+#@dataclass
+#class CombinedTokenRequest:
+#        tee_request: TokenRequest
+#        gpu_token_request: GPUTokenRequest
 
 
 class ITAConnector:
@@ -144,20 +175,21 @@ class ITAConnector:
         )
 
         def make_request():
+            #url = urljoin(self.cfg.api_url, "appraisal/v2/nonce")
             url = urljoin(self.cfg.api_url, constants.NONCE_URL)
             headers = {
                 constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_REQUEST_ID : args.request_id,
             }
-            http_proxy = os.getenv(constants.HTTP_PROXY)
-            https_proxy = os.getenv(constants.HTTPS_PROXY)
-            proxies = {"http": http_proxy, "https": https_proxy}
+            #http_proxy = os.getenv(constants.HTTP_PROXY)
+            #https_proxy = os.getenv(constants.HTTPS_PROXY)
+            #proxies = {"http": http_proxy, "https": https_proxy}
             try:
                 response = requests.get(
                     url,
                     headers=headers,
-                    proxies=proxies,
+            #        proxies=proxies
                     timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
@@ -201,6 +233,293 @@ class ITAConnector:
         )
         return GetNonceResponse(response.headers, nonce)
 
+    def get_token_composite(self, tdx: GetTokenArgs, gpu: GetTokenGPUArgs) -> GetTokenResponse:
+        """This Function calls Intel Trust Authority rest api to get Attestation Token.
+
+        Args:
+            GetTokenArgs(): Instance of GetTokenArgs class
+
+        Returns:
+            GetTokenResponse: object to GetTokenResponse class
+        """
+        if tdx.policy_ids != None:
+            for uuid_str in tdx.policy_ids:
+                if not validate_uuid(uuid_str):
+                    log.error(f"Invalid policy UUID :{uuid_str}")
+                    return None
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+        
+        def make_request():
+            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
+            encoded_quote = base64.b64encode(tdx.evidence.quote).decode("utf-8")
+            headers = {
+                "x-Api-Key": self.cfg.api_key,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Request-Id": tdx.request_id,
+            }
+            tdx_treq = TokenRequest(
+                quote=encoded_quote,
+                verifier_nonce=VerifierNonce(
+                    tdx.nonce.val, tdx.nonce.iat, tdx.nonce.signature
+                ).__dict__,
+                runtime_data=base64.b64encode(tdx.evidence.user_data.encode()).decode(
+                    "utf-8"
+                ),
+                policy_ids=tdx.policy_ids,
+                event_log=tdx.evidence.event_log,
+            )
+
+            gpu_treq = GPUTokenRequest(
+                vendor = "nvidia",
+                gpu_nonce = gpu.evidence['nonce'],
+                evidence = gpu.evidence['evidence'],
+                arch = gpu.evidence['arch'],
+                certificate = gpu.evidence['certificate'],
+                runtime_data = None,
+                policy_ids = None
+            )
+
+            wrapped_req = {"intel_tee": tdx_treq.__dict__,
+                       "nvidia_gpu": gpu_treq.__dict__}
+
+            body = json.dumps(wrapped_req)
+            #http_proxy = os.getenv(constants.HTTP_PROXY)
+            #https_proxy = os.getenv(constants.HTTPS_PROXY)
+            #proxies = {"http": http_proxy, "https": https_proxy}
+            log.info(
+                f"making attestation token request to Intel Trust Authority ... : {url}"
+            )
+
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=body,
+                    #data=json.dumps(body),
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_token request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
+        try:
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
+            return None
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
+            return None
+
+        if response is None:
+            return None
+        return GetTokenResponse(response.json().get("token"), str(response.headers))
+
+
+    def get_token_gpu(self, args: GetTokenGPUArgs) -> GetTokenResponse:
+        """This Function calls Intel Trust Authority rest api to get Attestation Token.
+
+        Args:
+            GetTokenArgs(): Instance of GetTokenArgs class
+
+        Returns:
+            GetTokenResponse: object to GetTokenResponse class
+        """
+        if args.policy_ids != None:
+            for uuid_str in args.policy_ids:
+                if not validate_uuid(uuid_str):
+                    log.error(f"Invalid policy UUID :{uuid_str}")
+                    return None
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+
+        def make_request():
+            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
+            #encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
+            headers = {
+                "x-Api-Key": self.cfg.api_key,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Request-Id": args.request_id,
+            }
+
+            gpu_treq = GPUTokenRequest(
+                vendor = "nvidia",
+                gpu_nonce = args.evidence['nonce'],
+                evidence = args.evidence['evidence'],
+                arch = args.evidence['arch'],
+                certificate = args.evidence['certificate'],
+                runtime_data = None,
+                policy_ids = None
+            )
+
+            wrapped_req = {"nvidia_gpu": gpu_treq.__dict__}
+            body = json.dumps(wrapped_req)
+
+            http_proxy = "http://proxy-us.intel.com:911/" 
+            https_proxy = "http://proxy-us.intel.com:912/" 
+            proxies = {"http": http_proxy, "https": https_proxy}
+            log.info(
+                f"making attestation token request to Intel Trust Authority ... : {url}"
+            )
+
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=body
+                    #data=json.dumps(body),
+                    #proxies=proxies
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_token request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
+        try:
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
+            return None
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
+            return None
+
+        if response is None:
+            return None
+        return GetTokenResponse(response.json().get("token"), str(response.headers))
+
+    def get_token_tdx(self, args: GetTokenArgs) -> GetTokenResponse:
+        """This Function calls Intel Trust Authority rest api to get Attestation Token.
+
+        Args:
+            GetTokenArgs(): Instance of GetTokenArgs class
+
+        Returns:
+            GetTokenResponse: object to GetTokenResponse class
+        """
+        if args.policy_ids != None:
+            for uuid_str in args.policy_ids:
+                if not validate_uuid(uuid_str):
+                    log.error(f"Invalid policy UUID :{uuid_str}")
+                    return None
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+
+        def make_request():
+            url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
+            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
+            headers = {
+                "x-Api-Key": self.cfg.api_key,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Request-Id": args.request_id,
+            }
+            token_req = TokenRequest(
+                quote=encoded_quote,
+                verifier_nonce=VerifierNonce(
+                    args.nonce.val, args.nonce.iat, args.nonce.signature
+                ).__dict__,
+                runtime_data=base64.b64encode(args.evidence.user_data.encode()).decode(
+                    "utf-8"
+                ),
+                policy_ids=args.policy_ids,
+                event_log=args.evidence.event_log,
+            )
+            #wrapped_req = {"nvidia_gpu": token_req.__dict__}
+            wrapped_req = {"intel_tee": token_req.__dict__}
+            body = json.dumps(wrapped_req)
+            log.info(
+                f"making attestation token request to Intel Trust Authority ... : {url}"
+            )
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=body,
+                    #data=json.dumps(body),
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_token request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                else:
+                    log.error("Since error is not retryable hence not retrying")
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
+        try:
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
+            return None
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
+            return None
+
+        if response is None:
+            return None
+        return GetTokenResponse(response.json().get("token"), str(response.headers))
+
+
     def get_token(self, args: GetTokenArgs) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api to get Attestation Token.
 
@@ -224,6 +543,7 @@ class ITAConnector:
                 constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
+            #url = urljoin(self.cfg.api_url, "appraisal/v1/attest")
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
             elif args.evidence.adapter_type in (
@@ -232,12 +552,15 @@ class ITAConnector:
             ):
                 url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
             elif args.evidence.adapter_type == constants.INTEL_SGX_ADAPTER:
-                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
+                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)   #URL is correct?
             else:
                 log.error("Invalid Adapter type")
                 return None
+
+            #url = urljoin(self.cfg.api_url, "appraisal/v2/attest")
+            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
             token_req = TokenRequest(
-                quote=args.evidence.quote,
+                quote=encoded_quote,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
                 ).__dict__,
@@ -315,9 +638,9 @@ class ITAConnector:
             log.error("CRL URL missing in the certificate")
             return None
         if validators.url(crl_url):
-            http_proxy = os.getenv(constants.HTTP_PROXY)
-            https_proxy = os.getenv(constants.HTTPS_PROXY)
-            proxies = {"http": http_proxy, "https": https_proxy}
+            #http_proxy = os.getenv(constants.HTTP_PROXY)
+            #https_proxy = os.getenv(constants.HTTPS_PROXY)
+            #proxies = {"http": http_proxy, "https": https_proxy}
 
             def make_request():
                 try:
@@ -370,6 +693,7 @@ class ITAConnector:
         if leaf_cert is None or ca_cert is None or crl is None:
             log.error("Leaf Cert, CA Cert, or CRL is None")
             return False
+
         pub_key = ca_cert.public_key()
         if not (crl.is_signature_valid(pub_key)):
             log.error("Invalid CRL signature")
@@ -380,13 +704,15 @@ class ITAConnector:
         if crl.next_update_utc.timestamp() < utc_timestamp_now:
             log.error("crl has been expired")
             return False
+
         if (
             crl.get_revoked_certificate_by_serial_number(leaf_cert.serial_number)
             != None
-        ):
-            log.error("certificate has been revoked")
+        ): 
+            log.error("Certificate has been revoked")
             return False
         return True
+
 
     def verify_token(self, token):
         """This Function verify Attestation token issued by Intel Trust Authority
@@ -407,7 +733,7 @@ class ITAConnector:
 
         # Get the JWT Signing Certificates from Intel Trust Authority
         jwks_data = self.get_token_signing_certificates()
-        if jwks_data == None:
+        if jwks_data is None:
             log.error(
                 "Failed to get token signing certificates from Intel Trust Authority."
             )
@@ -429,7 +755,6 @@ class ITAConnector:
             )
             return None
 
-        # Get Root, Intermediate and Leaf certificates from x5c Token signing certificates list
         root = []
         intermediate = []
         leaf_cert = None
@@ -460,28 +785,26 @@ class ITAConnector:
             else:
                 leaf_cert = cert_data
 
-        # Validate Intermediate CA Certificate against Root CA CRL
         cdp_list = inter_ca_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
         inter_ca_crl_url = cdp_list.value[0].full_name[0].value
         log.debug(f"inter ca crl url : {inter_ca_crl_url}")
         root_crl_obj = self.get_crl(inter_ca_crl_url)
-        if root_crl_obj == None:
+        if root_crl_obj is None:
             log.error("Failed to get ROOT CA CRL Object")
             return None
         if not self.verify_crl(root_crl_obj, inter_ca_cert, root_cert):
             log.error("Failed to check Intermediate CA Certificate against Root CA CRL")
             return None
 
-        # Validate Leaf certificate against Intermediate CA CRL
         cdp_list = leaf_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
         leaf_crl_url = cdp_list.value[0].full_name[0].value
         log.debug(f"leaf crl url : {leaf_crl_url}")
         intermediate_ca_crl_obj = self.get_crl(leaf_crl_url)
-        if intermediate_ca_crl_obj == None:
+        if intermediate_ca_crl_obj is None:
             log.error("Failed to get INTERMEDIATE CA CRL Object")
             return None
         if not self.verify_crl(intermediate_ca_crl_obj, leaf_cert, inter_ca_cert):
@@ -516,10 +839,7 @@ class ITAConnector:
         log.debug("Leaf certificate verification against Root and Inter ca certificate Successful")
 
         try:
-            # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
-            decoded_token = jwt.decode(
-                token, leaf_cert.public_key(), unverified_headers.get("alg")
-            )
+            jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
         except jwt.ExpiredSignatureError:
             log.error("Attestation Token has expired.")
             return None
@@ -531,11 +851,12 @@ class ITAConnector:
             return None
         else:
             log.debug("Attestation Token Verification Successful")
-            return decoded_token
+            return jwt.decode(
+                token, leaf_cert.public_key(), unverified_headers.get("alg")
+            )
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
-
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
             wait=self.cfg.retry_cfg.backoff,
@@ -544,10 +865,11 @@ class ITAConnector:
         )
 
         def make_request():
-            url = urljoin(self.cfg.base_url, "certs")
-            http_proxy = os.getenv(constants.HTTP_PROXY)
-            https_proxy = os.getenv(constants.HTTPS_PROXY)
-            proxies = {"http": http_proxy, "https": https_proxy}
+            #url = urljoin(self.cfg.base_url, "certs")
+            url = "https://amber-devops5-user1.project-amber-smas.com/certs"
+        #    http_proxy = os.getenv(constants.HTTP_PROXY)
+        #    https_proxy = os.getenv(constants.HTTPS_PROXY)
+            #proxies = {"http": http_proxy, "https": https_proxy}
             headers = {
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
             }
@@ -556,10 +878,8 @@ class ITAConnector:
                 response = requests.get(
                     url,
                     headers=headers,
-                    proxies=proxies,
-                    timeout=self.cfg.retry_cfg.timeout_sec,
+            #        proxies=proxies,
                 )
-
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
                 log.error(
@@ -614,24 +934,21 @@ class ITAConnector:
         """
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
-        if nonce_resp == None:
+        if nonce_resp is None:
             log.error("Get Nonce request failed")
             return None
         log.debug(f"Nonce : {nonce_resp.nonce}")
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
         concatenated_nonce = decoded_val + decoded_iat
-        try:
-            evidence = args.adapter.collect_evidence(concatenated_nonce)
-        except RuntimeError as err:
-            log.error(f"Runtime Error in Adapter collect_evidence Function :{err}")
+        evidence = args.adapter.collect_evidence(concatenated_nonce)
+        if evidence is None:
             return None
-        if evidence == None:
-            return None
+        log.info("Quote : %s", base64.b64encode(evidence.quote).decode())
         token_resp = self.get_token(
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
         )
-        if token_resp == None:
+        if token_resp is None:
             log.debug("Get Token request failed")
             return None
         response.token = token_resp.token
