@@ -1,25 +1,21 @@
 name: "Security Scans"
 on:
-  pull_request:
   workflow_dispatch:
   
 jobs:
     bandit-scan:
-        environment: Pull_Request_Environment
         runs-on: [ self-hosted, taas ]
         steps:
-            - uses: actions/checkout@v3
-              with:
-                    fetch-depth: 0
-            - name: Scan
+            - uses: actions/checkout@v4
+            - name: Bandit Scan
               uses: intel-innersource/frameworks.devops.github.actions.bandit@main
               with:
                 scan_path: .
                 report_path: artifacts/ITAPythonClient
+                exclude: .github
 
     Checkmarx:
         runs-on: [ self-hosted, taas ]
-        environment: Pull_Request_Environment
         steps:
             - uses: actions/checkout@v3
             - name: Scan
@@ -27,5 +23,8 @@ jobs:
               with:
                     username: ${{ secrets.CHECKMARX_USERNAME }}
                     password: ${{ secrets.CHECKMARX_PASSWORD }}
+                    http_proxy: ${{ secrets.HTTP_PROXY }}
+                    https_proxy: ${{ secrets.HTTPS_PROXY }}
+                    no_proxy: ${{ secrets.NO_PROXY }}
                     project: ITA Python Client
                     team: /CxServer/SP/Intel/IntelProjects/IAP/36221
