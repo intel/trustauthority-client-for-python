@@ -22,18 +22,13 @@ class GPUEvidence:
     evidence: bytearray
     user_data: bytearray
     event_log: bytearray
-#class GPUEvidence:
-#    type: str
-#    evidence: str
-#    user_data: str
-#    event_log: str
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self, uData=None, evLogParser=None):
         """Initializes GPU adapter object
         Args:
-            user_data ([]byte): contains any user data to be added to Evidence (Currently not used)
-            event_log_parser ([]byte):
+            user_data ([]byte): contains any user data to be added to Evidence (Currently not used for GPU)
+            event_log_parser ([]byte): currently not used for GPU
         """
         self.uData = uData
         self.EvLogParser = evLogParser
@@ -50,7 +45,7 @@ class GPUAdapter(EvidenceAdapter):
            return None
 
         evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
-        # Currently GPU attestation does not use user data. 
+        # Currently user data is not used with GPU attestation. 
         gpu_evidence = GPUEvidence("H100", evidence_payload, user_data=None, event_log=None)
         return gpu_evidence
 

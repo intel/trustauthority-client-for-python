@@ -399,9 +399,10 @@ class ITAConnector:
                 log.error("Invalid Adapter type")
                 return None
 
-            encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
+            #encoded_quote = base64.b64encode(args.evidence.quote).decode("utf-8")
             token_req = TokenRequest(
-                quote=encoded_quote,
+                #quote=encoded_quote,
+                quote=args.evidence.quote,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
                 ).__dict__,
@@ -421,7 +422,7 @@ class ITAConnector:
                     url,
                     headers=headers,
                     data=json.dumps(body),
-                    proxies=proxies,
+                    #proxies=proxies,
                     timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
@@ -788,7 +789,6 @@ class ITAConnector:
             return None
         if evidence is None:
             return None
-        log.info("Quote : %s", base64.b64encode(evidence.quote).decode())
         token_resp = self.get_token(
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
         )
