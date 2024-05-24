@@ -6,6 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import base64
 import requests
+import time
 import json
 import io
 import subprocess
@@ -13,6 +14,7 @@ import struct
 import hashlib
 import tempfile
 import os
+import binascii
 
 import logging as log
 import inteltrustauthorityclient.resources.constants as const
@@ -61,7 +63,7 @@ class AzureTDXAdapter:
         # If not then define it
         command = ["tpm2_nvreadpublic", "0x01400002"]
         try:
-            subprocess.run(command, check=True)
+            subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
         except Exception as e:
             log.info("Creating nv_index as it is not defined already")
             try:
@@ -76,7 +78,7 @@ class AzureTDXAdapter:
 
         # Write user_Data + nonce to report: "tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-"
         try:
-            with tempfile.NamedTemporaryFile(mode="wb", delete=True) as temp_file:
+            with tempfile.NamedTemporaryFile(mode="wb", delete=False) as temp_file:
                 temp_filename = temp_file.name
                 temp_file.write(digest)
             command = ["tpm2_nvwrite", "-C", "o", "0x01400002", "-i", temp_filename]
@@ -87,7 +89,10 @@ class AzureTDXAdapter:
         except Exception as e:
             log.error(f"issue in writing to nv_index {e}")
             return None
+        finally:
+            temp_file.close()
 
+        time.sleep(3)
         # Read the final report at "0x01400001"
         try:
             command = ["tpm2_nvread", "-C", "o", "0x01400001"]
@@ -133,6 +138,27 @@ class AzureTDXAdapter:
         runtime_data_encoded = base64.b64encode(runtime_data).decode("utf-8")
         log.info("Quote : %s", base64.b64encode(quote.encode("utf-8")).decode("utf-8"))
         user_data_encoded = base64.b64encode(self.user_data.encode()).decode("utf-8")
+
+        try:
+            runtime_data_map = json.loads(runtime_data)
+        except json.JSONDecodeError as e:
+            log.error(f"Invalid runtime_data: {e}")
+            return None
+
+        if "user-data" not in runtime_data_map:
+            log.error("runtime_data doesn't include user-data")
+            return None
+
+        user_data = runtime_data_map["user-data"]
+
+        if not isinstance(user_data, str):
+            log.error("user-data string assertion fail")
+            return None
+
+        if user_data.lower() != binascii.hexlify(digest).decode().lower():
+            log.error("The collected evidence is invalid")
+            return None
+
         # Create evidence class object to be returned
         tdx_evidence = Evidence(
             1,
