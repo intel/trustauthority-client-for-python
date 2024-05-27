@@ -137,27 +137,33 @@ class AzureTDXAdapter:
         runtime_data = tpm_report[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET + r_size]
         runtime_data_encoded = base64.b64encode(runtime_data).decode("utf-8")
         log.info("Quote : %s", base64.b64encode(quote.encode("utf-8")).decode("utf-8"))
-        user_data_encoded = base64.b64encode(self.user_data.encode()).decode("utf-8")
+        if self.user_data != None:
+            user_data_encoded = base64.b64encode(self.user_data.encode()).decode(
+                "utf-8"
+            )
+        else:
+            user_data_encoded = None
 
-        try:
-            runtime_data_map = json.loads(runtime_data)
-        except json.JSONDecodeError as e:
-            log.error(f"Invalid runtime_data: {e}")
-            return None
+        if nonce != None and self.user_data != None:
+            try:
+                runtime_data_map = json.loads(runtime_data)
+            except json.JSONDecodeError as e:
+                log.error(f"Invalid runtime_data: {e}")
+                return None
 
-        if "user-data" not in runtime_data_map:
-            log.error("runtime_data doesn't include user-data")
-            return None
+            if "user-data" not in runtime_data_map:
+                log.error("runtime_data doesn't include user-data")
+                return None
 
-        user_data = runtime_data_map["user-data"]
+            user_data = runtime_data_map["user-data"]
 
-        if not isinstance(user_data, str):
-            log.error("user-data string assertion fail")
-            return None
+            if not isinstance(user_data, str):
+                log.error("user-data string assertion fail")
+                return None
 
-        if user_data.lower() != binascii.hexlify(digest).decode().lower():
-            log.error("The collected evidence is invalid")
-            return None
+            if user_data.lower() != binascii.hexlify(digest).decode().lower():
+                log.error("The collected evidence is invalid")
+                return None
 
         # Create evidence class object to be returned
         tdx_evidence = Evidence(
