@@ -10,7 +10,7 @@ exclude = ["inteltrustauthorityclient/examples"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "^2.31.0"
+requests = "^2.32.0"
 validators = "^0.22.0"
 resources = "^0.0.1"
 staty = "^1.2.4"
@@ -21,7 +21,7 @@ coverage = "^7.4.2"
 pytest = "^8.0.2"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.1.1"
+black = "^24.3.0"
 
 [build-system]
 requires = ["poetry-core"]
