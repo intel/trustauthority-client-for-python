@@ -17,6 +17,7 @@ class AzureTDXAdapterTestCase(unittest.TestCase):
             "binascii.hexlify"
         ) as mock_hexlify:
             mock_run.return_value = MagicMock(stdout=b"tpm_report")
+            
             mock_post.return_value = MagicMock(json=lambda: {"quote": "quote"})
             mock_json_loads.return_value = {
                 "user-data": "user_data"
