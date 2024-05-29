@@ -126,10 +126,10 @@ def main():
         exit(1)
     if policy_ids != None:
         attest_args = connector.AttestArgs(
-            adapter, trust_authority_request_id, policy_ids
+            adapter, trust_authority_token_signing_algorithm, trust_authority_policy_match, trust_authority_request_id, policy_ids
         )
     else:
-        attest_args = connector.AttestArgs(adapter, trust_authority_request_id)
+        attest_args = connector.AttestArgs(adapter, trust_authority_token_signing_algorithm, trust_authority_policy_match, trust_authority_request_id)
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:

@@ -78,7 +78,7 @@ Use the adapter created with following piece of code to get attestation token:
 # policy_ids: List of policies to use in generating the token
 
 attest_args = connector.AttestArgs(
-            **adapter**, trust_authority_request_id, policy_ids
+            **adapter**, trust_authority_token_signing_algorithm, trust_authority_policy_match, trust_authority_request_id, policy_ids
         )
 
 # Get the Attestation Token from Intel Trust Authority

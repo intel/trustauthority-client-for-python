@@ -58,9 +58,11 @@ class AttestArgs:
     """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
 
     adapter: EvidenceAdapter
+    token_signing_alg: str = None
+    policy_must_match: bool = None
     request_id: Optional[str] = None
     policy_ids: Optional[List[UUID]] = None
-
+    
 
 @dataclass
 class AttestResponse:
@@ -78,6 +80,8 @@ class GetTokenArgs:
     evidence: Evidence
     policy_ids: List[UUID]
     request_id: str
+    token_signing_alg: str
+    policy_must_match: bool
 
 
 @dataclass
@@ -98,6 +102,8 @@ class TokenRequest:
     runtime_data: Optional[str]  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
+    token_signing_alg: Optional[str] = None #'json:"token_signing_alg"'
+    policy_must_match: Optional[bool] = None #'json:"policy_must_match"'
 
     def __post_init__(self):
         if self.event_log is None:
@@ -238,8 +244,14 @@ class ITAConnector:
                 runtime_data=base64.b64encode(args.evidence.runtime_data).decode("utf-8") if args.evidence.runtime_data is not None else None,
                 policy_ids=args.policy_ids,
                 event_log=args.evidence.event_log,
+                token_signing_alg=args.token_signing_alg,
+                policy_must_match=args.policy_must_match,
             )
             body = token_req.__dict__
+            if isinstance(body["policy_must_match"],str) and body["policy_must_match"].lower() == "true":
+                body["policy_must_match"]=True
+            if isinstance(body["policy_must_match"],str) and body["policy_must_match"].lower() == "false":
+                body["policy_must_match"]=False 
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
@@ -384,6 +396,10 @@ class ITAConnector:
             token: Intel Trust Authority Attestation Token
         """
         unverified_headers = jwt.get_unverified_header(token)
+        token_signing_alg = unverified_headers.get("alg", None)
+        if not validate_token_signing_algorithm(token_signing_alg):
+            log.error("Invalid Token Signing Algorithm")
+            return None
         kid = unverified_headers.get("kid", None)
         if kid is None:
             log.error("Missing key id in token")
@@ -613,7 +629,7 @@ class ITAConnector:
         if evidence == None:
             return None
         token_resp = self.get_token(
-            GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id)
+            GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
         )
         if token_resp == None:
             log.debug("Get Token request failed")
