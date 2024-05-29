@@ -90,7 +90,7 @@ class GetTokenArgs:
 class GetTokenGPUArgs:
     """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
 
-#    vendor: str
+    vendor: str
     nonce: VerifierNonce
     gpu_nonce: str
     evidence: Evidence
@@ -217,7 +217,7 @@ class ITAConnector:
         )
         return GetNonceResponse(response.headers, nonce)
 
-    def get_token_composite(self, tdx_args: GetTokenArgs, gpu_args: GetTokenGPUArgs, **kwargs) -> GetTokenResponse:
+    def get_token_composite(self, tdx_args: GetTokenArgs, gpu_args: GetTokenGPUArgs) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
         Currently supported attestation is TDX, NVGPU, TDX+NVGPU for v1.7
         Args:
@@ -232,12 +232,12 @@ class ITAConnector:
                     if not validate_uuid(uuid_str):
                         log.error(f"Invalid policy UUID :{uuid_str}")
                         return None
-        if gpu_args:
-            if gpu_args.policy_ids != None:
-                for uuid_str in gpu_args.policy_ids:
-                    if not validate_uuid(uuid_str):
-                        log.error(f"Invalid policy UUID :{uuid_str}")
-                        return None
+        #if gpu_args:
+        #    if gpu_args.policy_ids != None:
+        #        for uuid_str in gpu_args.policy_ids:
+        #            if not validate_uuid(uuid_str):
+        #                log.error(f"Invalid policy UUID :{uuid_str}")
+        #                return None
 
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
@@ -276,6 +276,7 @@ class ITAConnector:
                 # TDX+NVGPU
                 if gpu_args:
                     gpu_treq = GPUTokenRequest(
+                    vendor = "nvidia",
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
@@ -294,6 +295,7 @@ class ITAConnector:
             # NVGPU
             elif gpu_args:
                 gpu_treq = GPUTokenRequest(
+                    vendor = "nvidia",
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
@@ -309,6 +311,7 @@ class ITAConnector:
                 return None
 
             body = json.dumps(wrapped_req)
+            print(body)
             log.info(
                 f"making attestation token request to Intel Trust Authority ... : {url}"
             )
