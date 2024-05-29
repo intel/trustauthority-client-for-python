@@ -21,17 +21,15 @@ class GPUEvidence:
     evidence: bytearray
 
 class GPUAdapter(EvidenceAdapter):
-    def __init__(self, uData=None, evLogParser=None):
+    def __init__(self):
         """Initializes GPU adapter object
         Args:
             user_data ([]byte): contains any user data to be added to Evidence (Currently not used for GPU)
             event_log_parser ([]byte): currently not used for GPU
         """
-        self.uData = uData
-        self.EvLogParser = evLogParser
 
     def collect_evidence(self, nonce):
-        # When Verifier nonce is not user, generate the NV SDK compatible gpu_nonce of random 32 hex string 
+        # When Verifier nonce is not provided, generate the NV SDK compatible gpu_nonce of random 32 hex string 
         if nonce is None:
             nonce = secrets.token_bytes(32)
             
@@ -46,8 +44,6 @@ class GPUAdapter(EvidenceAdapter):
            return None
 
         evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
-        # Currently user data is not used with GPU attestation. 
-        #gpu_evidence = GPUEvidence("H100", evidence_payload, user_data=None, event_log=None)
         gpu_evidence = GPUEvidence("H100", evidence_payload)
         return gpu_evidence
 
