@@ -5,6 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 from urllib.parse import urlparse
+import uuid
 import validators
 import logging as log
 from tenacity import wait_exponential
@@ -25,9 +26,9 @@ class Config:
             api_key: Intel Trust Authority api key
         """
         if not validate_url(base_url):
-            raise ValueError("validate_url() failed for Intel Trust Authority Base URL")
+            raise ValueError("Invalid Intel Trust Authority Base URL")
         if not validate_url(api_url):
-            raise ValueError("validate_url() failed for Intel Trust Authority API URL")
+            raise ValueError("Invalid Intel Trust Authority API URL")
         self._base_url = base_url
         self._api_url = api_url
         self._retry_cfg = retry_cfg
@@ -59,9 +60,9 @@ class RetryConfig:
 
     def __init__(
         self,
-        retry_wait_min: int,
-        retry_wait_max: int,
-        retry_max_num: int,
+        retry_wait_min: int = None,
+        retry_wait_max: int = None,
+        retry_max_num: int = None,
         timeout_sec: int = None,
         check_retry=None,
         backoff=None,
@@ -89,7 +90,7 @@ class RetryConfig:
         )
         self.check_retry = check_retry if check_retry != None else self.retry_policy
         self.timeout_sec = (
-            timeout_sec if timeout_sec != None else constants.DEFAULT_TIMEOUT_SEC
+            timeout_sec if timeout_sec != None else constants.DEFAULT_CLIENT_TIMEOUT_SEC
         )
 
     def retry_policy(self, status_code):
@@ -105,3 +106,25 @@ def validate_url(url):
             return False
         return True
     return False
+
+
+def validate_uuid(uuid_str):
+    try:
+        uuid.UUID(uuid_str)
+        return True
+    except ValueError as exc:
+        log.error(f"ValueError occurred in UUID check request: {exc}")
+        return False
+    except TypeError as exc:
+        log.error(f"TypeError occurred in UUID check request: {exc}")
+        return False
+
+
+def validate_requestid(req_id):
+    # request_id is of maximum of 128 characters, including a-z, A-Z, 0-9, and - (hyphen). Special characters are not allowed
+    if len(req_id) > constants.REQUEST_ID_MAX_LEN:
+        return False
+    for req_char in req_id:
+        if req_char != "-" and req_char.isalnum() == False:
+            return False
+    return True

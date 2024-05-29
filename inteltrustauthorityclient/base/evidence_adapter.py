@@ -5,6 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 from abc import ABC, abstractmethod
+from inteltrustauthorityclient.connector.evidence import Evidence
 
 
 class EvidenceAdapter(ABC):
@@ -15,5 +16,5 @@ class EvidenceAdapter(ABC):
     """
 
     @abstractmethod
-    def collect_evidence(self, nonce):
+    def collect_evidence(self, nonce)->Evidence:
         pass

@@ -85,12 +85,12 @@ class sgx_report_t(ctypes.Structure):
 class SGXAdapter:
     """This class creates adapter which collects SGX Quote from Intel SGX platform."""
 
-    def __init__(self, eid, report_function, user_data=None) -> None:
+    def __init__(self, eid, report_function, user_data:bytearray=None) -> None:
         """Initializes Intel sgx adapter object
         Args:
             eid (string): Enclave id
             report_function (function): Function to Get Enclave Report Data
-            user_data (string, optional): User data.
+            user_data (byte array, optional): User data.
         """
         self.eid = eid
         self.report_function = report_function
@@ -190,10 +190,9 @@ class SGXAdapter:
             quote_data = base64.b64encode(
                 bytearray(quote_buffer[: quote_size.value])
             ).decode("utf-8")
-            user_data_encoded = base64.b64encode(self.user_data).decode("utf-8")
         except Exception as exc:
             log.error(f"Error while encoding data :{exc}")
             return None
         return Evidence(
-            0, quote_data, None, user_data_encoded, None, const.INTEL_SGX_ADAPTER
+            0, quote_data, None, self.user_data, None, const.INTEL_SGX_ADAPTER
         )

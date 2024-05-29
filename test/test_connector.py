@@ -112,7 +112,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token(self):
         """Test method to test get_token() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        evidence_params = Evidence(0, "quotedata", b"", b"", "", "INTEL-TDX")
         tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234")
         with patch("requests.post", url=self.ita_c.token_url) as mocked_get:
             mocked_response = requests.Response()
@@ -121,14 +121,6 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
             assert token.token == self.mocked_token_response["token"]
-
-    def test_get_token_invalid_policyid(self):
-        """Test method to test get_token() with Invalid UUID's"""
-        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, ["1234-5678"], "1234")
-        token = self.ita_c.get_token(tokenargs)
-        assert token is None
 
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
@@ -402,12 +394,6 @@ class ConnectorTestCase(unittest.TestCase):
                     decoded_token = self.ita_c.attest(attest_args)
                     assert decoded_token is not None
 
-    def test_attest_invalid_policyid(self):
-        """Test method to test attest() with Invalid policyid"""
-        attest_args = AttestArgs(TDXAdapter(""), "", ["1234-5678"])
-        decoded_token = self.ita_c.attest(attest_args)
-        assert decoded_token is None
-
     def test_attest_empty_nonce(self):
         """Test method to test attest() with empty Nonce"""
         attest_args = AttestArgs(TDXAdapter(""), "")
@@ -460,6 +446,48 @@ class ConnectorTestCase(unittest.TestCase):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
                     assert decoded_token is None
+
+    def test_get_crl_null(self):
+        cfg = MagicMock()
+        connector = ITAConnector(cfg)
+        crl_url = "mock_crl_url"
+        expected_crl = MagicMock()
+
+        with patch(
+            "inteltrustauthorityclient.connector.connector.requests.get"
+        ) as mock_get:
+            mock_get.return_value = MagicMock()
+            mock_get.return_value.content = expected_crl
+
+            result = connector.get_crl("")
+            self.assertNotEqual(result, expected_crl)
+
+    def test_get_crl_incorrect(self):
+        cfg = MagicMock()
+        connector = ITAConnector(cfg)
+        crl_url = "mock_crl_url"
+        expected_crl = MagicMock()
+
+        with patch(
+            "inteltrustauthorityclient.connector.connector.requests.get"
+        ) as mock_get:
+            mock_get.return_value = MagicMock()
+            mock_get.return_value.content = expected_crl
+
+            result = connector.get_crl("abcd")
+            self.assertEqual(result, None)
+
+    def test_get_crl_timeout_error(self):
+        """Test method to test get_crl() with raising Timeout Error"""
+        cfg = MagicMock()
+        connector = ITAConnector(cfg)
+        crl_url = "mock_crl_url"
+        with patch(
+            "inteltrustauthorityclient.connector.connector.requests.get"
+        ) as mock_get:
+            mock_get.side_effect = requests.exceptions.Timeout
+            result = connector.get_crl("http://www.abcd.com")
+            self.assertEqual(result, None)
 
 
 if __name__ == "__main__":

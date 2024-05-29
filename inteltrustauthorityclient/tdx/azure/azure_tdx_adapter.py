@@ -30,21 +30,19 @@ RUNTIME_DATA_OFFSET = 1236
 class AzureTDXAdapter:
     """This class creates adapter which collects TDX Quote from Azure TDX platform."""
 
-    def __init__(self, user_data=None, event_log_parser=None) -> None:
+    def __init__(self, user_data: bytearray=None, event_log_parser: bytearray=None) -> None:
         """Initializes azure tdx adapter object
 
         Args:
             user_data (_type_, optional): _description_. Defaults to None.
-            event_log_parser (_type_, optional): _description_. Defaults to None.
         """
         self.user_data = user_data
-        self.event_log_parser = event_log_parser
 
     def collect_evidence(self, nonce=None) -> Evidence:
         """This Function calls tpm2-tools to get Azure TDX quote.
 
         Args:
-            nonce ([]byte]): optional nonce provided by Intel Trust Authority
+            nonce ([]byte]): optional nonce provided
 
         Returns:
             evidence: object to Evidence class
@@ -54,7 +52,7 @@ class AzureTDXAdapter:
             if nonce != None:
                 sha512_hash.update(nonce)
             if self.user_data != None:
-                sha512_hash.update((self.user_data.encode("utf-8")))
+                sha512_hash.update(self.user_data)
             digest = sha512_hash.digest()
         else:
             digest = bytearray(64)
@@ -76,7 +74,7 @@ class AzureTDXAdapter:
                 log.error(f"issue in creating nv_index: {e}")
                 return None
 
-        # Write user_Data + nonce to report: "tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-"
+        # Write sha512(nonce || user_data) to NVIndex : "tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-"
         try:
             with tempfile.NamedTemporaryFile(mode="wb", delete=False) as temp_file:
                 temp_filename = temp_file.name
@@ -99,10 +97,10 @@ class AzureTDXAdapter:
             result = subprocess.run(command, capture_output=True)
             tpm_report = result.stdout
         except subprocess.CalledProcessError as e:
-            log.error(f"issue in reading nv_index: {e}")
+            log.error(f"error while reading TDReport from NVIndex.: {e}")
             return None
         except Exception as e:
-            log.error(f"issue in reading nv_index {e}")
+            log.error(f"error while reading TDReport from NVIndex. {e}")
             return None
 
         td_report = tpm_report[TD_REPORT_OFFSET : TD_REPORT_OFFSET + TD_REPORT_SIZE]
@@ -115,9 +113,9 @@ class AzureTDXAdapter:
         body = {"report": payload}
         payload_json = json.dumps(body)
         timeout_sec = (
-            const.DEFAULT_TIMEOUT_SEC
-            if os.getenv(const.TIMEOUT_SEC) is None
-            else os.getenv(const.TIMEOUT_SEC)
+            const.DEFAULT_CLIENT_TIMEOUT_SEC
+            if os.getenv("CLIENT_TIMEOUT_SEC") is None
+            else os.getenv("CLIENT_TIMEOUT_SEC")
         )
         try:
             response = requests.post(
@@ -135,14 +133,6 @@ class AzureTDXAdapter:
             "<I", tpm_report[RUNTIME_DATA_SIZE_OFFSET:RUNTIME_DATA_OFFSET]
         )[0]
         runtime_data = tpm_report[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET + r_size]
-        runtime_data_encoded = base64.b64encode(runtime_data).decode("utf-8")
-        log.info("Quote : %s", base64.b64encode(quote.encode("utf-8")).decode("utf-8"))
-        if self.user_data != None:
-            user_data_encoded = base64.b64encode(self.user_data.encode()).decode(
-                "utf-8"
-            )
-        else:
-            user_data_encoded = None
 
         if nonce != None and self.user_data != None:
             try:
@@ -169,8 +159,8 @@ class AzureTDXAdapter:
         tdx_evidence = Evidence(
             1,
             quote,
-            user_data_encoded,
-            runtime_data_encoded,
+            self.user_data,
+            runtime_data,
             None,
             const.AZURE_TDX_ADAPTER,
         )

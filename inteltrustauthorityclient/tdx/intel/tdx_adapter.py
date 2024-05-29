@@ -25,12 +25,12 @@ class tdx_uuid_t(ctypes.Structure):
 class TDXAdapter(EvidenceAdapter):
     """This class creates adapter which collects TDX Quote from Intel TDX platform."""
 
-    def __init__(self, user_data=None, event_log_parser=None) -> None:
+    def __init__(self, user_data: bytearray=None, event_log_parser: bytearray=None) -> None:
         """Initializes tdx adapter object
 
         Args:
-            user_data ([]byte): contains any user data to be added to Quote
-            event_log_parser ([]byte):
+            user_data (bytearray): contains any user data to be added to Quote
+            event_log_parser (bytearray): contains event log parser
         """
         self.user_data = user_data
         self.event_log_parser = event_log_parser
@@ -39,13 +39,13 @@ class TDXAdapter(EvidenceAdapter):
         """This Function calls DCAP libraries to get TDX quote.
 
         Args:
-            nonce ([]byte]): optional nonce provided by Intel Trust Authority
+            nonce ([]byte]): optional nonce provided
 
         Returns:
             evidence: object to Evidence class
         """
         try:
-            # Load the SGX DCAP library
+            # Load the TDX Attestation library
             c_lib = ctypes.CDLL("libtdx_attest.so")
         except FileNotFoundError as e:
             log.exception(
@@ -72,7 +72,7 @@ class TDXAdapter(EvidenceAdapter):
                 sha512_hash = hashlib.sha512()
                 sha512_hash.update(nonce)
                 if self.user_data != None:
-                    sha512_hash.update((self.user_data.encode("utf-8")))
+                    sha512_hash.update((self.user_data))
                 digest = sha512_hash.digest()
                 for i in range(len(digest)):
                     tdx_report.d[i] = digest[i]
@@ -105,9 +105,7 @@ class TDXAdapter(EvidenceAdapter):
             )
 
             # Check the result
-            if result == 0:
-                log.info("Quote generated successfully:")
-            else:
+            if result != 0:
                 log.error(f"tdx_att_get_quote failed with result {hex(result)}")
                 return None
 
@@ -121,7 +119,7 @@ class TDXAdapter(EvidenceAdapter):
             if ret != 0:
                 log.error(f"Error: tdx_att_free_quote failed with result {hex(ret)}")
             log.info("Quote : %s", quote)
-            runtime_data = base64.b64encode(self.user_data.encode()).decode("utf-8")
+            runtime_data = self.user_data
             # Create evidence class object to be returned
             tdx_evidence = Evidence(
                 1, quote, None, runtime_data, None, const.INTEL_TDX_ADAPTER

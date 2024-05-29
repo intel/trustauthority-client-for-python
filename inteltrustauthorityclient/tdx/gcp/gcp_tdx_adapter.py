@@ -40,12 +40,11 @@ class tdx_quote_request(ctypes.Structure):
 class GCPTDXAdapter:
     """This class creates adapter which collects TDX Quote from GCP TDX platform."""
 
-    def __init__(self, user_data=None, event_log_parser=None) -> None:
+    def __init__(self, user_data: bytearray=None, event_log_parser: bytearray=None) -> None:
         """Initializes  gcp tdx adapter object
 
         Args:
             user_data ([]byte, optional): contains any user data to be added to Quote
-            event_log_parser ([]byte, optional): 
         """
         self.user_data = user_data
         self.event_log_parser = event_log_parser
@@ -65,8 +64,7 @@ class GCPTDXAdapter:
         """This Function calls the GCP TDX platform to perform I/O calls to get the TDX Quote.
 
         Args:
-            nonce ([]byte]): optional nonce provided by Intel Trust Authority
-
+            nonce ([]byte]): optional nonce provided
         Returns:
             evidence: object to Evidence class containing quote
         """
@@ -77,7 +75,7 @@ class GCPTDXAdapter:
             if nonce != None:
                 sha512_hash.update(nonce)
             if self.user_data != None:
-                sha512_hash.update((self.user_data.encode("utf-8")))
+                sha512_hash.update(self.user_data)
             digest = sha512_hash.digest()
         else:
             digest = bytearray(64)
@@ -119,11 +117,9 @@ class GCPTDXAdapter:
             quote = base64.b64encode(
                 bytearray(c_uint8_ptr[: tdx_request.buffer.contents.out_len])
             ).decode("utf-8")
-
-            runtime_data = base64.b64encode(self.user_data.encode()).decode("utf-8")
             # Create evidence class object to be returned
             tdx_evidence = Evidence(
-                1, quote, None, runtime_data, None, const.GCP_TDX_ADAPTER
+                1, quote, None, self.user_data, None, const.GCP_TDX_ADAPTER
             )
         except AttributeError as e:
             log.error(f"An exception occurred: {str(e)}")

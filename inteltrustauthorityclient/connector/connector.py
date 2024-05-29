@@ -93,9 +93,9 @@ class TokenRequest:
     """TokenRequest holds all the data required for attestation"""
 
     quote: str  #'json:"quote"'
-    verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    user_data: str  #'json:"runtime_data"'
-    runtime_data: str  #'json:"runtime_data"'
+    verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
+    user_data: Optional[str]  #'json:"user_data"'
+    runtime_data: Optional[str]  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
     event_log: Optional[str] = None  #'json:"event_log"'
 
@@ -108,8 +108,8 @@ class TokenRequest:
 
 class ITAConnector:
     """
-    Initializes Intel Trust Authority connector object that is used to connect to Intel Trust Authority to get nonce,
-    get attestation token, get CRL and verify CRL and verify Attestation token
+    Initializes Intel Trust Authority connector object that is used to connect to Intel Trust Authority to get
+    the Attestation token and verify the token
     """
 
     def __init__(self, cfg) -> None:
@@ -139,11 +139,10 @@ class ITAConnector:
 
         def make_request():
             url = urljoin(self.cfg.api_url, constants.NONCE_URL)
-            log.info(f"get_nonce() http request url: {url}")
             headers = {
-                "x-api-key": self.cfg.api_key,
-                "Accept": "application/json",
-                "request-id": args.request_id,
+                constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
+                constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_REQUEST_ID : args.request_id,
             }
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
@@ -204,11 +203,6 @@ class ITAConnector:
         Returns:
             GetTokenResponse: object to GetTokenResponse class
         """
-        if args.policy_ids != None:
-            for uuid_str in args.policy_ids:
-                if not validate_uuid(uuid_str):
-                    log.error(f"Invalid policy UUID :{uuid_str}")
-                    return None
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
             wait=self.cfg.retry_cfg.backoff,
@@ -218,10 +212,10 @@ class ITAConnector:
 
         def make_request():
             headers = {
-                "x-Api-Key": self.cfg.api_key,
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Request-Id": args.request_id,
+                constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
+                constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
             if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
@@ -240,8 +234,8 @@ class ITAConnector:
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
                 ).__dict__,
-                user_data=args.evidence.user_data,
-                runtime_data=args.evidence.runtime_data,
+                user_data=base64.b64encode(args.evidence.user_data).decode("utf-8") if args.evidence.user_data is not None else None,
+                runtime_data=base64.b64encode(args.evidence.runtime_data).decode("utf-8") if args.evidence.runtime_data is not None else None,
                 policy_ids=args.policy_ids,
                 event_log=args.evidence.event_log,
             )
@@ -249,9 +243,6 @@ class ITAConnector:
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
-            log.info(
-                f"making attestation token request to Intel Trust Authority ... : {url}"
-            )
             try:
                 response = requests.post(
                     url,
@@ -320,7 +311,9 @@ class ITAConnector:
 
             def make_request():
                 try:
-                    response = requests.get(crl_url, proxies=proxies, timeout=self.cfg.retry_cfg.timeout_sec)
+                    response = requests.get(
+                        crl_url, proxies=proxies, timeout=self.cfg.retry_cfg.timeout_sec
+                    )
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as exc:
                     log.error(f"Http Error occurred in get_crl request: {exc}")
@@ -345,12 +338,15 @@ class ITAConnector:
             except requests.exceptions.RequestException as exc:
                 return None
             except Exception as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
+                log.error(f"Error occurred in get_crl request: {exc}")
                 return None
 
             if response is None:
                 return None
             return response
+        else:
+            log.error("Invalid CRL URL")
+            return None
 
     def verify_crl(self, crl, leaf_cert, ca_cert):
         """This Function verify certificate against crl object
@@ -398,7 +394,7 @@ class ITAConnector:
         jwks_data = self.get_token_signing_certificates()
         if jwks_data == None:
             log.error(
-                "getting Token signing certificates from Intel Trust Authority failed"
+                "Failed to get token signing certificates from Intel Trust Authority."
             )
             return None
         keyid_exists = False
@@ -502,9 +498,7 @@ class ITAConnector:
                 f"Error in verifying leaf certificate against inter ca certificate : {exc}"
             )
             return None
-        log.debug(
-            "Leaf certificate verification against Root and Inter ca certificate Successful"
-        )
+        log.debug("Leaf certificate verification against Root and Inter ca certificate Successful")
 
         try:
             # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
@@ -540,7 +534,7 @@ class ITAConnector:
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
             headers = {
-                "Accept": "application/json",
+                constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
             }
             log.debug(f"Making request to get_token_signing_certificates() url : {url}")
             try:
@@ -602,25 +596,11 @@ class ITAConnector:
         Returns:
             AttestResponse: Instance of AttestResponse class
         """
-        if args.policy_ids != None:
-            # policy_ids: An array of one to ten attestation policy IDs.
-            if len(args.policy_ids) > constants.POLICY_IDS_MAX_LEN:
-                log.error("policy count in request must be between 1 - 10")
-                return None
-            for uuid_str in args.policy_ids:
-                if not validate_uuid(uuid_str):
-                    log.error(f"Invalid policy UUID :{uuid_str}")
-                    return None
-        if args.request_id != None:
-            if not validate_requestid(args.request_id):
-                log.error(f"Invalid Request ID :{args.request_id}")
-
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
         if nonce_resp == None:
             log.error("Get Nonce request failed")
             return None
-        log.info("Nonce Retrieved Successfully")
         log.debug(f"Nonce : {nonce_resp.nonce}")
         decoded_val = base64.b64decode(nonce_resp.nonce.val)
         decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
@@ -641,24 +621,3 @@ class ITAConnector:
         response.token = token_resp.token
         response.headers = token_resp.headers
         return response
-
-
-def validate_uuid(uuid_str):
-    try:
-        uuid.UUID(uuid_str)
-        return True
-    except ValueError as exc:
-        log.error(f"ValueError occurred in UUID check request: {exc}")
-        return False
-    except TypeError as exc:
-        log.error(f"TypeError occurred in UUID check request: {exc}")
-        return False
-
-def validate_requestid(req_id):
-    # request_id is of maximum of 128 characters, including a-z, A-Z, 0-9, and - (hyphen). Special characters are not allowed
-    if len(req_id)>constants.REQUEST_ID_MAX_LEN:
-        return False
-    for req_char in req_id:
-        if req_char != '-' and req_char.isalnum() == False:
-            return False
-    return True

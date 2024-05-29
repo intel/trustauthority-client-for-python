@@ -107,7 +107,7 @@ class TDXAdapterTestCase(unittest.TestCase):
                 with patch.object(hashlib, "sha512", new=mock_sha512):
                     evidence = tdx_adapter.collect_evidence("")
                     assert evidence == None
-    
+
     def test_adpater_attribute_error(self):
         """Test method to test TDX Adapter with raising Attribute error"""
         tdx_adapter = adapter_object()
@@ -141,7 +141,7 @@ class TDXAdapterTestCase(unittest.TestCase):
                 with patch.object(hashlib, "sha512", new=mock_sha512):
                     evidence = tdx_adapter.collect_evidence("")
                     assert evidence == None
-    
+
     def test_adpater_Exception(self):
         """Test method to test TDX Adapter with raising mock Exception"""
         tdx_adapter = adapter_object()
@@ -158,7 +158,7 @@ class TDXAdapterTestCase(unittest.TestCase):
                 with patch.object(hashlib, "sha512", new=mock_sha512):
                     evidence = tdx_adapter.collect_evidence("")
                     assert evidence == None
-    
+
     def test_adpater_ctypes_ArguementError(self):
         """Test method to test TDX Adapter with raising ctypes Arguement Error"""
         tdx_adapter = adapter_object()

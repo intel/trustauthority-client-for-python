@@ -86,17 +86,17 @@ the `SGX Attestation Sample App` can be run using the following commands:
 ```sh
 # Creating sgx_token.env file
 cat <<EOF | tee sgx_token.env
-ENV_HTTP_PROXY=<http-proxy-host>
-ENV_HTTPS_PROXY=<https-proxy-host>
-ENV_TRUSTAUTHORITY_BASE_URL=<trustauthority-base-url>
-ENV_TRUSTAUTHORITY_API_URL=<trustauthority-api-url>
-ENV_TRUSTAUTHORITY_API_KEY=<trustauthority-api-key>
-ENV_TRUSTAUTHORITY_REQUEST_ID=<trustauthority-request-id>
-ENV_TRUSTAUTHORITY_POLICY_ID=<trustauthority-policy-id>
-ENV_RETRY_MAX=<max-number-of-retries>
-ENV_RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
-ENV_RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
-ENV_TIMEOUT_SEC=<request-timeout-sec>
+HTTP_PROXY=<http-proxy-host>
+HTTPS_PROXY=<https-proxy-host>
+TRUSTAUTHORITY_BASE_URL=<trustauthority-base-url>
+TRUSTAUTHORITY_API_URL=<trustauthority-api-url>
+TRUSTAUTHORITY_API_KEY=<trustauthority-api-key>
+TRUSTAUTHORITY_REQUEST_ID=<trustauthority-request-id>
+TRUSTAUTHORITY_POLICY_ID=<trustauthority-policy-id>
+RETRY_MAX=<max-number-of-retries>
+RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
+RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
+CLIENT_TIMEOUT_SEC=<request-timeout-sec>
 LOG_LEVEL=<log-level>
 SGX_AESM_ADDR=1
 EOF
@@ -116,7 +116,7 @@ sudo docker run \
 
 > **Note:**
 >
-> - The proxy setting values for `ENV_HTTP_PROXY` and `ENV_HTTPS_PROXY` have to be set by the user based on the system proxy settings.
+> - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
 
 ### Output when example is run...
@@ -146,17 +146,17 @@ pip install <whl file name>
 Please ensure to set these variables in the environment as a pre-requisite:
 
 ```sh
-export ENV_HTTP_PROXY=<HTTPS_PROXY_HOST>
-export ENV_HTTPS_PROXY=<HTTPS_PROXY_HOST>
-export ENV_TRUSTAUTHORITY_BASE_URL=<TRUSTAUTHORITY_BASE_URL>
-export ENV_TRUSTAUTHORITY_API_URL=<TRUSTAUTHORITY_API_URL>
-export ENV_TRUSTAUTHORITY_API_KEY=<TRUSTAUTHORITY_API_KEY>
-export ENV_TRUSTAUTHORITY_REQUEST_ID=<TRUSTAUTHORITY_REQUEST_ID>
-export ENV_TRUSTAUTHORITY_POLICY_ID=<TRUSTAUTHORITY_POLICY_ID>
-export ENV_RETRY_MAX=<MAX_NUMBER_OF_RETRIES>
-export ENV_RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
-export ENV_RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
-export ENV_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
+export HTTP_PROXY=<HTTPS_PROXY_HOST>
+export HTTPS_PROXY=<HTTPS_PROXY_HOST>
+export TRUSTAUTHORITY_BASE_URL=<TRUSTAUTHORITY_BASE_URL>
+export TRUSTAUTHORITY_API_URL=<TRUSTAUTHORITY_API_URL>
+export TRUSTAUTHORITY_API_KEY=<TRUSTAUTHORITY_API_KEY>
+export TRUSTAUTHORITY_REQUEST_ID=<TRUSTAUTHORITY_REQUEST_ID>
+export TRUSTAUTHORITY_POLICY_ID=<TRUSTAUTHORITY_POLICY_ID>
+export RETRY_MAX=<MAX_NUMBER_OF_RETRIES>
+export RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
+export RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
+export CLIENT_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
 export LOG_LEVEL=<LOG_LEVEL>
 export SGX_AESM_ADDR=1
 export ADAPTER_TYPE="INTEL-SGX"
@@ -169,7 +169,7 @@ python sgx_sample_app.py
 ```
 
 > **Note:**
-> - The proxy setting values for `ENV_HTTP_PROXY` and `ENV_HTTPS_PROXY` have to be set by the user based on the system proxy settings.
+> - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
 
 ### Output when example is run...
