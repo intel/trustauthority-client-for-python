@@ -44,15 +44,22 @@ class GPUAdapter(EvidenceAdapter):
            return None
 
         evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
+        if evidence_payload is None:
+            log.error("GPU Evidence not returned")
+            return None
         gpu_evidence = GPUEvidence("H100", evidence_payload)
         return gpu_evidence
 
     def build_payload(self, nonce, evidence, cert_chain):
         data = dict()
         data['nonce'] = nonce
-        encoded_evidence_bytes = evidence.encode("ascii")
-        encoded_evidence = base64.b64encode(encoded_evidence_bytes)
-        encoded_evidence = encoded_evidence.decode('utf-8')
+        try:
+            encoded_evidence_bytes = evidence.encode("ascii")
+            encoded_evidence = base64.b64encode(encoded_evidence_bytes)
+            encoded_evidence = encoded_evidence.decode('utf-8')
+        except Exception as exc:
+            log.error(f"Error while encoding data :{exc}")
+            return None
         data['evidence'] = encoded_evidence
         data['arch'] = 'HOPPER'
         data['certificate'] = str(cert_chain)
