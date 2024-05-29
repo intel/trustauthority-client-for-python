@@ -14,14 +14,10 @@ from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 from dataclasses import dataclass
 
-log.disable(log.CRITICAL)
-
 @dataclass
 class GPUEvidence:
     type: str
     evidence: bytearray
-    user_data: bytearray
-    event_log: bytearray
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self, uData=None, evLogParser=None):
@@ -46,7 +42,8 @@ class GPUAdapter(EvidenceAdapter):
 
         evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
         # Currently user data is not used with GPU attestation. 
-        gpu_evidence = GPUEvidence("H100", evidence_payload, user_data=None, event_log=None)
+        #gpu_evidence = GPUEvidence("H100", evidence_payload, user_data=None, event_log=None)
+        gpu_evidence = GPUEvidence("H100", evidence_payload)
         return gpu_evidence
 
     def build_payload(self, nonce, evidence, cert_chain):
