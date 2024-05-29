@@ -6,6 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import json
 import base64
+import secrets
 import logging as log
 
 from nv_attestation_sdk import attestation
@@ -30,6 +31,10 @@ class GPUAdapter(EvidenceAdapter):
         self.EvLogParser = evLogParser
 
     def collect_evidence(self, nonce):
+        # When Verifier nonce is not user, generate the NV SDK compatible gpu_nonce of random 32 hex string 
+        if nonce is None:
+            nonce = secrets.token_bytes(32)
+            
         try:
            evidence_list = attest_gpu_remote.generate_evidence(nonce)
            # Only one GPU attestaton support for now.
