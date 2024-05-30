@@ -65,6 +65,18 @@ class AttestArgs:
     
 
 @dataclass
+class AttestArgs_v2:
+    """AttestArgs_v2 holds the request parameters needed for attestation with Intel Trust Authority v2 Endpoint"""
+
+    adapter: EvidenceAdapter
+
+@dataclass
+class GPUAttestArgs:
+    """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
+
+    adapter: EvidenceAdapter
+
+@dataclass
 class AttestResponse:
     """AttestResponse holds the response parameters recieved during attestation flow"""
 
@@ -83,16 +95,20 @@ class GetTokenArgs:
     token_signing_alg: str
     policy_must_match: bool
 
+@dataclass
+class GetTokenArgs_v2:
+    """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
+
+    nonce: VerifierNonce
+    evidence: Evidence
 
 @dataclass
-class GetTokenGPUArgs:
+class GetTokenGPUArgs_v2:
     """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
 
     nonce: VerifierNonce
     gpu_nonce: str
     evidence: Evidence
-    policy_ids: List[UUID]
-    request_id: str
 
 
 @dataclass
@@ -122,12 +138,26 @@ class TokenRequest:
             delattr(self, "user_data")
 
 @dataclass
-class GPUTokenRequest:
+class TokenRequest_v2:
+    """TokenRequest holds all the data required for attestation"""
+    quote: str  #'json:"quote"'
+    verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
+    user_data: str  #'json:"runtime_data"'
+    runtime_data: str  #'json:"runtime_data"'
+    event_log: Optional[str] = None  #'json:"event_log"'
+
+    def __post_init__(self):
+        if self.event_log is None:
+            delattr(self, "event_log")
+        if self.user_data is None:
+            delattr(self, "user_data")
+
+@dataclass
+class GPUTokenRequest_v2:
+        evidence: str                    #'json:"evidence"'
         verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
         gpu_nonce: str    #'json:"gpu_nonce"'
-        evidence: str                    #'json:"evidence"'
         certificate: str                    #'json:"certificate"'
-        policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
 
 class ITAConnector:
     """
@@ -218,7 +248,7 @@ class ITAConnector:
         )
         return GetNonceResponse(response.headers, nonce)
 
-    def get_token_composite(self, tdx_args: GetTokenArgs, gpu_args: GetTokenGPUArgs) -> GetTokenResponse:
+    def get_token_v2(self, tdx_args: GetTokenArgs_v2, gpu_args: GetTokenGPUArgs_v2) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
         Currently supported attestation is TDX, NVGPU, TDX+NVGPU for v1.7
         Args:
@@ -231,19 +261,8 @@ class ITAConnector:
             log.error("Token Arguments are not provided")
             return None
 
-        if tdx_args is not None:
-            if tdx_args.policy_ids is not None:
-                for uuid_str in tdx_args.policy_ids:
-                    if not validate_uuid(uuid_str):
-                        log.error(f"Invalid policy UUID :{uuid_str}")
-                        return None
-
-        if gpu_args is not None:
-            if gpu_args.policy_ids is not None:
-                for uuid_str in gpu_args.policy_ids:
-                    if not validate_uuid(uuid_str):
-                        log.error(f"Invalid policy UUID :{uuid_str}")
-                        return None
+        # For v2 attest, we do not use request_id for now - TODO:Coordinator needs to be updated to accept the request_id outside of the attestation evidence
+        request_id = "123"
 
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
@@ -255,59 +274,50 @@ class ITAConnector:
         def make_request():
             url = urljoin(self.cfg.api_url, constants.COMPOSITE_ATTEST_URL)
 
-            # Only one request_id is needed
-            if tdx_args is not None:
-                request_id = tdx_args.request_id
-            elif gpu_args is not None:
-                request_id = gpu_args.request_id
-
             headers = {
                 constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
-                constants.HTTP_HEADER_REQUEST_ID: args.request_id,
+                constants.HTTP_HEADER_REQUEST_ID: request_id,
             }
 
             if tdx_args is not None:
-                tdx_treq = TokenRequest(
+                tdx_treq = TokenRequest_v2(
                     quote=tdx_args.evidence.quote,
                     verifier_nonce=VerifierNonce(
                         tdx_args.nonce.val, tdx_args.nonce.iat, tdx_args.nonce.signature
                     ).__dict__,
                     user_data=tdx_args.evidence.user_data,
                     runtime_data=tdx_args.evidence.runtime_data,
-                    policy_ids=tdx_args.policy_ids,
                     event_log=tdx_args.evidence.event_log,
                 )
                 # TDX+NVGPU
                 if gpu_args is not None:
-                    gpu_treq = GPUTokenRequest(
+                    gpu_treq = GPUTokenRequest_v2(
+                    evidence = gpu_args.evidence['evidence'],
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
-                    evidence = gpu_args.evidence['evidence'],
                     certificate = gpu_args.evidence['certificate'],
-                    policy_ids = None,
                     )
 
-                    wrapped_req = {"tdx": tdx_treq.__dict__,
+                    wrapped_req = {"policy_ids": None, "tdx": tdx_treq.__dict__,
                             "nvgpu": gpu_treq.__dict__}
                 # TDX Only
                 if gpu_args is None:
-                    wrapped_req = {"tdx": tdx_treq.__dict__}
+                    wrapped_req = {"policy_ids": None, "tdx": tdx_treq.__dict__}
             # NVGPU Only
             elif gpu_args is not None:
-                gpu_treq = GPUTokenRequest(
+                gpu_treq = GPUTokenRequest_v2(
+                    evidence = gpu_args.evidence['evidence'],
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
-                    evidence = gpu_args.evidence['evidence'],
                     certificate = gpu_args.evidence['certificate'],
-                    policy_ids = None,
                 )
-                wrapped_req = {"nvgpu": gpu_treq.__dict__}
+                wrapped_req = {"policy_ids": None,"nvgpu": gpu_treq.__dict__}
             else:
                 log.error("No attestation argument is provided")
                 return None
@@ -330,26 +340,27 @@ class ITAConnector:
                     url,
                     headers=headers,
                     data=body,
+                    proxies=proxies,
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
-                log.error(f"Http Error occurred in get_token_composite request: {exc}")
+                log.error(f"Http Error occurred in get_token_v2 request: {exc}")
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
-                log.error(f"Connection Error occurred in get_token_composite request: {exc}")
+                log.error(f"Connection Error occurred in get_token_v2 request: {exc}")
                 return None
             except requests.exceptions.Timeout as exc:
-                log.error(f"Timeout Error occurred in get_token_composite request: {exc}")
+                log.error(f"Timeout Error occurred in get_token_v2 request: {exc}")
                 return None
             except requests.exceptions.RequestException as exc:
-                log.error(f"Error occurred in get_token_composite request: {exc}")
+                log.error(f"Error occurred in get_token_v2 request: {exc}")
                 return None
             except Exception as exc:
-                log.error(f"Error occurred in get_token_composite request: {exc}")
+                log.error(f"Error occurred in get_token_v2 request: {exc}")
                 return None
             return response
 
@@ -358,7 +369,7 @@ class ITAConnector:
         except requests.exceptions.HTTPError:
             return None
         except Exception as exc:
-            log.error(f"Error occurred in get_token_composite request: {exc}")
+            log.error(f"Error occurred in get_token_v2 request: {exc}")
             return None
 
         if response is None:

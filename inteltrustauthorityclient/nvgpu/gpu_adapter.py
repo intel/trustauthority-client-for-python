@@ -12,16 +12,12 @@ import logging as log
 from nv_attestation_sdk import attestation
 from nv_attestation_sdk.gpu import attest_gpu_remote
 from inteltrustauthorityclient.resources import constants as const
-from inteltrustauthorityclient.connector.evidence import Evidence
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
-from dataclasses import dataclass
+from inteltrustauthorityclient.connector.evidence import * 
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self):
         """Initializes GPU adapter object
-        Args:
-            user_data ([]byte): contains any user data to be added to Evidence (Currently not used for GPU)
-            event_log_parser ([]byte): currently not used for GPU
         """
 
     def collect_evidence(self, nonce):
@@ -31,7 +27,7 @@ class GPUAdapter(EvidenceAdapter):
             
         try:
            evidence_list = attest_gpu_remote.generate_evidence(nonce)
-           # Only one GPU attestaton support for now.
+           # Only one GPU attestaton is supported for now.
            raw_evidence = evidence_list[0] 
            log.info("Collected GPU Evidence Successfully")
            log.info(f"GPU Evidence : {raw_evidence}")
@@ -43,12 +39,14 @@ class GPUAdapter(EvidenceAdapter):
         if evidence_payload is None:
             log.error("GPU Evidence not returned")
             return None
-        gpu_evidence = Evidence("100", evidence_payload, None, None, None, const.NV_GPU_ADAPTER)
+
+        gpu_evidence = GPUEvidence("H100", evidence_payload, const.NV_GPU_ADAPTER)
         return gpu_evidence
 
     def build_payload(self, nonce, evidence, cert_chain):
         data = dict()
         data['nonce'] = nonce
+
         try:
             encoded_evidence_bytes = evidence.encode("ascii")
             encoded_evidence = base64.b64encode(encoded_evidence_bytes)
@@ -56,13 +54,10 @@ class GPUAdapter(EvidenceAdapter):
         except Exception as exc:
             log.error(f"Error while encoding data :{exc}")
             return None
+
         data['evidence'] = encoded_evidence
         data['arch'] = 'HOPPER'
         data['certificate'] = str(cert_chain)
-        try:
-            payload = json.dumps(data)
-        except TypeError:
-            log.error("Unable to serialize the data object")
-            return None
+        payload = json.dumps(data)
         return payload
 

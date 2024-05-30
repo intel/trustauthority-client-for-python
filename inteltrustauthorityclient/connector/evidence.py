@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 
 class Evidence:
-    """Contains the attributes to be sent for attestation of platform."""
+    """Contains the GPU attributes to be sent for attestation of platform."""
 
     def __init__(
         self,
@@ -47,3 +47,26 @@ class Evidence:
     def runtime_data(self):
         """Getter method."""
         return self._runtime_data
+
+
+class GPUEvidence:
+    """Contains the GPU attributes to be sent for attestation of platform."""
+
+    def __init__(
+        self,
+        type: str,
+        evidence: bytearray,
+        adapter_type: str,
+    ) -> None:
+        self._type = type
+        self._evidence = evidence
+        self.adapter_type = adapter_type
+
+    @property
+    def type(self):
+        """Getter method."""
+        return self._type
+
+    @property
+    def evidence(self):
+        return self._evidence
