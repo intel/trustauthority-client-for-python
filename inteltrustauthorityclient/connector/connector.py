@@ -25,11 +25,9 @@ from cryptography import x509
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-
 from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 from inteltrustauthorityclient.resources import constants as constants
-from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
-from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
 @dataclass
 class GetNonceArgs:
@@ -169,10 +167,14 @@ class ITAConnector:
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_REQUEST_ID : args.request_id,
             }
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
             try:
                 response = requests.get(
                     url,
                     headers=headers,
+                    proxies=proxies,
                     timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
@@ -226,7 +228,7 @@ class ITAConnector:
             GetTokenResponse: object to GetTokenResponse class
         """
         if tdx_args is None and gpu_args is None:
-            log.error("No Token Argument is given")
+            log.error("Token Arguments are not provided")
             return None
 
         if tdx_args is not None:
@@ -260,10 +262,10 @@ class ITAConnector:
                 request_id = gpu_args.request_id
 
             headers = {
-                "x-Api-Key": self.cfg.api_key,
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Request-Id": request_id,
+                constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
+                constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
 
             if tdx_args is not None:
@@ -320,6 +322,9 @@ class ITAConnector:
                 f"making attestation token request to Intel Trust Authority ... : {url}"
             )
 
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
             try:
                 response = requests.post(
                     url,
@@ -678,7 +683,10 @@ class ITAConnector:
         log.debug("Leaf certificate verification against Root and Inter ca certificate Successful")
 
         try:
-            jwt.decode(token, leaf_cert.public_key(), unverified_headers.get("alg"))
+            # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
+            decoded_token = jwt.decode(
+               token, leaf_cert.public_key(), unverified_headers.get("alg")
+            )
         except jwt.ExpiredSignatureError:
             log.error("Attestation Token has expired.")
             return None
@@ -690,9 +698,7 @@ class ITAConnector:
             return None
         else:
             log.debug("Attestation Token Verification Successful")
-            return jwt.decode(
-                token, leaf_cert.public_key(), unverified_headers.get("alg")
-            )
+            return decoded_token
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
