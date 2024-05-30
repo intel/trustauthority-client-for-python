@@ -1,3 +1,8 @@
+"""
+Copyright (c) 2024 Intel Corporation
+All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+"""
 # trustauthority-cli-python v1.0
 
 import argparse
@@ -17,7 +22,7 @@ from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 def cmd_evidence(args):
     if args.attest_type == 'tdx':
         if args.user_data:
-            user_data_bytes = args.user_data
+            user_data_bytes = base64.b64decode(args.user_data)
 
         if args.nonce:
             nonce_bytes = base64.b64decode(args.nonce)
@@ -25,13 +30,10 @@ def cmd_evidence(args):
         # eventLogger is not used for Python CLI
         tdx_adapter = TDXAdapter(user_data_bytes, None)
         evidence = tdx_adapter.collect_evidence(nonce_bytes)
-        if evidence == None:
-           log.error("Failed to get the evidence") 
         log.info(f"TDX quote : {evidence.quote}")
 
     elif args.attest_type == 'nvgpu':
         gpu_adapter = GPUAdapter()
-
         evidence = gpu_adapter.collect_evidence(args.nonce)
         log.info(f"GPU evidence : {evidence.evidence}")
 
@@ -68,11 +70,6 @@ def cmd_attest(args):
     with open(args.config, 'r') as cf:
         cf_dict = json.load(cf)
 
-    trustauthority_base_url = cf_dict['trustauthority_base_url']
-    if trustauthority_base_url is None:
-        log.error("TRUSTAUTHORITY_BASE_URL is not set.")
-        exit(1)
-
     trustauthority_api_url = cf_dict['trustauthority_api_url']
     if trustauthority_api_url is None:
         log.error("TRUSTAUTHORITY_API_URL is not set.")
@@ -89,20 +86,15 @@ def cmd_attest(args):
             config.RetryConfig(
                 1, 1, 1
             ),
-            trustauthority_base_url,
             trustauthority_api_url,
             trustauthority_api_key,
         )
-
-    if config_obj == None:
-        log.error("Error in config() instance initialization")
-        exit(1)
 
     ita_connector = connector.ITAConnector(config_obj)
 
     if args.attest_type == 'tdx':
         if args.user_data:
-            user_data_bytes = args.user_data
+            user_data_bytes = base64.b64decode(args.user_data)
         else:
             user_data_bytes = "" 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
@@ -139,7 +131,7 @@ def cmd_attest(args):
 
     elif args.attest_type =='tdx+nvgpu':
         if args.user_data:
-            user_data_bytes = args.user_data
+            user_data_bytes = base64.b64decode(args.user_data)
 
         # Create TDX Adapter
         tdx_adapter = TDXAdapter(user_data_bytes, None)
@@ -164,11 +156,15 @@ def cmd_attest(args):
         )
 
     else:
-        log.error("Unknown Attestation Type %s is unknown.", args.attest_type)
+        log.error("Attestation Type %s is unknown.", args.attest_type)
         exit(1)
 
 
 def cmd_verify(args):
+
+    if args.token == None:
+        log.error("Token needs to be provided")
+        exit(1)
 
     with open(args.config, 'r') as cf:
         cf_dict = json.load(cf)
@@ -178,16 +174,6 @@ def cmd_verify(args):
         log.error("TRUSTAUTHORITY_BASE_URL is not set.")
         exit(1)
 
-    trustauthority_api_url = cf_dict['trustauthority_api_url']
-    if trustauthority_api_url is None:
-        log.error("TRUSTAUTHORITY_API_URL is not set.")
-        exit(1)
-
-    trustauthority_api_key = cf_dict['trustauthority_api_key']
-    if trustauthority_api_key is None:
-        log.error("TRUSTAUTHORITY_API_KEY is not set.")
-        exit(1)
-
     cf.close()
 
     config_obj = config.Config(
@@ -195,34 +181,24 @@ def cmd_verify(args):
                 1, 1, 1
             ),
             trustauthority_base_url,
-            trustauthority_api_url,
-            trustauthority_api_key,
         )
-
-    if config_obj == None:
-        log.error("Error in config() instance initialization")
-        exit(1)
 
     ita_connector = connector.ITAConnector(config_obj)
 
-    if args.token == None:
-        log.error("Token needs to be provided")
-        exit(1)
+    try:
+        verified_token = ita_connector.verify_token(args.token)
+    except Exception as exc:
+        verified_token = None
+        log.error(f"Token verification returned exception : {exc}")
+    if verified_token != None:
+        log.info("Token Verification Successful")
+        log.info(f"Verified Attestation Token : {verified_token}")
     else:
-        try:
-            verified_token = ita_connector.verify_token(args.token)
-        except Exception as exc:
-            verified_token = None
-            log.error(f"Token verification returned exception : {exc}")
-        if verified_token != None:
-            log.info("Token Verification Successful")
-            log.info(f"Verified Attestation Token : {verified_token}")
-        else:
-            log.error("Token Verification failed")
-            exit(1)
+        log.error("Token Verification failed")
+        exit(1)
 
 def main():
-    parser = argparse.ArgumentParser(description='Trust Authority CLI for Python')
+    parser = argparse.ArgumentParser(description='Trust Authority CLI')
     subparsers = parser.add_subparsers(title="Commands", dest="command", help="Command to execute")
 
     # evidence command
