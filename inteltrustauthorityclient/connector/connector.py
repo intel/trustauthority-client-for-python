@@ -377,8 +377,8 @@ class ITAConnector:
             return False
         dt = datetime.now(timezone.utc)
         utc_time = dt.replace(tzinfo=timezone.utc)
-        utc_timestamp = utc_time.timestamp()
-        if crl.next_update_utc.timestamp() < utc_timestamp:
+        utc_timestamp_now = utc_time.timestamp()
+        if crl.next_update_utc.timestamp() < utc_timestamp_now:
             log.error("crl has been expired")
             return False
         if (
