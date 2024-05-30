@@ -22,6 +22,7 @@ HTTP_HEADER_APPLICATION_JSON = "application/json"
 HTTP_HEADER_KEY_ACCEPT = "Accept"
 HTTP_HEADER_KEY_CONTENT_TYPE = "Content-Type"
 HTTP_HEADER_REQUEST_ID = "Request-Id"
+NV_GPU_ADAPTER = "NV-GPU"
 
 # Intel Trust Authority URLs
 NONCE_URL = "appraisal/v1/nonce"

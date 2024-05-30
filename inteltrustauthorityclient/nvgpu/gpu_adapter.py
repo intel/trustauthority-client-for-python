@@ -12,13 +12,9 @@ import logging as log
 from nv_attestation_sdk import attestation
 from nv_attestation_sdk.gpu import attest_gpu_remote
 from inteltrustauthorityclient.resources import constants as const
+from inteltrustauthorityclient.connector.evidence import Evidence
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 from dataclasses import dataclass
-
-@dataclass
-class GPUEvidence:
-    type: str
-    evidence: bytearray
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self):
@@ -47,7 +43,7 @@ class GPUAdapter(EvidenceAdapter):
         if evidence_payload is None:
             log.error("GPU Evidence not returned")
             return None
-        gpu_evidence = GPUEvidence("H100", evidence_payload)
+        gpu_evidence = Evidence("100", evidence_payload, None, None, None, const.NV_GPU_ADAPTER)
         return gpu_evidence
 
     def build_payload(self, nonce, evidence, cert_chain):
@@ -63,6 +59,10 @@ class GPUAdapter(EvidenceAdapter):
         data['evidence'] = encoded_evidence
         data['arch'] = 'HOPPER'
         data['certificate'] = str(cert_chain)
-        payload = json.dumps(data)
+        try:
+            payload = json.dumps(data)
+        except TypeError:
+            log.error("Unable to serialize the data object")
+            return None
         return payload
 

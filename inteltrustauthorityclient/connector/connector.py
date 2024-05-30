@@ -90,7 +90,6 @@ class GetTokenArgs:
 class GetTokenGPUArgs:
     """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
 
-    vendor: str
     nonce: VerifierNonce
     gpu_nonce: str
     evidence: Evidence
@@ -127,7 +126,7 @@ class TokenRequest:
 @dataclass
 class GPUTokenRequest:
         verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-        gpu_nonce: str    #'json:"verifier_nonce"'
+        gpu_nonce: str    #'json:"gpu_nonce"'
         evidence: str                    #'json:"evidence"'
         certificate: str                    #'json:"certificate"'
         policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
@@ -226,18 +225,23 @@ class ITAConnector:
         Returns:
             GetTokenResponse: object to GetTokenResponse class
         """
-        if tdx_args:
-            if tdx_args.policy_ids != None:
+        if tdx_args is None and gpu_args is None:
+            log.error("No Token Argument is given")
+            return None
+
+        if tdx_args is not None:
+            if tdx_args.policy_ids is not None:
                 for uuid_str in tdx_args.policy_ids:
                     if not validate_uuid(uuid_str):
                         log.error(f"Invalid policy UUID :{uuid_str}")
                         return None
-        #if gpu_args:
-        #    if gpu_args.policy_ids != None:
-        #        for uuid_str in gpu_args.policy_ids:
-        #            if not validate_uuid(uuid_str):
-        #                log.error(f"Invalid policy UUID :{uuid_str}")
-        #                return None
+
+        if gpu_args is not None:
+            if gpu_args.policy_ids is not None:
+                for uuid_str in gpu_args.policy_ids:
+                    if not validate_uuid(uuid_str):
+                        log.error(f"Invalid policy UUID :{uuid_str}")
+                        return None
 
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
@@ -245,14 +249,14 @@ class ITAConnector:
             retry=retry_if_exception_type(requests.exceptions.HTTPError),
             reraise=True,
         )
-        
+       
         def make_request():
             url = urljoin(self.cfg.api_url, constants.COMPOSITE_ATTEST_URL)
 
             # Only one request_id is needed
-            if tdx_args:
+            if tdx_args is not None:
                 request_id = tdx_args.request_id
-            elif gpu_args:
+            elif gpu_args is not None:
                 request_id = gpu_args.request_id
 
             headers = {
@@ -262,7 +266,7 @@ class ITAConnector:
                 "Request-Id": request_id,
             }
 
-            if tdx_args:
+            if tdx_args is not None:
                 tdx_treq = TokenRequest(
                     quote=tdx_args.evidence.quote,
                     verifier_nonce=VerifierNonce(
@@ -274,44 +278,44 @@ class ITAConnector:
                     event_log=tdx_args.evidence.event_log,
                 )
                 # TDX+NVGPU
-                if gpu_args:
+                if gpu_args is not None:
                     gpu_treq = GPUTokenRequest(
-                    vendor = "nvidia",
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
                     evidence = gpu_args.evidence['evidence'],
                     certificate = gpu_args.evidence['certificate'],
-                    policy_ids = None
+                    policy_ids = None,
                     )
 
                     wrapped_req = {"tdx": tdx_treq.__dict__,
                             "nvgpu": gpu_treq.__dict__}
-                # TDX
+                # TDX Only
                 if gpu_args is None:
                     wrapped_req = {"tdx": tdx_treq.__dict__}
-
-            # NVGPU
-            elif gpu_args:
+            # NVGPU Only
+            elif gpu_args is not None:
                 gpu_treq = GPUTokenRequest(
-                    vendor = "nvidia",
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
                     evidence = gpu_args.evidence['evidence'],
                     certificate = gpu_args.evidence['certificate'],
-                    policy_ids = None
+                    policy_ids = None,
                 )
-                wrapped_req = {"gpu": gpu_treq.__dict__}
-                    
+                wrapped_req = {"nvgpu": gpu_treq.__dict__}
             else:
                 log.error("No attestation argument is provided")
                 return None
 
-            body = json.dumps(wrapped_req)
-            print(body)
+            try:
+                body = json.dumps(wrapped_req)
+            except TypeError:
+                log.error("Unable to serialize the request")
+                return None
+
             log.info(
                 f"making attestation token request to Intel Trust Authority ... : {url}"
             )
@@ -324,23 +328,23 @@ class ITAConnector:
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
-                log.error(f"Http Error occurred in get_token request: {exc}")
+                log.error(f"Http Error occurred in get_token_composite request: {exc}")
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
-                log.error(f"Connection Error occurred in get_token request: {exc}")
+                log.error(f"Connection Error occurred in get_token_composite request: {exc}")
                 return None
             except requests.exceptions.Timeout as exc:
-                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                log.error(f"Timeout Error occurred in get_token_composite request: {exc}")
                 return None
             except requests.exceptions.RequestException as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
+                log.error(f"Error occurred in get_token_composite request: {exc}")
                 return None
             except Exception as exc:
-                log.error(f"Error occurred in get_token request: {exc}")
+                log.error(f"Error occurred in get_token_composite request: {exc}")
                 return None
             return response
 
@@ -349,7 +353,7 @@ class ITAConnector:
         except requests.exceptions.HTTPError:
             return None
         except Exception as exc:
-            log.error(f"Error occurred in get_token request: {exc}")
+            log.error(f"Error occurred in get_token_composite request: {exc}")
             return None
 
         if response is None:
@@ -541,7 +545,7 @@ class ITAConnector:
 
         if (
             crl.get_revoked_certificate_by_serial_number(leaf_cert.serial_number)
-            != None
+            is not None
         ): 
             log.error("Certificate has been revoked")
             return False
@@ -792,90 +796,8 @@ class ITAConnector:
         response.headers = token_resp.headers
         return response
 
-<<<<<<< HEAD
 def validate_token_signing_algorithm(signing_alg):
     # token signing algorithm should be one of RS256, PS384
     if signing_alg in ["RS256","PS384"]:
-=======
-
-    # Supported Attestation Types - Intel TDX, NVGPU, TDX+NVGPU 
-    def attest_composite(self, tdx_args: AttestArgs, gpu_args: AttestArgs) -> AttestResponse:
-        """This Function calls Intel Trust Authority Connector V2 endpoints (Composite Attestation) for get_nonce(), collect evidence from adapter
-           class, get_token() and return the attestation token.
-
-        Args:
-            Two instances of AttestArgs class (for TDX and NVGPU)
-
-        Returns:
-            AttestResponse: Instance of AttestResponse class
-        """
-
-        # call get_nonce() only once
-        if tdx_args:
-            nonce_resp = self.get_nonce(GetNonceArgs(tdx_args.request_id))
-        elif gpu_args:
-            nonce_resp = self.get_nonce(GetNonceArgs(gpu_args.request_id))
-        else:
-            log.error("Attestation Argument is required")
-            return None
-
-        if nonce_resp is None:
-             log.error("Get Nonce request failed")
-             return None
-
-        log.info("Nonce Retrieved Successfully")
-        log.debug(f"Nonce : {nonce_resp.nonce}")
-        decoded_val = base64.b64decode(nonce_resp.nonce.val)
-        decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
-        concatenated_nonce = decoded_val + decoded_iat
-     
-        intel_tdx_args = None
-        nvidia_gpu_args = None
-
-        if tdx_args:
-            if tdx_args.policy_ids != None:
-                for uuid_str in tdx_args.policy_ids:
-                    if not validate_uuid(uuid_str):
-                        log.error(f"Invalid policy UUID :{uuid_str}")
-                        return None
-            tdx_evidence = tdx_args.adapter.collect_evidence(concatenated_nonce)
-            if tdx_evidence is None:
-                return None
-            intel_tdx_args = GetTokenArgs(nonce=nonce_resp.nonce, evidence=tdx_evidence, policy_ids=tdx_args.policy_ids, request_id=tdx_args.request_id)
-            print(intel_tdx_args)
-      
-        if gpu_args:
-            if gpu_args.policy_ids != None:
-                for uuid_str in gpu_args.policy_ids:
-                    if not validate_uuid(uuid_str):
-                        log.error(f"Invalid policy UUID :{uuid_str}")
-                        return None
-            if nonce_resp is None:
-                gpu_nonce = None
-            else:
-                gpu_nonce = hashlib.sha256(concatenated_nonce).hexdigest()
-
-            gpu_evidence = gpu_args.adapter.collect_evidence(gpu_nonce)
-            if gpu_evidence is None:
-                return None
-            log.info("GPU Evidence : %s", gpu_evidence.evidence)
-            evidence_details = json.loads(gpu_evidence.evidence)
-            nvidia_gpu_args = GetTokenGPUArgs(nonce=nonce_resp.nonce, gpu_nonce=gpu_nonce, evidence=evidence_details, policy_ids=None, request_id=gpu_args.request_id)
-            print(nvidia_gpu_args)
-
-        token_resp = self.get_token_composite(intel_tdx_args, nvidia_gpu_args)
-        if token_resp is None:
-            log.debug("Get Token request failed")
-            return None
-
-        response = AttestResponse
-        response.token = token_resp.token
-        response.headers = token_resp.headers
-        return response
-
-def validate_uuid(uuid_str):
-    try:
-        uuid.UUID(uuid_str)
->>>>>>> a1190c0 (Removed user data and eventlog parser as GPU does not use them)
         return True
     return False
