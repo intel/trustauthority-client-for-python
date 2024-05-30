@@ -106,7 +106,7 @@ def cmd_attest(args):
         else:
             user_data_bytes = "" 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
-        tdx_attest_args = connector.TDXAttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
         attestation_token = ita_connector.attest_composite(tdx_attest_args, None)
         if attestation_token is None:
             log.error("Attestation Token is not returned.")
@@ -123,7 +123,7 @@ def cmd_attest(args):
 
     elif args.attest_type =='nvgpu':
         gpu_adapter = GPUAdapter()
-        gpu_attest_args = connector.GPUAttestArgs(gpu_adapter, trust_authority_request_id)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id)
         attestation_token = ita_connector.attest_composite(None, gpu_attest_args)
         if attestation_token is None:
             log.error("Attestation Token is not returned.")
@@ -146,9 +146,9 @@ def cmd_attest(args):
         # Create GPU Adapter
         gpu_adapter = GPUAdapter()
 
-        tdx_attest_args = connector.TDXAttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
         # GPU appraisal policy is not supported yet until v2 policy is available. 
-        gpu_attest_args = connector.GPUAttestArgs(gpu_adapter, trust_authority_request_id, None)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, None)
         # Fetch Attestation Token from ITA
         attestation_token = ita_connector.attest_composite(tdx_attest_args, gpu_attest_args)
         if attestation_token is None:
