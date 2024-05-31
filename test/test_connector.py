@@ -12,6 +12,7 @@ from unittest.mock import patch, MagicMock
 from inteltrustauthorityclient.connector.connector import *
 from inteltrustauthorityclient.connector.config import *
 from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
 
 def get_connector():
