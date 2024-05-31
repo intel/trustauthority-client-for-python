@@ -77,11 +77,11 @@ def cmd_attest(args):
        trust_authority_request_id = args.request_id
     # If request_id is not provided as an argument
     else:
-       trust_authority_request_id = const.TRUSTAUTHORITY_REQUEST_ID
+       trust_authority_request_id = "cli12345" 
 
     # Check if policy uuid is valid and the number of policy counts not exceeded.
+    policyIds = []
     if args.policy_ids != None:
-       policyIds = []
        pIds = args.policy_ids.split(",")
        if len(pIds) > const.POLICY_IDS_MAX_LEN:
             print("policy count in request must be between 1 - 10")
@@ -94,7 +94,6 @@ def cmd_attest(args):
                 exit(1)
             else:
                 policyIds.append(uid)
-
     # Read ITA Env configuration from json file
     with open(args.config, 'r') as cf:
         cf_dict = json.load(cf)
@@ -140,7 +139,7 @@ def cmd_attest(args):
             user_data_bytes = b""
 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, request_id=trust_authority_request_id, policy_ids=policyIds, token_signing_alg=None, policy_must_match=None)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, None)
         if attestation_token is None:
             print("Attestation Token is not returned.")
@@ -151,7 +150,7 @@ def cmd_attest(args):
 
     elif args.attest_type =='nvgpu':
         gpu_adapter = GPUAdapter()
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, None)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, policy_ids=None, token_signing_alg=None, policy_must_match=None)
         attestation_token = ita_connector.attest_v2(None, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")

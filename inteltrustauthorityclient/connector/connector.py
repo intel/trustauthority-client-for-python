@@ -141,7 +141,7 @@ class TokenRequest_v2:
     """TokenRequest_v2 holds all the data required for attestation"""
     quote: str  #'json:"quote"'
     verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
-    user_data: Optional[str]  #'json:"runtime_data"'
+    user_data: Optional[str]  #'json:"user_data"'
     runtime_data: Optional[str]  #'json:"runtime_data"'
     event_log: Optional[str] = None  #'json:"event_log"'
     
@@ -547,15 +547,19 @@ class ITAConnector:
         if leaf_cert is None or ca_cert is None or crl is None:
             log.error("Leaf Cert, CA Cert, or CRL is None")
             return False
-
         pub_key = ca_cert.public_key()
         if not (crl.is_signature_valid(pub_key)):
             log.error("Invalid CRL signature")
             return False
-        dt = datetime.now(timezone.utc)
-        utc_time = dt.replace(tzinfo=timezone.utc)
-        utc_timestamp_now = utc_time.timestamp()
-        if crl.next_update_utc.timestamp() < utc_timestamp_now:
+
+        current_time = datetime.now(timezone.utc)
+        # make crl.next_update aware by adding timezone info
+        if crl.next_update.tzinfo is None:
+            crl_next_update_aware = crl.next_update.replace(tzinfo=timezone.utc)
+        else:
+            crl_next_update_aware = crl.next_update
+
+        if crl_next_update_aware < current_time:
             log.error("crl has been expired")
             return False
 
@@ -638,7 +642,8 @@ class ITAConnector:
                 inter_ca_cert = cert_data
             else:
                 leaf_cert = cert_data
-
+        
+        # Validate Intermediate CA Certificate against Root CA CRL
         cdp_list = inter_ca_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
@@ -652,6 +657,7 @@ class ITAConnector:
             log.error("Failed to check Intermediate CA Certificate against Root CA CRL")
             return None
 
+        # Validate Leaf certificate against Intermediate CA CRL
         cdp_list = leaf_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
         )
