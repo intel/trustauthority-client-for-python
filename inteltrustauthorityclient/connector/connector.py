@@ -324,8 +324,8 @@ class ITAConnector:
 
             try:
                 body = json.dumps(wrapped_req)
-            except TypeError:
-                log.error("Unable to serialize the request")
+            except TypeError as exc:
+                log.error(f"Unable to serialize the request: {exc}")
                 return None
 
             log.info(

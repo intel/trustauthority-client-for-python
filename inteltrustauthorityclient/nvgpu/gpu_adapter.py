@@ -58,6 +58,11 @@ class GPUAdapter(EvidenceAdapter):
         data['evidence'] = encoded_evidence
         data['arch'] = 'HOPPER'
         data['certificate'] = str(cert_chain)
-        payload = json.dumps(data)
+
+        try:
+            payload = json.dumps(data)
+        except TypeError as exc:
++           log.error(f"Unable to serialize the data: {exc}")
+            return None
         return payload
 
