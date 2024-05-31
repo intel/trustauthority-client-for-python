@@ -247,11 +247,7 @@ class ITAConnector:
                 token_signing_alg=args.token_signing_alg,
                 policy_must_match=args.policy_must_match,
             )
-            body = token_req.__dict__
-            if isinstance(body["policy_must_match"],str) and body["policy_must_match"].lower() == "true":
-                body["policy_must_match"]=True
-            if isinstance(body["policy_must_match"],str) and body["policy_must_match"].lower() == "false":
-                body["policy_must_match"]=False 
+            body = token_req.__dict__ 
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}

@@ -87,8 +87,9 @@ def main():
         log.debug("CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value.")
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
 
-    trust_authority_token_signing_algorithm = os.getenv("TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM")
-    trust_authority_policy_match = os.getenv("TRUSTAUTHORITY_POLICY_MUST_MATCH")
+    token_signing_algorithm = os.getenv("TOKEN_SIGNING_ALGORITHM")
+    policy_must_match = os.getenv("POLICY_MUST_MATCH")
+    policy_must_match = True if policy_must_match.lower() == "true" else False
 
     try:
         # Populate config object
@@ -129,10 +130,10 @@ def main():
         exit(1)
     if policy_ids != None:
         attest_args = connector.AttestArgs(
-            adapter, trust_authority_token_signing_algorithm, trust_authority_policy_match, trust_authority_request_id, policy_ids
+            adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id, policy_ids
         )
     else:
-        attest_args = connector.AttestArgs(adapter, trust_authority_token_signing_algorithm, trust_authority_policy_match, trust_authority_request_id)
+        attest_args = connector.AttestArgs(adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id)
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:

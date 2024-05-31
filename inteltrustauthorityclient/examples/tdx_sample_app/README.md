@@ -101,8 +101,8 @@ RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
 RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 CLIENT_TIMEOUT_SEC=<request-timeout-sec>
 LOG_LEVEL=<log-level>
-TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
-TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+POLICY_MUST_MATCH=True/False
+TOKEN_SIGNING_ALGORITHM=<Algorithm>
 
 EOF
 
@@ -123,7 +123,7 @@ docker run \
 >
 > - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
-> - Token Signing Algorithm should be one of PS384 or RS256.
+> - Token Signing Algorithm should be either PS384 or RS256.
 
 ### Output when example is run...
 - When successful, the token and other information will be displayed...
@@ -166,8 +166,8 @@ export RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export CLIENT_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
 export LOG_LEVEL=<LOG_LEVEL>
 export ADAPTER_TYPE=<ADAPTER_TYPE>
-export TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
-export TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+export POLICY_MUST_MATCH=True/False
+export TOKEN_SIGNING_ALGORITHM=<Algorithm>
 # ADAPTER_TYPE can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
 ```
 
@@ -182,7 +182,7 @@ python tdx_sample_app.py
 >
 > - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
-> - Token Signing Algorithm should be one of PS384 or RS256.
+> - Token Signing Algorithm should be either PS384 or RS256.
 
 ### Output when example is run...
 - When successful, the token and other information will be displayed...

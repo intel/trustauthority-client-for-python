@@ -99,8 +99,8 @@ RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 CLIENT_TIMEOUT_SEC=<request-timeout-sec>
 LOG_LEVEL=<log-level>
 SGX_AESM_ADDR=1
-TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
-TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+POLICY_MUST_MATCH=True/False
+TOKEN_SIGNING_ALGORITHM=<Algorithm>
 EOF
 
 # Use docker to run the SGX Sample App...
@@ -120,7 +120,7 @@ sudo docker run \
 >
 > - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
-> - Token Signing Algorithm should be one of PS384 or RS256.
+> - Token Signing Algorithm should be either PS384 or RS256.
 
 ### Output when example is run...
 - When successful, the token and other information will be displayed...
@@ -163,8 +163,8 @@ export CLIENT_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
 export LOG_LEVEL=<LOG_LEVEL>
 export SGX_AESM_ADDR=1
 export ADAPTER_TYPE="INTEL-SGX"
-export TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
-export TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+export POLICY_MUST_MATCH=True/False
+export TOKEN_SIGNING_ALGORITHM=<Algorithm>
 ```
 
 Run the Sample App in **/inteltrustauthorityclient/examples/sgx_sample_app/** after setting the environment variables using the following command:
@@ -176,7 +176,7 @@ python sgx_sample_app.py
 > **Note:**
 > - The proxy setting values for `HTTP_PROXY` and `HTTPS_PROXY` have to be set by the user based on the system proxy settings.
 > - The example above uses one such proxy settings and this can vary from system to system.
-> - Token Signing Algorithm should be one of PS384 or RS256.
+> - Token Signing Algorithm should be either PS384 or RS256.
 
 ### Output when example is run...
 - When successful, the token and other information will be displayed...
