@@ -135,6 +135,9 @@ def main():
         )
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
 
+    trust_authority_token_signing_algorithm = os.getenv("TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM")
+    trust_authority_policy_match = os.getenv("TRUSTAUTHORITY_POLICY_MUST_MATCH")
+
     # enclave related work
     enclave_path = "./minimal-enclave/enclave.signed.so"
     eid = create_sgx_enclave(enclave_path)

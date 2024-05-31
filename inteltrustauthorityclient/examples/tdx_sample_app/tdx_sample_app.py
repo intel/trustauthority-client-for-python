@@ -87,6 +87,9 @@ def main():
         log.debug("CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value.")
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
 
+    trust_authority_token_signing_algorithm = os.getenv("TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM")
+    trust_authority_policy_match = os.getenv("TRUSTAUTHORITY_POLICY_MUST_MATCH")
+
     try:
         # Populate config object
         config_obj = config.Config(

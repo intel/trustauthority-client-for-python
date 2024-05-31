@@ -637,3 +637,9 @@ class ITAConnector:
         response.token = token_resp.token
         response.headers = token_resp.headers
         return response
+
+def validate_token_signing_algorithm(signing_alg):
+    # token signing algorithm should be one of RS256, PS384
+    if signing_alg in ["RS256","PS384"]:
+        return True
+    return False

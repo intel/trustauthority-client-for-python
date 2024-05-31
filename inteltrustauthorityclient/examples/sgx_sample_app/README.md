@@ -99,8 +99,8 @@ RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
 CLIENT_TIMEOUT_SEC=<request-timeout-sec>
 LOG_LEVEL=<log-level>
 SGX_AESM_ADDR=1
-ENV_TRUSTAUTHORITY_POLICY_MATCH=<bool>
-ENV_TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
+TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
 EOF
 
 # Use docker to run the SGX Sample App...
@@ -163,8 +163,8 @@ export CLIENT_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
 export LOG_LEVEL=<LOG_LEVEL>
 export SGX_AESM_ADDR=1
 export ADAPTER_TYPE="INTEL-SGX"
-export ENV_TRUSTAUTHORITY_POLICY_MATCH=<bool>
-export ENV_TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
+export TRUSTAUTHORITY_POLICY_MUST_MATCH=<bool>
+export TRUSTAUTHORITY_TOKEN_SIGNING_ALGORITHM=<Algorithm>
 ```
 
 Run the Sample App in **/inteltrustauthorityclient/examples/sgx_sample_app/** after setting the environment variables using the following command:

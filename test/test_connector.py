@@ -113,7 +113,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         evidence_params = Evidence(0, "quotedata", b"", b"", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234")
+        tokenargs = GetTokenArgs(
+            verifier_nonce, evidence_params, [], "1234", "PS384", True
+        )
         with patch("requests.post", url=self.ita_c.token_url) as mocked_get:
             mocked_response = requests.Response()
             mocked_response.json = lambda: self.mocked_token_response
@@ -126,7 +128,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() with raising Connection Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234","PS384",True)
+        tokenargs = GetTokenArgs(
+            verifier_nonce, evidence_params, [], "1234", "PS384", True
+        )
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.ConnectionError
             token = self.ita_c.get_token(tokenargs)
@@ -136,7 +140,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() with raising HTTP Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234","PS384",True)
+        tokenargs = GetTokenArgs(
+            verifier_nonce, evidence_params, [], "1234", "PS384", True
+        )
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_response = requests.Response()
             mocked_response.status_code = 400
@@ -148,7 +154,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() with raising Timeout Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234","PS384",True)
+        tokenargs = GetTokenArgs(
+            verifier_nonce, evidence_params, [], "1234", "PS384", True
+        )
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.Timeout
             token = self.ita_c.get_token(tokenargs)
@@ -158,7 +166,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() with raising Request Exception"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
-        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, [], "1234","PS384",True)
+        tokenargs = GetTokenArgs(
+            verifier_nonce, evidence_params, [], "1234", "PS384", True
+        )
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.RequestException
             token = self.ita_c.get_token(tokenargs)
@@ -259,10 +269,8 @@ class ConnectorTestCase(unittest.TestCase):
                 "alg": "HS256",
                 "typ": "JWT",
                 "kid": "3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb",
-        }
-            decoded_token = self.ita_c.verify_token(
-                self.mocked_token_response["token"]
-            )
+            }
+            decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
             assert decoded_token is None
 
     def test_verify_token_invalid_get_certs(self):
