@@ -141,9 +141,9 @@ class TokenRequest:
 class TokenRequest_v2:
     """TokenRequest holds all the data required for attestation"""
     quote: str  #'json:"quote"'
-    verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
-    user_data: str  #'json:"runtime_data"'
-    runtime_data: str  #'json:"runtime_data"'
+    verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
+    user_data: Optional[str]  #'json:"runtime_data"'
+    runtime_data: Optional[str]  #'json:"runtime_data"'
     event_log: Optional[str] = None  #'json:"event_log"'
 
     def __post_init__(self):
@@ -155,7 +155,7 @@ class TokenRequest_v2:
 @dataclass
 class GPUTokenRequest_v2:
         evidence: str                    #'json:"evidence"'
-        verifier_nonce: VerifierNonce  #'json:"verifier_nonce"'
+        verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
         gpu_nonce: str    #'json:"gpu_nonce"'
         certificate: str                    #'json:"certificate"'
 
@@ -287,8 +287,8 @@ class ITAConnector:
                     verifier_nonce=VerifierNonce(
                         tdx_args.nonce.val, tdx_args.nonce.iat, tdx_args.nonce.signature
                     ).__dict__,
-                    user_data=tdx_args.evidence.user_data,
-                    runtime_data=tdx_args.evidence.runtime_data,
+                    user_data=base64.b64encode(tdx_args.evidence.user_data).decode("utf-8") if tdx_args.evidence.user_data is not None else None,
+                    runtime_data=base64.b64encode(tdx_args.evidence.runtime_data).decode("utf-8") if tdx_args.evidence.runtime_data is not None else None,
                     event_log=tdx_args.evidence.event_log,
                 )
                 # TDX+NVGPU
