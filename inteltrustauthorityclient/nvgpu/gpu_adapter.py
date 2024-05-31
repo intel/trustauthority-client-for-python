@@ -23,7 +23,8 @@ class GPUAdapter(EvidenceAdapter):
     def collect_evidence(self, nonce):
         # When Verifier nonce is not provided, generate the NV SDK compatible gpu_nonce of random 32 hex string 
         if nonce is None:
-            nonce = secrets.token_bytes(32)
+            # Generating random nonce in size of 32byte hex string
+            nonce = secrets.token_bytes(32).hex()
             
         try:
            evidence_list = attest_gpu_remote.generate_evidence(nonce)
@@ -62,7 +63,7 @@ class GPUAdapter(EvidenceAdapter):
         try:
             payload = json.dumps(data)
         except TypeError as exc:
-+           log.error(f"Unable to serialize the data: {exc}")
+            log.error(f"Unable to serialize the data: {exc}")
             return None
         return payload
 

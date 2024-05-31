@@ -35,7 +35,7 @@ HTTP_HEADER_API_KEY = "x-api-key"
 HTTP_HEADER_APPLICATION_JSON = "application/json"
 HTTP_HEADER_KEY_ACCEPT = "Accept"
 HTTP_HEADER_KEY_CONTENT_TYPE = "Content-Type"
-HTTP_HEADER_REQUEST_ID = "Request-Id#"
+HTTP_HEADER_REQUEST_ID = "Request-Id"
 
 # Intel Trust Authority URLs
 NONCE_URL = "appraisal/v1/nonce"
