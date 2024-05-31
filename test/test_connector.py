@@ -15,7 +15,6 @@ from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
 from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
 
-
 def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
     retryConfig = RetryConfig(2, 2, 2, 2)
@@ -35,6 +34,7 @@ class ConnectorTestCase(unittest.TestCase):
     ita_c = get_connector()
     ita_c.nonce_url = "appraisal/v1/nonce"
     ita_c.token_url = "appraisal/v1/attest"
+    ita_c.token_url_v2 = "appraisal/v2/attest"
     mocked_nonce = {
         "val": "g9QC7VxV0n8dID0zSJeVLSULqYCJuv4iMepby91xukrhXgKrKscGXB5lxmT2s3POjxVOG+fSPCYpOKYWRRWAyQ==",
         "iat": "MjAyMi0wOC0yNCAxMjozNjozMi45Mjk3MjIwNzUgKzAwMDAgVVRD",
@@ -125,6 +125,71 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
             assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_v2(self):
+        """Test method to test get_token() from Intel Trust Authority Connector"""
+        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
+        gpu_nonce = "931d8dd0add203ac3d8b4fbde75e115278eefcdceac5b87671a748f32364dfcb"
+        tdx_evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        gpu_evidence_params = GPUEvidence(0, "gpuevidence", "NV-GPU")
+        tdxtokenargs = GetTokenArgs(verifier_nonce, tdx_evidence_params, [], "1234")
+        gputokenargs = GetokenArgs(verifier_nonce, gpu_nonce, gpu_evidence_params, [], "1234")
+        with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
+            mocked_response = requests.Response()
+            mocked_response.json = lambda: self.mocked_token_response
+            mocked_response.status_code = 200
+            mocked_get.return_value = mocked_response
+            token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
+            assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_v2_nvgpu(self):
+        """Test method to test get_token() from Intel Trust Authority Connector"""
+        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
+        gpu_nonce = "931d8dd0add203ac3d8b4fbde75e115278eefcdceac5b87671a748f32364dfcb"
+        gpu_evidence_params = GPUEvidence(0, "gpuevidence", "NV-GPU")
+        tdxtokenargs = None 
+        gputokenargs = GetokenArgs(verifier_nonce, gpu_nonce, gpu_evidence_params, [], "1234")
+        with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
+            mocked_response = requests.Response()
+            mocked_response.json = lambda: self.mocked_token_response
+            mocked_response.status_code = 200
+            mocked_get.return_value = mocked_response
+            token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
+            assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_v2_tdx(self):
+        """Test method to test get_token() from Intel Trust Authority Connector"""
+        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
+        tdx_evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        tdxtokenargs = GetTokenArgs(verifier_nonce, tdx_evidence_params, [], "1234")
+        gputokenargs = None 
+        with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
+            mocked_response = requests.Response()
+            mocked_response.json = lambda: self.mocked_token_response
+            mocked_response.status_code = 200
+            mocked_get.return_value = mocked_response
+            token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
+            assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_v2_with_noargs(self):
+        """Test method to test get_token() from Intel Trust Authority Connector"""
+        tdxtokenargs = None 
+        gputokenargs = None 
+        with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
+            mocked_response = requests.Response()
+            mocked_response.json = lambda: self.mocked_token_response
+            mocked_response.status_code = 200
+            mocked_get.return_value = mocked_response
+            token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
+            assert token.token == self.mocked_token_response["token"]
+
+    def test_get_token_invalid_policyid(self):
+        """Test method to test get_token() with Invalid UUID's"""
+        verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
+        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        tokenargs = GetTokenArgs(verifier_nonce, evidence_params, ["1234-5678"], "1234")
+        token = self.ita_c.get_token(tokenargs)
+        assert token is None
 
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
@@ -417,6 +482,31 @@ class ConnectorTestCase(unittest.TestCase):
                     decoded_token = self.ita_c.attest(attest_args)
                     assert decoded_token is not None
 
+    def test_attest_v2_nvgpu(self):
+        """Test method to test attest() of Intel Trust Authority Connector"""
+        tdx_attest_args = None
+        gpu_attest_args = AttestArgs(GPUAdapter(""))
+
+        def mock_collect_evidence_gpu(arg1, arg2):
+            return GPUEvidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "NV-GPU")
+
+        def mock_get_token_v2(arg1, arg2):
+            return GetTokenResponse("", "")
+
+        with patch.object(ITAConnector, "get_nonce", new=self.mock_get_nonce):
+            with patch.object(
+                GPUAdapter, "collect_evidence", new=mock_collect_evidence_gpu,
+            ):
+                with patch.object(ITAConnector, "get_token_v2", new=mock_get_token_v2):
+                    decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
+                    assert decoded_token is not None
+
+    def test_attest_invalid_policyid(self):
+        """Test method to test attest() with Invalid policyid"""
+        attest_args = AttestArgs(TDXAdapter(""), "", ["1234-5678"])
+        decoded_token = self.ita_c.attest(attest_args)
+        assert decoded_token is None
+
     def test_attest_empty_nonce(self):
         """Test method to test attest() with empty Nonce"""
         attest_args = AttestArgs(TDXAdapter(""), "")
@@ -426,6 +516,18 @@ class ConnectorTestCase(unittest.TestCase):
 
         with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
             decoded_token = self.ita_c.attest(attest_args)
+            assert decoded_token is None
+
+    def test_attest_v2(self):
+        """Test method to test attest() with empty Nonce"""
+        tdx_attest_args = AttestArgs(TDXAdapter(""), "")
+        gpu_attest_args = AttestArgs(GPUAdapter(""), "")
+
+        def mock_get_nonce(arg1, arg2):
+            return None
+
+        with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
+            decoded_token = self.ita_c.attest_v2(attest_args)
             assert decoded_token is None
 
     def test_attest_empty_collect_evidence(self):
@@ -451,6 +553,67 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 decoded_token = self.ita_c.attest(attest_args)
                 assert decoded_token is None
+
+    def test_attest_v2_tdx(self):
+        """Test method to test attest() with empty Evidence"""
+        tdx_attest_args = AttestArgs(TDXAdapter(""))
+        gpu_attest_args = None
+
+        def mock_get_nonce(arg1, arg2):
+            return GetNonceResponse(
+                "",
+                VerifierNonce(
+                    "g9QC7VxV0n8dID0zSJeVLSULqYCJuv4iMepby91xukrhXgKrKscGXB5lxmT2s3POjxVOG+fSPCYpOKYWRRWAyQ==",
+                    "MjAyMi0wOC0yNCAxMjozNjozMi45Mjk3MjIwNzUgKzAwMDAgVVRD",
+                    "WswVG3rOPJIuVmMNG2GZ6IF4hD+QfuJ/PigIRaHtQitGAHRCRzgtW8+8UbXe9vJfjnapjw7RQyzpT+vPGVpxRSoiBaj54RsedI38K9ubFd3gPvsMlYltgFRSAtb1ViWZxMhL0yA9+xzgv0D+11mpNEz8nt3HK4oALV5EAxqJYCmKZRzi3/LJe842AY8DVcV9eUZQ8RBx7gNe72Ex1fU3+qF9A9MuOgKqJ41/7HFTY0rCpcBS8k6E1VBSatk4XTj5KNcluI3LoAOvBuiwObgmNKT8Nyc4JAEc+gmf9e9taIgt7QNFEtl3nwPQuiCLIh0FHdXPYumiQ0mclU8nfQL8ZUoe/GqgOd58+fZoHeGvFoeyjQ7Q0Ini1rWEzwOY5gik9yH57/JTEJTI8Evc0L8ggRO4M/sZ2ZTyIq5yRUISB2eDh6qTfbKgSr5LpxW8IRl0y9fp8CEuzhFxKcOeld9p61yb040P+QhemhP/O1E5tf4y4Pz/ISASiKUBFSTh4yYx",
+                ),
+            )
+
+        def mock_collect_evidence_tdx(arg1, arg2):
+            return None
+
+        with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
+            with patch.object(
+                TDXAdapter, "collect_evidence", new=mock_collect_evidence_tdx,
+            ):
+                decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
+                assert decoded_token is None
+
+    def test_attest_empty_get_token(self):
+        """Test method to test attest() with empty Token"""
+        attest_args = AttestArgs(TDXAdapter(""))
+
+        def mock_collect_evidence(arg1, arg2):
+            return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
+
+        def mock_get_token(arg1, arg2):
+            return None
+
+        with patch.object(ITAConnector, "get_nonce", new=self.mock_get_nonce):
+            with patch.object(
+                TDXAdapter, "collect_evidence", new=mock_collect_evidence
+            ):
+                with patch.object(ITAConnector, "get_token", new=mock_get_token):
+                    decoded_token = self.ita_c.attest(attest_args)
+                    assert decoded_token is None
+
+    def test_attest_empty_get_token_v2(self):
+        """Test method to test attest() with empty Token"""
+        attest_args = AttestArgs(TDXAdapter(""))
+
+        def mock_collect_evidence(arg1, arg2):
+            return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
+
+        def mock_get_token(arg1, arg2):
+            return None
+
+        with patch.object(ITAConnector, "get_nonce", new=self.mock_get_nonce):
+            with patch.object(
+                TDXAdapter, "collect_evidence", new=mock_collect_evidence
+            ):
+                with patch.object(ITAConnector, "get_token_v2", new=mock_get_token):
+                    decoded_token = self.ita_c.attest_v2(attest_args, None)
+                    assert decoded_token is None
 
 if __name__ == "__main__":
     unittest.main()
