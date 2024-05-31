@@ -35,7 +35,8 @@ class GPUAdapter(EvidenceAdapter):
         except Exception as e:
            log.exception(f"Caught Exception: {e}")
            return None
-
+        
+        # Build GPU evidence payload to be sent to NRAS, with nonce, Attestation Report, Certificate extracted from the Raw GPU evidence 
         evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
         if evidence_payload is None:
             log.error("GPU Evidence not returned")
