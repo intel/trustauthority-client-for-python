@@ -110,7 +110,6 @@ class GetTokenGPUArgs_v2:
     gpu_nonce: str
     evidence: Evidence
 
-
 @dataclass
 class GetTokenResponse:
     """GetTokenResponse holds the response parameters recieved from attest endpoint"""
@@ -118,10 +117,10 @@ class GetTokenResponse:
     token: str
     headers: str
 
-
 @dataclass
 class TokenRequest:
     """TokenRequest holds all the data required for attestation"""
+
     quote: str  #'json:"quote"'
     verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
     user_data: Optional[str]  #'json:"user_data"'
@@ -145,7 +144,7 @@ class TokenRequest_v2:
     user_data: Optional[str]  #'json:"runtime_data"'
     runtime_data: Optional[str]  #'json:"runtime_data"'
     event_log: Optional[str] = None  #'json:"event_log"'
-
+    
     def __post_init__(self):
         if self.event_log is None:
             delattr(self, "event_log")
@@ -252,8 +251,8 @@ class ITAConnector:
         """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
         Currently supported attestation is TDX, NVGPU, TDX+NVGPU for v1.7
         Args:
-            GetTokenArgs(): Instance of GetTokenArgs_v2 class
-            GetGPUTokenArgs(): Instance of GetGPUTokenArgs_v2 class
+            GetTokenArgs(): Instance of GetTokenArgs class (for TDX)
+            GetTokenArgs(): Instance of GetTokenArgs class (for NVGPU)
 
         Returns:
             GetTokenResponse: object to GetTokenResponse class
@@ -378,7 +377,7 @@ class ITAConnector:
         return GetTokenResponse(response.json().get("token"), str(response.headers))
 
 
-    def get_token_v1(self, args: GetTokenArgs) -> GetTokenResponse:
+    def get_token(self, args: GetTokenArgs) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api to get Attestation Token.
 
         Args:
@@ -562,12 +561,11 @@ class ITAConnector:
 
         if (
             crl.get_revoked_certificate_by_serial_number(leaf_cert.serial_number)
-            is not None
-        ): 
-            log.error("Certificate has been revoked")
+            != None
+        ):
+            log.error("certificate has been revoked")
             return False
         return True
-
 
     def verify_token(self, token):
         """This Function verify Attestation token issued by Intel Trust Authority
@@ -780,7 +778,7 @@ class ITAConnector:
 
     def attest(self, args: AttestArgs) -> AttestResponse:
         """This Function calls Intel Trust Authority Connector V1 endpoint for get_nonce(), collect evidence from adapter
-           class, get_token_v1() and return the attestation token.
+           class, get_token() and return the attestation token.
 
         Args:
             AttestArgs: Instance of AttestArgs class
@@ -808,7 +806,7 @@ class ITAConnector:
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
         )
         if token_resp is None:
-            log.error("Get Token request failed")
+            log.debug("Get Token request failed")
             return None
         response.token = token_resp.token
         response.headers = token_resp.headers

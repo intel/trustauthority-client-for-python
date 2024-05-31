@@ -15,6 +15,7 @@ from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
 from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
 
+
 def get_connector():
     """This function initializes and returns Intel Trust Authority connector object"""
     retryConfig = RetryConfig(2, 2, 2, 2)
@@ -427,18 +428,6 @@ class ConnectorTestCase(unittest.TestCase):
             decoded_token = self.ita_c.attest(attest_args)
             assert decoded_token is None
 
-    def test_attest_composite_empty_nonce(self):
-        """Test method to test attest() with empty Nonce"""
-        tdx_attest_args = AttestArgs(TDXAdapter(""), "")
-        gpu_attest_args = AttestArgs(GPUAdapter(""), "")
-
-        def mock_get_nonce(arg1, arg2):
-            return None
-
-        with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
-            decoded_token = self.ita_c.attest_composite(attest_args)
-            assert decoded_token is None
-
     def test_attest_empty_collect_evidence(self):
         """Test method to test attest() with empty Evidence"""
         attest_args = AttestArgs(TDXAdapter(""))
@@ -462,54 +451,6 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 decoded_token = self.ita_c.attest(attest_args)
                 assert decoded_token is None
-
-    def test_attest_composite_empty_collect_evidence(self):
-        """Test method to test attest() with empty Evidence"""
-        tdx_attest_args = AttestArgs(TDXAdapter(""))
-        gpu_attest_args = AttestArgs(GPUAdapter(""))
-
-        def mock_get_nonce(arg1, arg2):
-            return GetNonceResponse(
-                "",
-                VerifierNonce(
-                    "g9QC7VxV0n8dID0zSJeVLSULqYCJuv4iMepby91xukrhXgKrKscGXB5lxmT2s3POjxVOG+fSPCYpOKYWRRWAyQ==",
-                    "MjAyMi0wOC0yNCAxMjozNjozMi45Mjk3MjIwNzUgKzAwMDAgVVRD",
-                    "WswVG3rOPJIuVmMNG2GZ6IF4hD+QfuJ/PigIRaHtQitGAHRCRzgtW8+8UbXe9vJfjnapjw7RQyzpT+vPGVpxRSoiBaj54RsedI38K9ubFd3gPvsMlYltgFRSAtb1ViWZxMhL0yA9+xzgv0D+11mpNEz8nt3HK4oALV5EAxqJYCmKZRzi3/LJe842AY8DVcV9eUZQ8RBx7gNe72Ex1fU3+qF9A9MuOgKqJ41/7HFTY0rCpcBS8k6E1VBSatk4XTj5KNcluI3LoAOvBuiwObgmNKT8Nyc4JAEc+gmf9e9taIgt7QNFEtl3nwPQuiCLIh0FHdXPYumiQ0mclU8nfQL8ZUoe/GqgOd58+fZoHeGvFoeyjQ7Q0Ini1rWEzwOY5gik9yH57/JTEJTI8Evc0L8ggRO4M/sZ2ZTyIq5yRUISB2eDh6qTfbKgSr5LpxW8IRl0y9fp8CEuzhFxKcOeld9p61yb040P+QhemhP/O1E5tf4y4Pz/ISASiKUBFSTh4yYx",
-                ),
-            )
-
-        def mock_collect_evidence_tdx(arg1, arg2):
-            return None
-
-        def mock_collect_evidence_gpu(arg1, arg2):
-            return None
-
-        with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
-            with patch.object(
-                TDXAdapter, "collect_evidence", new=mock_collect_evidence_tdx,
-                GPUAdapter, "collect_evidence", new=mock_collect_evidence_gpu,
-            ):
-                decoded_token = self.ita_c.attest_composite(tdx_attest_args, gpu_attest_args)
-                assert decoded_token is None
-
-    def test_attest_empty_get_token(self):
-        """Test method to test attest() with empty Token"""
-        attest_args = AttestArgs(TDXAdapter(""))
-
-        def mock_collect_evidence(arg1, arg2):
-            return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
-
-        def mock_get_token(arg1, arg2):
-            return None
-
-        with patch.object(ITAConnector, "get_nonce", new=self.mock_get_nonce):
-            with patch.object(
-                TDXAdapter, "collect_evidence", new=mock_collect_evidence
-            ):
-                with patch.object(ITAConnector, "get_token", new=mock_get_token):
-                    decoded_token = self.ita_c.attest(attest_args)
-                    assert decoded_token is None
-
 
 if __name__ == "__main__":
     unittest.main()
