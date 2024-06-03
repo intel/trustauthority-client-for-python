@@ -818,6 +818,72 @@ class ITAConnector:
         response.headers = token_resp.headers
         return response
 
+    # Supported Attestation Types - Intel TDX, NVGPU, TDX+NVGPU 
+    def attest_v2(self, tdx_args: AttestArgs, gpu_args: AttestArgs) -> AttestResponse:
+        """This Function calls Intel Trust Authority Connector V2 endpoints (Composite Attestation) for get_nonce(), collect evidence from adapter
+           class, get_token_v2() and return the attestation token.
+
+        Args:
+            Two instances of AttestArgs class (for TDX and NVGPU)
+
+        Returns:
+            AttestResponse: Instance of AttestResponse class
+        """
+
+        if tdx_args is None and gpu_args is None:
+            log.error("AttestArgs are not provided")
+            return None
+
+        # For V2 endpoint, it should be decided how to set request_id and policy_ids for composite token, set it in both TDX and GPU AttestArgs for now"
+        if tdx_args:
+            request_id = tdx_args.request_id
+        elif gpu_args:
+            request_id = gpu_args.request_id
+
+        nonce_resp = self.get_nonce(GetNonceArgs(request_id))
+        if nonce_resp is None:
+             print("Get Nonce failed")
+             log.error("Get Nonce request failed")
+             return None
+        print(nonce_resp)
+        log.info("Nonce Retrieved Successfully")
+        log.debug(f"Nonce : {nonce_resp.nonce}")
+
+        decoded_val = base64.b64decode(nonce_resp.nonce.val)
+        decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
+        concatenated_nonce = decoded_val + decoded_iat
+     
+        if tdx_args is None:
+            intel_tdx_args = None 
+        else:
+            tdx_evidence = tdx_args.adapter.collect_evidence(concatenated_nonce)
+            if tdx_evidence is None:
+                return None
+            intel_tdx_args = GetTokenArgs(nonce=nonce_resp.nonce, evidence=tdx_evidence, policy_ids=tdx_args.policy_ids, request_id=request_id, token_signing_alg=None, policy_must_match=None)
+      
+        if gpu_args is None:
+            nvidia_gpu_args = None
+        else:
+            print("gpu_attest")
+            gpu_nonce = hashlib.sha256(concatenated_nonce).hexdigest()
+            gpu_evidence = gpu_args.adapter.collect_evidence(gpu_nonce)
+            if gpu_evidence is None:
+                log.debug("Failed to collect GPU Evidence")
+                return None
+
+            log.info("GPU Evidence : %s", gpu_evidence.evidence)
+            evidence_details = json.loads(gpu_evidence.evidence)
+            nvidia_gpu_args = GetTokenArgs(nonce=nonce_resp.nonce, evidence=evidence_details, request_id=request_id, policy_ids=None, token_signing_alg=None, policy_must_match=None)
+
+        token_resp = self.get_token_v2(intel_tdx_args, nvidia_gpu_args)
+        if token_resp is None:
+            log.error("Get Token request failed")
+            return None
+        response = AttestResponse
+        response.token = token_resp.token
+        response.headers = token_resp.headers
+        return response
+
 def validate_token_signing_algorithm(signing_alg):
     # token signing algorithm should be one of RS256, PS384
     if signing_alg in ["RS256","PS384"]:
