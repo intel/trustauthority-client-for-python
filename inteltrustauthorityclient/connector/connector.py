@@ -812,7 +812,7 @@ class ITAConnector:
             GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
         )
         if token_resp is None:
-            log.debug("Get Token request failed")
+            log.error("Get Token request failed")
             return None
         response.token = token_resp.token
         response.headers = token_resp.headers
