@@ -13,7 +13,7 @@ from nv_attestation_sdk import attestation
 from nv_attestation_sdk.gpu import attest_gpu_remote
 from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
-from inteltrustauthorityclient.connector.evidence import * 
+from inteltrustauthorityclient.connector.evidence import GPUEvidence 
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self):

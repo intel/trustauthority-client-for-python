@@ -138,7 +138,7 @@ class TokenRequest:
 
 @dataclass
 class TokenRequest_v2:
-    """TokenRequest_v2 holds all the data required for attestation"""
+    """TokenRequest_v2 holds all the data required for v2 attestation APIs"""
     quote: str  #'json:"quote"'
     verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
     user_data: Optional[str]  #'json:"user_data"'
@@ -153,10 +153,11 @@ class TokenRequest_v2:
 
 @dataclass
 class GPUTokenRequest_v2:
-        evidence: str                    #'json:"evidence"'
-        verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
-        gpu_nonce: str    #'json:"gpu_nonce"'
-        certificate: str                    #'json:"certificate"'
+    """GPUTokenRequest_v2 holds all the data required for v2 GPU attestation APIs"""
+    evidence: str                    #'json:"evidence"'
+    verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
+    gpu_nonce: str    #'json:"gpu_nonce"'
+    certificate: str                    #'json:"certificate"'
 
 class ITAConnector:
     """
@@ -842,10 +843,8 @@ class ITAConnector:
 
         nonce_resp = self.get_nonce(GetNonceArgs(request_id))
         if nonce_resp is None:
-             print("Get Nonce failed")
              log.error("Get Nonce request failed")
              return None
-        print(nonce_resp)
         log.info("Nonce Retrieved Successfully")
         log.debug(f"Nonce : {nonce_resp.nonce}")
 
@@ -864,7 +863,6 @@ class ITAConnector:
         if gpu_args is None:
             nvidia_gpu_args = None
         else:
-            print("gpu_attest")
             gpu_nonce = hashlib.sha256(concatenated_nonce).hexdigest()
             gpu_evidence = gpu_args.adapter.collect_evidence(gpu_nonce)
             if gpu_evidence is None:

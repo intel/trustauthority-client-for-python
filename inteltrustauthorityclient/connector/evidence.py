@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 
 class Evidence:
-    """Contains the GPU attributes to be sent for attestation of platform."""
+    """Contains the attributes to be sent for attestation of platform."""
 
     def __init__(
         self,
