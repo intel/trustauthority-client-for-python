@@ -89,7 +89,8 @@ def main():
 
     token_signing_algorithm = os.getenv("TOKEN_SIGNING_ALGORITHM")
     policy_must_match = os.getenv("POLICY_MUST_MATCH")
-    policy_must_match = True if policy_must_match.lower() == "true" else False
+    if policy_must_match is not None and policy_must_match.lower() in {"true", "false"}:
+        policy_must_match = True if policy_must_match.lower() == "true" else False
 
     try:
         # Populate config object
