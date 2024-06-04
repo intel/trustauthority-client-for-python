@@ -13,8 +13,8 @@ import os
 import base64
 import hashlib
 import secrets
-from urllib.parse import urlparse
-from dotenv import load_dotenv
+#from urllib.parse import urlparse
+#from dotenv import load_dotenv
 from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.connector import config, connector
 from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
@@ -139,7 +139,7 @@ def cmd_attest(args):
             user_data_bytes = b""
 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, request_id=trust_authority_request_id, policy_ids=policyIds, token_signing_alg=None, policy_must_match=None)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, request_id=trust_authority_request_id, policy_ids=policyIds)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, None)
         if attestation_token is None:
             print("Attestation Token is not returned.")
@@ -150,7 +150,7 @@ def cmd_attest(args):
 
     elif args.attest_type =='nvgpu':
         gpu_adapter = GPUAdapter()
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, policy_ids=None, token_signing_alg=None, policy_must_match=None)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, None)
         attestation_token = ita_connector.attest_v2(None, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")
