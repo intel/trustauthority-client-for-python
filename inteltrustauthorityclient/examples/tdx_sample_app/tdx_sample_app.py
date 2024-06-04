@@ -129,7 +129,7 @@ def main():
     else:
         log.error("Invalid Adapter Type Selected.")
         exit(1)
-    if policy_ids != None:
+    if trust_authority_policy_id != None:
         attest_args = connector.AttestArgs(
             adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id, policy_ids
         )

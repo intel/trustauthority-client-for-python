@@ -167,7 +167,7 @@ def main():
         exit(1)
     c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
     adapter = SGXAdapter(eid, c_lib.enclave_create_report, pub_bytes)
-    if policy_ids != None:
+    if trust_authority_policy_id != None:
         attest_args = connector.AttestArgs(
             adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id, policy_ids
         )
