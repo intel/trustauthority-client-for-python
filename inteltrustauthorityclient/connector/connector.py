@@ -166,6 +166,7 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
+                    log.error(f"Error occured in getting nonce request: {response.content}")
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
@@ -265,6 +266,7 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
+                    log.error(f"Error occured in getting Attestation token request: {response.content}")
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
@@ -328,6 +330,7 @@ class ITAConnector:
                     if self.cfg.retry_cfg.check_retry(response.status_code):
                         raise exc
                     else:
+                        log.error(f"Error occured in getting CRL request: {response.content}")
                         log.error("Since error is not retryable hence not retrying")
                         return None
                 except requests.exceptions.ConnectionError as exc:
@@ -565,6 +568,7 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
+                    log.error(f"Error occured in getting token signing certificates request: {response.content}")
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
