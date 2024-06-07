@@ -43,9 +43,9 @@ class ConfigTestCase(unittest.TestCase):
             RetryConfig(2, 2, 2, 2),
             "https://custom-base-url-ITA.com",
             "https://custom-api-url-ITA.com",
-            "apikey",
+            "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3",
         )
-        self.assertEqual(config_obj.api_key, "apikey")
+        self.assertEqual(config_obj.api_key, "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3")
         self.assertEqual(config_obj.api_url, "https://custom-api-url-ITA.com")
         self.assertEqual(config_obj.base_url, "https://custom-base-url-ITA.com")
         self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
@@ -59,9 +59,9 @@ class ConfigTestCase(unittest.TestCase):
             RetryConfig(2, 2, 2),
             "https://custom-base-url-ITA.com",
             "https://custom-api-url-ITA.com",
-            "apikey",
+            "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3",
         )
-        self.assertEqual(config_obj.api_key, "apikey")
+        self.assertEqual(config_obj.api_key, "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3")
         self.assertEqual(config_obj.api_url, "https://custom-api-url-ITA.com")
         self.assertEqual(config_obj.base_url, "https://custom-base-url-ITA.com")
         self.assertEqual(config_obj.retry_cfg.retry_wait_min_sec, 2)
@@ -76,7 +76,7 @@ class ConfigTestCase(unittest.TestCase):
                 RetryConfig(2, 2, 2, 2),
                 "httpa://custom-base-url-ITA.com",
                 "https://custom-api-url-ITA.com",
-                "apikey",
+                "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3",
             )
 
     def test_config_invalid_apiurl(self):
@@ -86,7 +86,7 @@ class ConfigTestCase(unittest.TestCase):
                 RetryConfig(2, 2, 2, 2),
                 "https://custom-base-url-ITA.com",
                 "httpa://custom-api-url-ITA.com",
-                "apikey",
+                "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3",
             )
 
     def test_config_invalid_policyID(self):

@@ -4,8 +4,10 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+import binascii
 from urllib.parse import urlparse
 import uuid
+import base64
 import validators
 import logging as log
 from tenacity import wait_exponential
@@ -29,6 +31,9 @@ class Config:
             raise ValueError("Invalid Intel Trust Authority Base URL")
         if not validate_url(api_url):
             raise ValueError("Invalid Intel Trust Authority API URL")
+        if not validate_apikey(api_key):
+            raise ValueError("Invalid Intel Trust Authority API Key")
+
         self._base_url = base_url
         self._api_url = api_url
         self._retry_cfg = retry_cfg
@@ -128,3 +133,12 @@ def validate_requestid(req_id):
         if req_char != "-" and req_char.isalnum() == False:
             return False
     return True
+
+def validate_apikey(api_key):
+    # api_key has to be a valid base64 encoded string
+    try:
+        if(api_key != base64.b64encode(base64.b64decode(api_key)).decode()):
+            return False
+        return True
+    except binascii.Error as exc:
+        log.error(f"Error in apikey validation :{exc}, API key must be a valid Base64 Encoded string")

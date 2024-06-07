@@ -35,24 +35,25 @@ def main():
 
     # get all the environment variables
     trustauthority_base_url = os.getenv("TRUSTAUTHORITY_BASE_URL")
-    if trustauthority_base_url is None:
+    if trustauthority_base_url is None or trustauthority_base_url == "":
         log.error("TRUSTAUTHORITY_BASE_URL is not set.")
         exit(1)
 
     trustAuthority_api_url = os.getenv("TRUSTAUTHORITY_API_URL")
-    if trustAuthority_api_url is None:
+    if trustAuthority_api_url is None or trustAuthority_api_url == "":
         log.error("TRUSTAUTHORITY_API_URL is not set.")
         exit(1)
 
     trust_authority_api_key = os.getenv("TRUSTAUTHORITY_API_KEY")
-    if trust_authority_api_key is None:
+    if trust_authority_api_key is None or trust_authority_api_key == "":
         log.error("TRUSTAUTHORITY_API_KEY is not set.")
         exit(1)
-
+    
     trust_authority_request_id = os.getenv("TRUSTAUTHORITY_REQUEST_ID")
-    if not config.validate_requestid(trust_authority_request_id):
-        log.error(f"Invalid Request ID :{trust_authority_request_id}")
-        exit(1)
+    if trust_authority_request_id is not None:
+        if not config.validate_requestid(trust_authority_request_id):
+            log.error(f"Invalid Request ID :{trust_authority_request_id}")
+            exit(1)
 
     trust_authority_policy_id = os.getenv("TRUSTAUTHORITY_POLICY_ID")
     if trust_authority_policy_id != None:
@@ -69,22 +70,38 @@ def main():
     if retry_max is None:
         log.debug("RETRY_MAX is not provided. Hence, setting default value.")
         retry_max = const.DEFAULT_RETRY_MAX_NUM
+    else:
+        if not retry_max.isnumeric():
+            log.error("Invalid RETRY_MAX format: RETRY_MAX must be an Integer.")
+            exit(1)
 
     retry_wait_time_min = os.getenv("RETRY_WAIT_TIME_MIN")
     if retry_wait_time_min is None:
         log.debug("RETRY_WAIT_TIME is not provided. Hence, setting default value.")
         retry_wait_time_min = const.DEFAULT_RETRY_WAIT_MIN_SEC
+    else:
+        if not retry_wait_time_min.isnumeric():
+            log.error(
+                "Invalid RETRY_WAIT_TIME_MIN format: RETRY_WAIT_TIME_MIN must be an Integer."
+            )
+            exit(1)
 
     retry_wait_time_max = os.getenv("RETRY_WAIT_TIME_MAX")
     if retry_wait_time_max is None:
-        log.debug(
-            "RETRY_WAIT_TIME_MAX is not provided. Hence, setting default value."
-        )
+        log.debug("RETRY_WAIT_TIME_MAX is not provided. Hence, setting default value.")
         retry_wait_time_max = const.DEFAULT_RETRY_WAIT_MAX_SEC
+    else:
+        if not retry_wait_time_max.isnumeric():
+            log.error(
+                "Invalid RETRY_WAIT_TIME_MAX format: RETRY_WAIT_TIME_MAX must be an Integer."
+            )
+            exit(1)
 
     timeout_second = os.getenv("CLIENT_TIMEOUT_SEC")
     if timeout_second is None:
-        log.debug("CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value.")
+        log.debug(
+            "CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value."
+        )
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
 
     token_signing_algorithm = os.getenv("TOKEN_SIGNING_ALGORITHM")
@@ -131,10 +148,19 @@ def main():
         exit(1)
     if trust_authority_policy_id != None:
         attest_args = connector.AttestArgs(
-            adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id, policy_ids
+            adapter,
+            token_signing_algorithm,
+            policy_must_match,
+            trust_authority_request_id,
+            policy_ids,
         )
     else:
-        attest_args = connector.AttestArgs(adapter, token_signing_algorithm, policy_must_match, trust_authority_request_id)
+        attest_args = connector.AttestArgs(
+            adapter,
+            token_signing_algorithm,
+            policy_must_match,
+            trust_authority_request_id,
+        )
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:

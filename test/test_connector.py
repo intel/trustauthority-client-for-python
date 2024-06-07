@@ -21,7 +21,7 @@ def get_connector():
         retryConfig,
         "https://custom-base-url-ITA.com",
         "https://custom-api-url-ITA.com",
-        "apikey",
+        "095KGgj5Eh8DqqjZwwp6J8HuE8fC2Efo5Z2qSUf3",
     )
     ita_connector = ITAConnector(config)
     return ita_connector
