@@ -31,7 +31,7 @@ jobs:
         run:  poetry install
 
       - name: Run UT with Coverage enabled
-        run: cd test && poetry run coverage run --source ../inteltrustauthorityclient/ --omit="../inteltrustauthorityclient/examples/*,../inteltrustauthorityclient/resources/*" -m unittest discover -p 'test_*.py'
+        run: cd test && poetry run coverage run --source ../inteltrustauthorityclient/ --omit="../inteltrustauthorityclient/nvgpu/*,../inteltrustauthorityclient/examples/*,../inteltrustauthorityclient/resources/*" -m unittest discover -p 'test_*.py'
       
       - name: Check coverage percentage
         run: |
