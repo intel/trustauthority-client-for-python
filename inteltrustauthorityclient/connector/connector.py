@@ -252,7 +252,7 @@ class ITAConnector:
         """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
         Currently supported attestation is TDX, NVGPU, TDX+NVGPU for v1.7
         Args:
-            GetTokenArgs(): Instance of GetTokenArgs class (for TDX)
+            GetTokenArgs(): Instance of GetTokenArgs class (for Intel TDX)
             GetTokenArgs(): Instance of GetTokenArgs class (for NVGPU)
 
         Returns:
@@ -306,11 +306,17 @@ class ITAConnector:
                     certificate = gpu_args.evidence['certificate'],
                     )
 
-                    wrapped_req = {"policy_ids": tdx_args.policy_ids, "tdx": tdx_treq.__dict__,
+                    wrapped_req = {"policy_ids": tdx_args.policy_ids, 
+                            "token_signing_alg": tdx_args.token_signing_alg,
+                            "policy_must_match": tdx_args.policy_must_match,
+                            "tdx": tdx_treq.__dict__,
                             "nvgpu": gpu_treq.__dict__}
                 # TDX Only
                 if gpu_args is None:
-                    wrapped_req = {"policy_ids": tdx_args.policy_ids, "tdx": tdx_treq.__dict__}
+                    wrapped_req = {"policy_ids": tdx_args.policy_ids, 
+                            "token_signing_alg": tdx_args.token_signing_alg,
+                            "policy_must_match": tdx_args.policy_must_match, 
+                            "tdx": tdx_treq.__dict__}
             # NVGPU Only
             elif gpu_args is not None:
                 gpu_treq = GPUTokenRequest_v2(
@@ -321,7 +327,10 @@ class ITAConnector:
                     gpu_nonce = gpu_args.evidence['nonce'],
                     certificate = gpu_args.evidence['certificate'],
                 )
-                wrapped_req = {"policy_ids": None,"nvgpu": gpu_treq.__dict__}
+                wrapped_req = {"policy_ids": gpu_args.policy_ids,
+                            "token_signing_alg": gpu_args.token_signing_alg,
+                            "policy_must_match": gpu_args.policy_must_match,
+                            "nvgpu": gpu_treq.__dict__}
 
             try:
                 body = json.dumps(wrapped_req)
@@ -858,7 +867,7 @@ class ITAConnector:
             tdx_evidence = tdx_args.adapter.collect_evidence(concatenated_nonce)
             if tdx_evidence is None:
                 return None
-            intel_tdx_args = GetTokenArgs(nonce=nonce_resp.nonce, evidence=tdx_evidence, policy_ids=tdx_args.policy_ids, request_id=request_id, token_signing_alg=None, policy_must_match=None)
+            intel_tdx_args = GetTokenArgs(nonce_resp.nonce, tdx_evidence, tdx_args.policy_ids, request_id, tdx_args.token_signing_alg, tdx_args.policy_must_match)
       
         if gpu_args is None:
             nvidia_gpu_args = None
@@ -871,8 +880,7 @@ class ITAConnector:
 
             log.info("GPU Evidence : %s", gpu_evidence.evidence)
             evidence_details = json.loads(gpu_evidence.evidence)
-            nvidia_gpu_args = GetTokenArgs(nonce=nonce_resp.nonce, evidence=evidence_details, request_id=request_id, policy_ids=None, token_signing_alg=None, policy_must_match=None)
-
+            nvidia_gpu_args = GetTokenArgs(nonce_resp.nonce, evidence_details, gpu_args.policy_ids, request_id, gpu_args.token_signing_alg, gpu_args.policy_must_match)
         token_resp = self.get_token_v2(intel_tdx_args, nvidia_gpu_args)
         if token_resp is None:
             log.error("Get Token request failed")

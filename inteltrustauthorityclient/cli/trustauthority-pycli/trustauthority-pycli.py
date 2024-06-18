@@ -13,8 +13,6 @@ import os
 import base64
 import hashlib
 import secrets
-#from urllib.parse import urlparse
-#from dotenv import load_dotenv
 from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.connector import config, connector
 from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
@@ -28,6 +26,7 @@ def cmd_evidence(args):
                 user_data_bytes = base64.b64decode(args.user_data)
             except Exception as err:
                 print(f"Error while base64 decoding of user data: : {err}")
+                exit(1)
         else:
             user_data_bytes = b"" 
 
@@ -36,6 +35,7 @@ def cmd_evidence(args):
                 nonce_bytes = base64.b64decode(args.nonce)
             except Exception as err:
                 print(f"Error while base64 decoding of nonce: : {err}")
+                exit(1)
         else:
             nonce_bytes = b"" 
 
@@ -44,6 +44,7 @@ def cmd_evidence(args):
         evidence = tdx_adapter.collect_evidence(nonce_bytes)
         if evidence is None:
             print("TDX Quote is not returned")
+            return None
         print(f"TDX Quote : {evidence.quote}")
 
     elif args.attest_type == 'nvgpu':
@@ -55,6 +56,7 @@ def cmd_evidence(args):
                 gpu_nonce = hashlib.sha256(nonce_bytes).hexdigest()
             except Exception as err:
                 print(f"Error while base64 decoding of nonce: : {err}")
+                exit(1)
         # if nonce is not provided by a user, GPU Adapter will generate random nonce 
         else:
             gpu_nonce = None
@@ -62,38 +64,43 @@ def cmd_evidence(args):
         evidence = gpu_adapter.collect_evidence(gpu_nonce)
         if evidence is None:
             print("GPU Evidence is not returned")
+            return None
         print(f"GPU evidence : {evidence.evidence}")
 
 def cmd_attest(args):
     # Check if request id is valid
     if args.request_id != None:
-       if len(args.request_id) > const.REQUEST_ID_MAX_LEN:
+        if len(args.request_id) > const.REQUEST_ID_MAX_LEN:
             print("Request ID should be atmost 128 characters long.") 
             exit(1)
-       for req_char in args.request_id:
+        for req_char in args.request_id:
             if req_char != '-' and req_char.isalnum() == False:
                 print("Request ID should contain only a-z, A-Z, 0-9, and - (hyphen), Special characters are not allowed.")
                 exit(1)
-       trust_authority_request_id = args.request_id
-    # If request_id is not provided as an argument
-    else:
-       trust_authority_request_id = "cli12345" 
 
     # Check if policy uuid is valid and the number of policy counts not exceeded.
-    policyIds = []
     if args.policy_ids != None:
-       pIds = args.policy_ids.split(",")
-       if len(pIds) > const.POLICY_IDS_MAX_LEN:
+        policyIds = args.policy_ids.split(",")
+        if len(policyIds) > const.POLICY_IDS_MAX_LEN:
             print("policy count in request must be between 1 - 10")
             exit(1)
-       for pId in pIds:
-            try:
-               uid = uuid.UUID(pId)
-            except ValueError:
+        for pId in policyIds:
+            if not config.validate_uuid(pId):
                 print(f"Invalid policy UUID :{pId}")
                 exit(1)
-            else:
-                policyIds.append(uid)
+    else:
+        policyIds = None 
+
+    # Check if the token signing altorithm is supported
+    if args.token_signing_alg != None:
+        tsa = args.token_signing_alg
+        if tsa not in ["RS256", "PS384"]:
+            print(f"Token Signing Algorithm {tsa} is unsupported, supported algorithms are PS384 and RS256")
+            exit(1)
+       
+    # Not enfocing policies match during attestation (default: False)
+    policy_must_match = False
+
     # Read ITA Env configuration from json file
     with open(args.config, 'r') as cf:
         cf_dict = json.load(cf)
@@ -135,26 +142,28 @@ def cmd_attest(args):
                 user_data_bytes = base64.b64decode(args.user_data)
             except Exception as err:
                 print(f"Error while base64 decoding of user data: : {err}")
+                exit(1)
         else:
             user_data_bytes = b""
 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, request_id=trust_authority_request_id, policy_ids=policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, None)
         if attestation_token is None:
             print("Attestation Token is not returned.")
-            exit(1)
+            return None 
 
         token = attestation_token.token
         print(f"Attestation token : {token}")
 
     elif args.attest_type =='nvgpu':
         gpu_adapter = GPUAdapter()
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, None)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(None, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")
-            exit(1)
+            return None 
+
         token = attestation_token.token
         print(f"Attestation token : {token}")
 
@@ -164,6 +173,7 @@ def cmd_attest(args):
                 user_data_bytes = base64.b64decode(args.user_data)
             except Exception as err:
                 print(f"Error while base64 decoding of user data: : {err}")
+                exit(1)
         else:
             user_data_bytes = b"" 
 
@@ -172,13 +182,12 @@ def cmd_attest(args):
         # Create GPU Adapter
         gpu_adapter = GPUAdapter()
 
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, trust_authority_request_id, policyIds)
-        # GPU appraisal policy is not supported yet until v2 policy is available. 
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, trust_authority_request_id, None)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")
-            exit(1)
+            return None 
         token = attestation_token.token
         print(f"Attestation token : {token}")
 
@@ -257,6 +266,7 @@ def main():
     parser_attest.add_argument('-u', '--user-data', help='User Data in base64 encoded format')
     parser_attest.add_argument('-p', '--policy-ids', help='Trust Authority Policy Ids, comma separated')
     parser_attest.add_argument('-r', '--request-id', help='Trust Authority Request Id')
+    parser_attest.add_argument('-t', '--token-signing-alg', help='Trust Authority Token Signing Algorithm')
     parser_attest.set_defaults(func=cmd_attest)
 
     # verify command
