@@ -31,6 +31,10 @@ def cmd_evidence(args):
             user_data_bytes = b"" 
 
         if args.nonce:
+            # Input Validation: limit the nonce input size to 64 bytes
+            if len(args.nonce) > 64:
+                print("Nonce should be less than 64 bytes in length")
+                exit(1)
             try:
                 nonce_bytes = base64.b64decode(args.nonce)
             except Exception as err:
@@ -51,7 +55,12 @@ def cmd_evidence(args):
         gpu_adapter = GPUAdapter()
 
         if args.nonce:
+            # Input Validation: limit the nonce input size to 64 bytes
+            if len(args.nonce) > 64:
+                print("Nonce should be less than 64 bytes in length")
+                exit(1)
             try:
+                # Transform to NVGPU nonce (should be 32 bytes/Hex string)
                 nonce_bytes = base64.b64decode(args.nonce)
                 gpu_nonce = hashlib.sha256(nonce_bytes).hexdigest()
             except Exception as err:
@@ -92,13 +101,13 @@ def cmd_attest(args):
         policyIds = None 
 
     # Check if the token signing altorithm is supported
-    if args.token_signing_alg != None:
-        tsa = args.token_signing_alg
+    if args.sign_alg != None:
+        tsa = args.sign_alg
         if tsa not in ["RS256", "PS384"]:
             print(f"Token Signing Algorithm {tsa} is unsupported, supported algorithms are PS384 and RS256")
             exit(1)
        
-    # Not enfocing policies match during attestation (default: False)
+    # Not enforcing policy match during attestation (CLI does not provide policy_must_match as an argument option: set to default/False)
     policy_must_match = False
 
     # Read ITA Env configuration from json file
@@ -147,7 +156,7 @@ def cmd_attest(args):
             user_data_bytes = b""
 
         tdx_adapter = TDXAdapter(user_data_bytes, None)
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.sign_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, None)
         if attestation_token is None:
             print("Attestation Token is not returned.")
@@ -158,7 +167,7 @@ def cmd_attest(args):
 
     elif args.attest_type =='nvgpu':
         gpu_adapter = GPUAdapter()
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.sign_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(None, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")
@@ -182,8 +191,8 @@ def cmd_attest(args):
         # Create GPU Adapter
         gpu_adapter = GPUAdapter()
 
-        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
-        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.token_signing_alg, policy_must_match, args.request_id, policyIds)
+        tdx_attest_args = connector.AttestArgs(tdx_adapter, args.sign_alg, policy_must_match, args.request_id, policyIds)
+        gpu_attest_args = connector.AttestArgs(gpu_adapter, args.sign_alg, policy_must_match, args.request_id, policyIds)
         attestation_token = ita_connector.attest_v2(tdx_attest_args, gpu_attest_args)
         if attestation_token is None:
             print("Attestation Token is not returned.")
@@ -264,9 +273,13 @@ def main():
     parser_attest.add_argument('-a', '--attest-type', choices=['tdx', 'nvgpu', 'tdx+nvgpu'], required=True, help='Attestation Type selection')
     parser_attest.add_argument('-c', '--config', type=str, required=True, help='ITA environment argument')
     parser_attest.add_argument('-u', '--user-data', help='User Data in base64 encoded format')
-    parser_attest.add_argument('-p', '--policy-ids', help='Trust Authority Policy Ids, comma separated')
+    parser_attest.add_argument('-p', '--policy-ids', help='Trust Authority Policy Ids, comma separated without space')
     parser_attest.add_argument('-r', '--request-id', help='Trust Authority Request Id')
-    parser_attest.add_argument('-t', '--token-signing-alg', help='Trust Authority Token Signing Algorithm')
+<<<<<<< HEAD
+    parser_attest.add_argument('-s', '--sign-alg', choices=["RS256", "PS384"], help='Trust Authority Token Signing Algorithm')
+=======
+    parser_attest.add_argument('-s', '--sign-alg', help='Trust Authority Token Signing Algorithm')
+>>>>>>> 54968e7 (Removed unittest for NVGPU (due to NV SDK issue in CI))
     parser_attest.set_defaults(func=cmd_attest)
 
     # verify command
