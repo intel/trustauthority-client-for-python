@@ -7,6 +7,7 @@ SPDX-License-Identifier: BSD-3-Clause
 import json
 import base64
 import secrets
+import hashlib
 import logging as log
 from nv_attestation_sdk.gpu import attest_gpu_remote
 from inteltrustauthorityclient.resources import constants as const
@@ -19,14 +20,15 @@ class GPUAdapter(EvidenceAdapter):
         """
 
     def collect_evidence(self, nonce):
-        # When Verifier nonce is not provided, generate the NV SDK compatible gpu_nonce of random 32 hex string 
-        if nonce is None:
-            # Generating random nonce in size of 32byte hex string
-            nonce = secrets.token_bytes(32).hex()
-            
+        if nonce != None:
+            # If ITA nonce or user's nonce is not provided, transform ITA nonce to 32-byte Hex string nonce (NV SDK nonce size)
+            gpu_nonce = hashlib.sha256(nonce).hexdigest()
+        else:
+            # If nonce is not provided, generate random nonce in size of 32byte hex string
+            gpu_nonce = secrets.token_bytes(32).hex()
         try:
-           evidence_list = attest_gpu_remote.generate_evidence(nonce)
-           # Only one GPU attestaton is supported for now.
+           evidence_list = attest_gpu_remote.generate_evidence(gpu_nonce)
+           # Only single GPU attestaton is supported for now.
            raw_evidence = evidence_list[0] 
            log.info("Collected GPU Evidence Successfully")
            log.info(f"GPU Evidence : {raw_evidence}")
@@ -35,7 +37,7 @@ class GPUAdapter(EvidenceAdapter):
            return None
         
         # Build GPU evidence payload to be sent to NRAS, with nonce, Attestation Report, Certificate extracted from the Raw GPU evidence 
-        evidence_payload = self.build_payload(nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
+        evidence_payload = self.build_payload(gpu_nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
         if evidence_payload is None:
             log.error("GPU Evidence not returned")
             return None

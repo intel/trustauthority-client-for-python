@@ -130,9 +130,10 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(0, "quotedata", b"", b"", "", "INTEL-TDX")
-        gpu_evidence_params = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence_params = GPUEvidence("H100", gpu_evidence, "NV-GPU")
         tdxtokenargs = GetTokenArgs(verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True)
-        gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params, [], "1234", "PS384", True)
+        gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params.evidence, [], "1234", "PS384", True)
         with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
             mocked_response = requests.Response()
             mocked_response.json = lambda: self.mocked_token_response
@@ -145,8 +146,9 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdxtokenargs = None 
-        gpu_evidence_params = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
-        gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params, [], "1234", "PS384", True)
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence_params = GPUEvidence("H100", gpu_evidence, "NV-GPU")
+        gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params.evidence, [], "1234", "PS384", True)
         with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
             mocked_response = requests.Response()
             mocked_response.json = lambda: self.mocked_token_response
@@ -533,12 +535,12 @@ class ConnectorTestCase(unittest.TestCase):
                 ),
             )
 
-        def mock_collect_evidence_tdx(arg1, arg2):
+        def mock_collect_evidence(arg1, arg2):
             return None
 
         with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
             with patch.object(
-                TDXAdapter, "collect_evidence", new=mock_collect_evidence_tdx,
+                TDXAdapter, "collect_evidence", new=mock_collect_evidence,
             ):
                 decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
                 assert decoded_token is None
@@ -563,7 +565,8 @@ class ConnectorTestCase(unittest.TestCase):
 
     def test_attest_empty_get_token_v2(self):
         """Test method to test attest() with empty Token"""
-        attest_args = AttestArgs(TDXAdapter(""))
+        tdx_attest_args = AttestArgs(TDXAdapter(""))
+        gpu_attest_args = None
 
         def mock_collect_evidence(arg1, arg2):
             return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
@@ -576,7 +579,7 @@ class ConnectorTestCase(unittest.TestCase):
                 TDXAdapter, "collect_evidence", new=mock_collect_evidence
             ):
                 with patch.object(ITAConnector, "get_token_v2", new=mock_get_token_v2):
-                    decoded_token = self.ita_c.attest_v2(attest_args, None)
+                    decoded_token = self.ita_c.attest_v2(tdx_attest_args, None)
                     assert decoded_token is None
 
     def test_get_crl_null(self):

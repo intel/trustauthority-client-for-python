@@ -8,7 +8,6 @@ import base64
 import json
 import uuid
 import jwt
-import hashlib
 import os
 import http
 import requests
@@ -252,8 +251,8 @@ class ITAConnector:
         """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
         Currently supported attestation is TDX, NVGPU, TDX+NVGPU for v1.7
         Args:
-            GetTokenArgs(): Instance of GetTokenArgs class (for Intel TDX)
-            GetTokenArgs(): Instance of GetTokenArgs class (for NVGPU)
+            tdx_args: GetTokenArgs() - Instance of GetTokenArgs class for Intel TDX 
+            gpu_args: GetTokenArgs() - Instance of GetTokenArgs class for NVGPU 
 
         Returns:
             GetTokenResponse: object to GetTokenResponse class
@@ -864,6 +863,7 @@ class ITAConnector:
         if tdx_args is None:
             intel_tdx_args = None 
         else:
+            # Collect TDX evidence
             tdx_evidence = tdx_args.adapter.collect_evidence(concatenated_nonce)
             if tdx_evidence is None:
                 return None
@@ -872,8 +872,8 @@ class ITAConnector:
         if gpu_args is None:
             nvidia_gpu_args = None
         else:
-            gpu_nonce = hashlib.sha256(concatenated_nonce).hexdigest()
-            gpu_evidence = gpu_args.adapter.collect_evidence(gpu_nonce)
+            # Collect GPU evidence
+            gpu_evidence = gpu_args.adapter.collect_evidence(concatenated_nonce)
             if gpu_evidence is None:
                 log.debug("Failed to collect GPU Evidence")
                 return None
@@ -881,6 +881,8 @@ class ITAConnector:
             log.info("GPU Evidence : %s", gpu_evidence.evidence)
             evidence_details = json.loads(gpu_evidence.evidence)
             nvidia_gpu_args = GetTokenArgs(nonce_resp.nonce, evidence_details, gpu_args.policy_ids, request_id, gpu_args.token_signing_alg, gpu_args.policy_must_match)
+
+        # Get composite token
         token_resp = self.get_token_v2(intel_tdx_args, nvidia_gpu_args)
         if token_resp is None:
             log.error("Get Token request failed")
