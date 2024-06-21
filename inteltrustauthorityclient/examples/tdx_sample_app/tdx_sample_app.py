@@ -4,16 +4,10 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-import ctypes
 import json
-import sys
 import os
-import base64
-from urllib.parse import urlparse
-import validators
 import uuid
 import logging as log
-from urllib.parse import urlparse
 from inteltrustauthorityclient.resources import logger as logger
 from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
