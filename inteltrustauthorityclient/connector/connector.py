@@ -64,18 +64,6 @@ class AttestArgs:
     
 
 @dataclass
-class AttestArgs_v2:
-    """AttestArgs_v2 holds the request parameters needed for attestation with Intel Trust Authority v2 Endpoint"""
-
-    adapter: EvidenceAdapter
-
-@dataclass
-class GPUAttestArgs:
-    """AttestArgs holds the request parameters needed for attestation with Intel Trust Authority"""
-
-    adapter: EvidenceAdapter
-
-@dataclass
 class AttestResponse:
     """AttestResponse holds the response parameters recieved during attestation flow"""
 
@@ -93,21 +81,6 @@ class GetTokenArgs:
     request_id: str
     token_signing_alg: str
     policy_must_match: bool
-
-@dataclass
-class GetTokenArgs_v2:
-    """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
-
-    nonce: VerifierNonce
-    evidence: Evidence
-
-@dataclass
-class GetTokenGPUArgs_v2:
-    """GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority"""
-
-    nonce: VerifierNonce
-    gpu_nonce: str
-    evidence: Evidence
 
 @dataclass
 class GetTokenResponse:
