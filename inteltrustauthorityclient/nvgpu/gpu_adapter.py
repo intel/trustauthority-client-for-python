@@ -21,7 +21,7 @@ class GPUAdapter(EvidenceAdapter):
 
     def collect_evidence(self, nonce):
         if nonce != None:
-            # If ITA nonce or user's nonce is not provided, transform ITA nonce to 32-byte Hex string nonce (NV SDK nonce size)
+            # If ITA verifier nonce is used or user provides a nonce, transform it to 32-byte Hex string nonce (NVDIA SDK accepts nonce in 32-byte Hex only )
             gpu_nonce = hashlib.sha256(nonce).hexdigest()
         else:
             # If nonce is not provided, generate random nonce in size of 32byte hex string
