@@ -323,6 +323,7 @@ class ITAConnector:
                     headers=headers,
                     data=body,
                     proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
@@ -330,6 +331,7 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
+                    log.error(f"Failed to collect token from Trust Authority: {response.content}")
                     log.error("Since error is not retryable hence not retrying")
                     return None
             except requests.exceptions.ConnectionError as exc:
@@ -721,6 +723,7 @@ class ITAConnector:
                     url,
                     headers=headers,
                     proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
                 )
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
