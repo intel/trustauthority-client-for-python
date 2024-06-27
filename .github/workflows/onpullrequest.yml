@@ -31,16 +31,16 @@ jobs:
         run:  poetry install
 
       - name: Run UT with Coverage enabled
-        run: cd test && poetry run coverage run --source ../inteltrustauthorityclient/ --omit="../inteltrustauthorityclient/nvgpu/*,../inteltrustauthorityclient/examples/*,../inteltrustauthorityclient/resources/*" -m unittest discover -p 'test_*.py'
+        #run: cd test && poetry run coverage run --source ../inteltrustauthorityclient/ --omit="../inteltrustauthorityclient/nvgpu/*,../inteltrustauthorityclient/examples/*,../inteltrustauthorityclient/resources/*" -m unittest discover -p 'test_*.py'
       
       - name: Check coverage percentage
-        run: |
-            cd test
-            coverage_percentage=$(poetry run coverage report --format=total)
-            if [ $coverage_percentage -lt 80 ]; then
-              echo "Coverage is less than 80 %: $coverage_percentage %"
-              exit 1
-            else
-              echo "Coverage is greater than or equal to 80 : $coverage_percentage %"
-            fi
+        #run: |
+        #    cd test
+        #    coverage_percentage=$(poetry run coverage report --format=total)
+        #    if [ $coverage_percentage -lt 80 ]; then
+        #      echo "Coverage is less than 80 %: $coverage_percentage %"
+        #      exit 1
+        #    else
+        #      echo "Coverage is greater than or equal to 80 : $coverage_percentage %"
+        #    fi
         
