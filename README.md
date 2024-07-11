@@ -67,7 +67,8 @@ ita_connector = connector.ITAConnector(config_obj)
         - [GCP TDX](./inteltrustauthorityclient/tdx/gcp/README.md)
     - **SGX**
         - [Intel SGX](./inteltrustauthorityclient/sgx/intel/README.md)
-
+    - **NVIDIA**
+        - [NVGPU](./inteltrustauthorityclient/nvgpu/README.md)
 
 Use the adapter created with following piece of code to get attestation token:
 
