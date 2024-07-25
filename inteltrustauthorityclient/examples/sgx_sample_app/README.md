@@ -60,7 +60,7 @@ UBUNTU_VERSION=20.04
 TRUST_AUTHORITY_CLIENT_VERSION=<Sample app Docker Image version>
 DCAP_VERSION=<sgx sdk dcap version>
 PSW_VERSION=<sgx sdk psw version>
-ADAPTER_TYPE=INTEL-SGX
+ADAPTER_TYPE="sgx"
 EOF
 
 docker-compose --env-file .env build

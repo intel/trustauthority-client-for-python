@@ -16,5 +16,5 @@ class EvidenceAdapter(ABC):
     """
 
     @abstractmethod
-    def collect_evidence(self, nonce)->Evidence:
+    def collect_evidence(self, nonce) -> Evidence:
         pass

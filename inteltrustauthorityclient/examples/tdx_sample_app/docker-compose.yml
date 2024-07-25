@@ -14,7 +14,6 @@ services:
       dockerfile: inteltrustauthorityclient/examples/tdx_sample_app/Dockerfile
       args:
         - UBUNTU_VERSION=${UBUNTU_VERSION}
-        - DCAP_VERSION=${DCAP_VERSION}
         - ADAPTER_TYPE=${ADAPTER_TYPE}
     env_file:
       - ../.env

@@ -10,11 +10,11 @@ import uuid
 import logging as log
 from inteltrustauthorityclient.resources import logger as logger
 from inteltrustauthorityclient.resources import constants as const
-from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.tdx.tdx_adapter import TDXAdapter
 from inteltrustauthorityclient.tdx.azure.azure_tdx_adapter import AzureTDXAdapter
-from inteltrustauthorityclient.tdx.gcp.gcp_tdx_adapter import GCPTDXAdapter
 from inteltrustauthorityclient.connector import config, connector
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
+from inteltrustauthorityclient.connector.evidence import EvidenceType
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     if trust_authority_api_key is None or trust_authority_api_key == "":
         log.error("TRUSTAUTHORITY_API_KEY is not set.")
         exit(1)
-    
+
     trust_authority_request_id = os.getenv("TRUSTAUTHORITY_REQUEST_ID")
     if trust_authority_request_id is not None:
         if not config.validate_requestid(trust_authority_request_id):
@@ -131,14 +131,12 @@ def main():
         log.error("ADAPTER_TYPE is not set.")
         exit(1)
     adapter = None
-    if adapter_type == const.INTEL_TDX_ADAPTER:
+    if adapter_type == str(EvidenceType.TDX):
         adapter = TDXAdapter(user_data)
-    elif adapter_type == const.AZURE_TDX_ADAPTER:
+    elif adapter_type == str(EvidenceType.AZTDX):
         adapter = AzureTDXAdapter(user_data)
-    elif adapter_type == const.GCP_TDX_ADAPTER:
-        adapter = GCPTDXAdapter(user_data)
     else:
-        log.error("Invalid Adapter Type Selected.")
+        log.error(f"Invalid Adapter Type Provided: {adapter_type}.")
         exit(1)
     if trust_authority_policy_id != None:
         attest_args = connector.AttestArgs(
@@ -173,7 +171,7 @@ def main():
         verified_token = ita_connector.verify_token(token)
     except Exception as exc:
         log.error(f"Token verification returned exception : {exc}")
-    if verified_token != None:
+    if verified_token is not None:
         log.info("Token Verification Successful")
         log.info(f"Verified Attestation Token : {verified_token}")
     else:

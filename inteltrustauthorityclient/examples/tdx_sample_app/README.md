@@ -60,13 +60,12 @@ Once `Docker` and `docker-compose` are installed, build the Sample Application D
 cat <<EOF | tee .env
 UBUNTU_VERSION=20.04
 TRUST_AUTHORITY_CLIENT_VERSION=<Sample app Docker Image version>
-DCAP_VERSION=<sgx sdk dcap version>
-ADAPTER_TYPE=<Adapter_type>
+ADAPTER_TYPE=<Adapter_type> ("tdx"/"aztdx")
 EOF
 
 docker-compose --env-file .env build
 ```
-**change Adapter_type based on TD being used. Adapter_Type can be one of INTEL-TDX, AZURE-TDX, GCP-TDX**
+**change Adapter_type based on TD being used. Adapter_Type can be one of tdx, aztdx**
 
 
 ### Deployment Instructions
@@ -95,7 +94,7 @@ TRUSTAUTHORITY_BASE_URL=<trustauthority-base-url>
 TRUSTAUTHORITY_API_URL=<trustauthority-api-url>
 TRUSTAUTHORITY_API_KEY=<trustauthority-api-key>
 TRUSTAUTHORITY_REQUEST_ID=<trustauthority-request-id>
-TRUSTAUTHORITY_POLICY_ID=<trustauthority-policy-id>
+TRUSTAUTHORITY_POLICY_ID=<trustauthority-policy-id> example: ["policy 1","policy 2"]
 RETRY_MAX=<max-number-of-retries>
 RETRY_WAIT_TIME_MAX=<max-retry-wait-time>
 RETRY_WAIT_TIME_MIN=<min-retry-wait-time>
@@ -103,20 +102,25 @@ CLIENT_TIMEOUT_SEC=<request-timeout-sec>
 LOG_LEVEL=<log-level>
 POLICY_MUST_MATCH=True/False
 TOKEN_SIGNING_ALGORITHM=<Algorithm>
-
 EOF
 
-# Make sure the Intel(R) TDX driver device is set with the following permissions:
-# crw-rw---- root <user-group> /dev/tdx_guest
-
 # Use docker to run the TDX Sample App...
+For Azure TDX:
+sudo docker run \
+-it --rm --device=/dev/tpm0 \
+--device=/dev/tpmrm0 \
+--env-file tdx_token.env \
+--group-add $(getent group tss | cut -d: -f3) \
+trust_authority_python_client_tdx_sample_app:v1.0.0
+
+
+For For Google Cloud / Intel® Developer Cloud TDX adapters:
 docker run \
        --rm \
-       --network host \
-       --device=/dev/tdx_guest \
+       --privileged \
        --env-file tdx_token.env \
-       --group-add $(getent group <user-group> | cut -d: -f3) \
-       trust_authority_python_client_tdx_sample_app:v1.0.0
+       -v /sys/kernel/config:/sys/kernel/config \
+       trust_authority_python_client_tdx_sample_app:v1.0.0     
 ```
 
 > **Note:**
@@ -165,10 +169,8 @@ export RETRY_WAIT_TIME_MAX=<MAX_RETRY_WAIT_TIME>
 export RETRY_WAIT_TIME_MIN=<MAX_RETRY_WAIT_TIME>
 export CLIENT_TIMEOUT_SEC=<REQUEST_TIMEOUT_SEC>
 export LOG_LEVEL=<LOG_LEVEL>
-export ADAPTER_TYPE=<ADAPTER_TYPE>
 export POLICY_MUST_MATCH=True/False
 export TOKEN_SIGNING_ALGORITHM=<Algorithm>
-# ADAPTER_TYPE can be one of INTEL-TDX, AZURE-TDX, GCP-TDX
 ```
 
 

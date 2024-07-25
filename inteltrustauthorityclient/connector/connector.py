@@ -25,7 +25,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
-from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.connector.evidence import Evidence, EvidenceType
 from inteltrustauthorityclient.resources import constants as constants
 
 
@@ -62,7 +62,7 @@ class AttestArgs:
     policy_must_match: bool = None
     request_id: Optional[str] = None
     policy_ids: Optional[List[UUID]] = None
-    
+
 
 @dataclass
 class AttestResponse:
@@ -101,13 +101,10 @@ class TokenRequest:
     user_data: Optional[str]  #'json:"user_data"'
     runtime_data: Optional[str]  #'json:"runtime_data"'
     policy_ids: Optional[List[UUID]] = None  #'json:"policy_ids"'
-    event_log: Optional[str] = None  #'json:"event_log"'
-    token_signing_alg: Optional[str] = None #'json:"token_signing_alg"'
-    policy_must_match: Optional[bool] = None #'json:"policy_must_match"'
+    token_signing_alg: Optional[str] = None  #'json:"token_signing_alg"'
+    policy_must_match: Optional[bool] = None  #'json:"policy_must_match"'
 
     def __post_init__(self):
-        if self.event_log is None:
-            delattr(self, "event_log")
         if self.user_data is None:
             delattr(self, "user_data")
 
@@ -148,7 +145,7 @@ class ITAConnector:
             headers = {
                 constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
                 constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
-                constants.HTTP_HEADER_REQUEST_ID : args.request_id,
+                constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
@@ -166,8 +163,9 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
-                    log.error(f"Failed to collect nonce from Trust Authority: {response.content}")
-                    log.error("Since error is not retryable hence not retrying")
+                    log.error(
+                        f"Failed to collect nonce from Trust Authority: {response.content}"
+                    )
                     return None
             except requests.exceptions.ConnectionError as exc:
                 log.error(f"Connection Error occurred in get_nonce request: {exc}")
@@ -224,31 +222,29 @@ class ITAConnector:
                 constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
                 constants.HTTP_HEADER_REQUEST_ID: args.request_id,
             }
-            if args.evidence.adapter_type == constants.AZURE_TDX_ADAPTER:
+            url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
+            if args.evidence.type == EvidenceType.AZTDX:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
-            elif args.evidence.adapter_type in (
-                constants.INTEL_TDX_ADAPTER,
-                constants.GCP_TDX_ADAPTER,
-            ):
-                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
-            elif args.evidence.adapter_type == constants.INTEL_SGX_ADAPTER:
-                url = urljoin(self.cfg.api_url, constants.INTEL_TDX_ATTEST_URL)
-            else:
-                log.error("Invalid Adapter type")
-                return None
             token_req = TokenRequest(
                 quote=args.evidence.quote,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
                 ).__dict__,
-                user_data=base64.b64encode(args.evidence.user_data).decode("utf-8") if args.evidence.user_data is not None else None,
-                runtime_data=base64.b64encode(args.evidence.runtime_data).decode("utf-8") if args.evidence.runtime_data is not None else None,
+                user_data=(
+                    base64.b64encode(args.evidence.user_data).decode("utf-8")
+                    if args.evidence.user_data is not None
+                    else None
+                ),
+                runtime_data=(
+                    base64.b64encode(args.evidence.runtime_data).decode("utf-8")
+                    if args.evidence.runtime_data is not None
+                    else None
+                ),
                 policy_ids=args.policy_ids,
-                event_log=args.evidence.event_log,
                 token_signing_alg=args.token_signing_alg,
                 policy_must_match=args.policy_must_match,
             )
-            body = token_req.__dict__ 
+            body = token_req.__dict__
             http_proxy = os.getenv(constants.HTTP_PROXY)
             https_proxy = os.getenv(constants.HTTPS_PROXY)
             proxies = {"http": http_proxy, "https": https_proxy}
@@ -266,8 +262,9 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
-                    log.error(f"Failed to collect token from Trust Authority: {response.content}")
-                    log.error("Since error is not retryable hence not retrying")
+                    log.error(
+                        f"Failed to collect token from Trust Authority: {response.content}"
+                    )
                     return None
             except requests.exceptions.ConnectionError as exc:
                 log.error(f"Connection Error occurred in get_token request: {exc}")
@@ -331,7 +328,6 @@ class ITAConnector:
                         raise exc
                     else:
                         log.error(f"Failed to get CRL Object: {response.content}")
-                        log.error("Since error is not retryable hence not retrying")
                         return None
                 except requests.exceptions.ConnectionError as exc:
                     log.error(f"Connection Error occurred in get_crl request: {exc}")
@@ -513,7 +509,9 @@ class ITAConnector:
                 f"Error in verifying leaf certificate against inter ca certificate : {exc}"
             )
             return None
-        log.debug("Leaf certificate verification against Root and Inter ca certificate Successful")
+        log.debug(
+            "Leaf certificate verification against Root and Inter ca certificate Successful"
+        )
 
         try:
             # Decode the JWT Attestation Token using leaf certificate public key and algorithm used to encode the token
@@ -568,8 +566,9 @@ class ITAConnector:
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
                 else:
-                    log.error(f"Failed to collect token signing certificates from Trust Authority: {response.content}")
-                    log.error("Since error is not retryable hence not retrying")
+                    log.error(
+                        f"Failed to collect token signing certificates from Trust Authority: {response.content}"
+                    )
                     return None
             except requests.exceptions.ConnectionError as exc:
                 log.error(
@@ -629,7 +628,14 @@ class ITAConnector:
         if evidence == None:
             return None
         token_resp = self.get_token(
-            GetTokenArgs(nonce_resp.nonce, evidence, args.policy_ids, args.request_id, args.token_signing_alg, args.policy_must_match)
+            GetTokenArgs(
+                nonce_resp.nonce,
+                evidence,
+                args.policy_ids,
+                args.request_id,
+                args.token_signing_alg,
+                args.policy_must_match,
+            )
         )
         if token_resp == None:
             log.debug("Get Token request failed")
@@ -638,8 +644,9 @@ class ITAConnector:
         response.headers = token_resp.headers
         return response
 
+
 def validate_token_signing_algorithm(signing_alg):
     # token signing algorithm should be one of RS256, PS384
-    if signing_alg in ["RS256","PS384"]:
+    if signing_alg in ["RS256", "PS384"]:
         return True
     return False

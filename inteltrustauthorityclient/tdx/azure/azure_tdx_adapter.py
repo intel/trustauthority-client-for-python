@@ -30,7 +30,7 @@ RUNTIME_DATA_OFFSET = 1236
 class AzureTDXAdapter:
     """This class creates adapter which collects TDX Quote from Azure TDX platform."""
 
-    def __init__(self, user_data: bytearray=None, event_log_parser: bytearray=None) -> None:
+    def __init__(self, user_data: bytearray = None) -> None:
         """Initializes azure tdx adapter object
 
         Args:
@@ -156,12 +156,5 @@ class AzureTDXAdapter:
                 return None
 
         # Create evidence class object to be returned
-        tdx_evidence = Evidence(
-            1,
-            quote,
-            self.user_data,
-            runtime_data,
-            None,
-            const.AZURE_TDX_ADAPTER,
-        )
+        tdx_evidence = Evidence(1, quote, self.user_data, runtime_data)
         return tdx_evidence

@@ -96,7 +96,7 @@ def main():
     if trust_authority_api_key is None or trust_authority_api_key == "":
         log.error("TRUSTAUTHORITY_API_KEY is not set.")
         exit(1)
-    
+
     trust_authority_request_id = os.getenv("TRUSTAUTHORITY_REQUEST_ID")
     if trust_authority_request_id is not None:
         if not config.validate_requestid(trust_authority_request_id):
@@ -217,7 +217,7 @@ def main():
         verified_token = ita_connector.verify_token(token)
     except Exception as exc:
         log.error(f"Token verification returned exception : {exc}")
-    if verified_token != None:
+    if verified_token is not None:
         log.info("Token Verification Successful")
         log.info(f"Verified Attestation Token : {verified_token}")
     else:

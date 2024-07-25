@@ -11,7 +11,7 @@ import requests
 from unittest.mock import patch, MagicMock
 from inteltrustauthorityclient.connector.connector import *
 from inteltrustauthorityclient.connector.config import *
-from inteltrustauthorityclient.tdx.intel.tdx_adapter import TDXAdapter
+from inteltrustauthorityclient.tdx.tdx_adapter import TDXAdapter
 
 
 def get_connector():
@@ -112,7 +112,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token(self):
         """Test method to test get_token() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", b"", b"", "", "INTEL-TDX")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -127,7 +127,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -139,7 +139,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_http_error(self):
         """Test method to test get_token() with raising HTTP Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -153,7 +153,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_timeout_error(self):
         """Test method to test get_token() with raising Timeout Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -165,7 +165,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_request_exception(self):
         """Test method to test get_token() with raising Request Exception"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(0, "quotedata", "", "", "", "INTEL-TDX")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -402,7 +402,7 @@ class ConnectorTestCase(unittest.TestCase):
         attest_args = AttestArgs(TDXAdapter(""))
 
         def mock_collect_evidence(arg1, arg2):
-            return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
+            return Evidence(EvidenceType.TDX, b"BAACAIEAAAAAAAAAk5pyM", "", None)
 
         def mock_get_token(arg1, arg2):
             return GetTokenResponse("", "")
@@ -455,7 +455,7 @@ class ConnectorTestCase(unittest.TestCase):
         attest_args = AttestArgs(TDXAdapter(""))
 
         def mock_collect_evidence(arg1, arg2):
-            return Evidence(0, b"BAACAIEAAAAAAAAAk5pyM", "", None, "", "INTEL-TDX")
+            return Evidence(EvidenceType.TDX, b"BAACAIEAAAAAAAAAk5pyM", "", None)
 
         def mock_get_token(arg1, arg2):
             return None

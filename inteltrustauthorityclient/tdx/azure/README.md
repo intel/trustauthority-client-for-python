@@ -24,7 +24,7 @@ To Create a new Azure TDX adapter, then use the adapter to collect quote from Az
 
 ```python
 #Create a new tdx adapter
-adapter = AzureTDXAdapter(user_data, event_log_parser)
+adapter = AzureTDXAdapter(user_data)
 
 #Use this adapter to get evidence
 evidence = adapter.collect_evidence(nonce)

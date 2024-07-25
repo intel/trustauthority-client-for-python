@@ -7,7 +7,7 @@ Use <b>Ubuntu 20.04</b>.
 
 ## Installation
  
-Install the latest version of the library with following commands:
+Install the latest version of the package with following commands:
  
 Installation steps:
 1) Install poetry using command `pip3 install --no-cache-dir poetry`
@@ -62,9 +62,8 @@ ita_connector = connector.ITAConnector(config_obj)
 
 - Create Adapter using:
     - **TDX**
-        - [Intel TDX](./inteltrustauthorityclient/tdx/intel/README.md)
+        - [TDX](./inteltrustauthorityclient/tdx/README.md)
         - [Azure TDX](./inteltrustauthorityclient/tdx/azure/README.md)
-        - [GCP TDX](./inteltrustauthorityclient/tdx/gcp/README.md)
     - **SGX**
         - [Intel SGX](./inteltrustauthorityclient/sgx/intel/README.md)
 

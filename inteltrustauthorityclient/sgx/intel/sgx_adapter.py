@@ -3,7 +3,7 @@ import base64
 import logging as log
 from dataclasses import dataclass
 from ctypes import *
-from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.connector.evidence import Evidence, EvidenceType
 from inteltrustauthorityclient.resources import constants as const
 
 
@@ -85,7 +85,7 @@ class sgx_report_t(ctypes.Structure):
 class SGXAdapter:
     """This class creates adapter which collects SGX Quote from Intel SGX platform."""
 
-    def __init__(self, eid, report_function, user_data:bytearray=None) -> None:
+    def __init__(self, eid, report_function, user_data: bytearray = None) -> None:
         """Initializes Intel sgx adapter object
         Args:
             eid (string): Enclave id
@@ -193,6 +193,4 @@ class SGXAdapter:
         except Exception as exc:
             log.error(f"Error while encoding data :{exc}")
             return None
-        return Evidence(
-            0, quote_data, None, self.user_data, None, const.INTEL_SGX_ADAPTER
-        )
+        return Evidence(EvidenceType.SGX, quote_data, None, self.user_data)
