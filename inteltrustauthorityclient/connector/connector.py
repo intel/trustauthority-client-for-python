@@ -518,11 +518,11 @@ class ITAConnector:
             decoded_token = jwt.decode(
                 token, leaf_cert.public_key(), unverified_headers.get("alg")
             )
-        except jwt.ExpiredSignatureError:
-            log.error("Attestation Token has expired.")
+        except jwt.ExpiredSignatureError as exc:
+            log.error(f"Attestation Token has expired: {exc}")
             return None
-        except jwt.InvalidTokenError:
-            log.error("Invalid Attestation token.")
+        except jwt.InvalidTokenError as exc:
+            log.error(f"Invalid Attestation token: {exc}")
             return None
         except Exception as exc:
             log.error(f"Caught Exception in Attestation Token Verification: {exc}")
