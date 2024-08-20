@@ -17,6 +17,8 @@ The Python client currently supports the following TEEs:
 ## Library structure
 
 - [/inteltrustauthorityclient/connector](inteltrustauthorityclient/connector#readme): Contains the main ITAConnector class to connect to Intel Trust Authority. 
+- [/inteltrustauthorityclient/nvgpu](inteltrustauthorityclient/nvgpu#readme): Contains the NVIDIA H100 GPU adapter. This feature is in limited preview status. 
+- [/inteltrustauthorityclient/cli](inteltrustauthorityclient/cli#readme): Contains the Intel Trust Authority Python CLI. This version of the CLI includes support for NVIDIA H100 GPU attestation. This feature is in limited preview status. 
 - [/inteltrustauthorityclient/examples](inteltrustauthorityclient/examples): Contains sample applications to demonstrate the usage of the client. See [Sample applications](#sample-applications) for more information.
 - [inteltrustauthorityclient/sgx/intel](inteltrustauthorityclient/sgx/intel/README.md): Contains the Intel SGX adapter.
 - [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX and Azure TDX adapters. See the READMEs in the subfolders for more information.
