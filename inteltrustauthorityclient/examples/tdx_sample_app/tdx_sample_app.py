@@ -138,6 +138,7 @@ def main():
     else:
         log.error(f"Invalid Adapter Type Provided: {adapter_type}.")
         exit(1)
+    log.debug(f"adapter type: {adapter_type}")
     if trust_authority_policy_id != None:
         attest_args = connector.AttestArgs(
             adapter,

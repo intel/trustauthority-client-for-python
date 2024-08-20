@@ -118,8 +118,9 @@ For For Google Cloud / Intel® Developer Cloud TDX adapters:
 docker run \
        --rm \
        --privileged \
-       --env-file tdx_token.env \
+       --network host \
        -v /sys/kernel/config:/sys/kernel/config \
+       --env-file tdx_token.env \
        trust_authority_python_client_tdx_sample_app:v1.0.0     
 ```
 

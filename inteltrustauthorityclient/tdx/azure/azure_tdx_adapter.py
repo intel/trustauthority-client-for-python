@@ -18,7 +18,7 @@ import binascii
 
 import logging as log
 import inteltrustauthorityclient.resources.constants as const
-from inteltrustauthorityclient.connector.evidence import Evidence
+from inteltrustauthorityclient.connector.evidence import Evidence, EvidenceType
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
 TD_REPORT_OFFSET = 32
@@ -156,5 +156,5 @@ class AzureTDXAdapter:
                 return None
 
         # Create evidence class object to be returned
-        tdx_evidence = Evidence(1, quote, self.user_data, runtime_data)
+        tdx_evidence = Evidence(EvidenceType.AZTDX, quote, self.user_data, runtime_data)
         return tdx_evidence
