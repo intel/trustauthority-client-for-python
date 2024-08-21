@@ -35,7 +35,7 @@ The Python client (General Availability version) currently supports the followin
  
 To install the latest preview version of the Intel TDX + NVIDIA H100 client, follow these steps:
 
-1. Clone the client repository. The following commands clone the repository and creates a `trustauthority-pycli` alias to run the client. You must replace **\<path_to_python_cli\>** with the path to the directory where you'll install the client. You can customize the names in the sample below, of course. Don't change `$CLIPATH` or the **git clone** \<branch\> and \<repo\>.
+1. The following commands clone the repository (only the tdx_h100_preview branch) and set up to build the wheel and run the CLI. You must replace **\<path_to_python_cli\>** with the path to the directory where you'll install the client. You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<branch\> and \<repo\>.
 
 ```bash
 git clone --branch tdx_h100-preview https://github.com/intel/trustauthority-client-for-python.git trustauthority-pycli-preview;
