@@ -1,23 +1,26 @@
----
-last_updated: 10 July 2024
----
 
 # Intel® Trust Authority CLI for Intel TDX and NVDIA GPU  
 
-Intel® Trust Authority Python CLI for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA GPU [**trustauthority-pycli**](./cli) provides a CLI 
-to attest an Intel TDX trust domain (TD) and NVIDIA GPU with Intel Trust Authority. **trustauthority-pycli** requires **python-connector**, **python-intel-tdx**, **python-nvgpu**, 
-and Intel® Software Guard Extensions Data Center Attestation Primitives (Intel® SGX DCAP) and NVIDIA Attestation SDK. 
+<p style="font-size: 0.875em;">· 08/19/2024 ·</p>
+
+Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI 
+to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
+
+This preview version of the CLI works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
+
+> [!NOTE]
+> This feature is in limited preview status. Details of implementation and usage may change before general availability. Preview features are only available on the Intel® Trust Authority Pilot environment. Contact your Intel representative for access.
+
+For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
 
 ## Prerequisites
-- Intel® SGX DCAP
-
-- Intel TDX Attestation Primitives in TDVM
-
-- NVIDIA Attestation SDK in TDVM
+- Python 3.8 or newer.
+- Ubuntu 22.04. Other versions (24.04) may work but are not tested.
+- Intel TDX Attestation Primitives installed in the guest TD.
+- NVIDIA Attestation SDK in TD.
 
 ## Intel Trust Authority Configuration
-The Trust Authority Python CLI requires a Intel Trust Authority configuration file (config.json) to be provided for the CLI operations. Here is an example configuration:
-Save the configuration to 'config.json' file.
+The CLI requires a configuration file (config.json) to be provided for the CLI operations. The following is an example of the configuration file:
 
 ```
 {
@@ -26,51 +29,78 @@ Save the configuration to 'config.json' file.
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
 ```
+Save the configuration to a 'config.json' file. The `attest` command requires the configuration file path as an argument, and allows you to specify a path to the file so that it doesn't need to be in the same directory as the CLI binary.
 
-The Trust Authority CLI provides several commands for different operations. Here are the available commands:
+> [!NOTE]
+ > If you are in the European Union (EU) region, use the following Intel Trust Authority URLs:<br> Base URL — https://portal.eu.trustauthority.intel.com <br> API URL — https://api.eu.trustauthority.intel.com
+
+## Installation
+
+Refer to the main [README](..\README.md#installation) for installation instructions. You can check to see that the CLI is installed correctly by running the following command:
+
+```bash
+$trustauthority-pycli -h
+```
+This command should display the help message for the CLI.
 
 ## Usage
-### evidence
-To collect evidence from the Trust Authority.
+
+The CLI provides several commands for different operations. Here are the available commands:
+
+### `evidence`
+
+Collects evidence for attestation from an Intel TDX trust domain or a NVIDIA H100 GPU (one at a time; evidence doesn't support both in a single call). This command collects evidence but doesn't send it to Intel Trust Authority for attestation. If successful, `evidence` prints the GPU evidence or Intel TDX quote to the screen (of course, output can also be piped to a file). This command can be used in Background-check attestation flow or in development and testing. 
 
 ```sh
 python3 trustauthority_pycli.py evidence -a <attest_type> [-n <nonce>] [-u <user_data>]
 ```
 Options:
 ```
--a, --attest-type: Specify the attestation type (tdx or nvgpu).
--n, --nonce: Optional nonce in base64 encoded format.
--u, --user-data: Optional user data in base64 encoded format.
+-a, --attest-type: Specify the TEE type, valid values are "tdx" or "nvgpu".
+-n, --nonce: Optional nonce in base64-encoded format.
+-u, --user-data: Optional user data in base64-encoded format.
 ```
 
-## attest
-To request attestation from the Trust Authority.
+## `attest`
+
+Collects evidence from the TEE or GPU and sends it to Intel Trust Authority for attestation. `attest` returns an attestation token in JWT format if the attestation is successful. This command can attest an Intel TDX trust domain, a NVIDIA H100 GPU, or both.
+
 ```sh
 python3 trustauthority_pycli.py attest -a <attest_type> -c <config_file> [-u <user_data>] [-p <policy_ids>] [-s <token_sign_alg> [--policy-must-match]
 ```
 Options:
 ```
--a, --attest-type: Specify the attestation type (tdx, nvgpu, or tdx+nvgpu).
+-a, --attest-type: Specify the TEE type to attest; valid values are "tdx", "nvgpu", or "tdx+nvgpu".
 -c, --config: Configuration file path (config.json).
--u, --user-data: Optional user data in base64 encoded format.
--p, --policy-ids: Optional list of Trust Authority policy IDs (comma separated).
--s, --token-sign-alg: Optional token signing algorithm ("RS256" or "PS384")
---policy-must-match: Optional for enforcing policy match during attestation (defaul=False if unused)
+-u, --user-data: Optional user data in base64-encoded format.
+-p, --policy-ids: An optional list of Trust Authority policy IDs (comma separated). 
+-s, --token-sign-alg: Optional token signing algorithm ("RS256" or "PS384"). The default is "PS384".
+--policy-must-match: Optional boolean for enforcing policy match during attestation. If set to "True", a token is issued only if all attestation policies match. If set to "False", a token is issued even if one or all policies are unmatched. The default is "False".
 ```
 
-## verify 
-To verify an attestation token.
+## `verify` 
+
+Verifies an attestation token to ensure that the token is generated from a genuine Intel Trust Authority service. This command verifies the token signature and format, but it doesn't verify claims. If the token is valid, the command prints the token claims to the screen.
+
 ```sh
 python3 trustauthority_pycli.py verify -c <config_file> -t <token in JWT format>
 ```
 Options:
 ```
 -c, --config: Configuration file path.
--t, --token: Attesation Token in JWT format.
+-t, --token: An Intel Trust Authority attestation token in JWT format.
 ```
+
+## Code of Conduct and Contributing
+
+See the [CONTRIBUTING](../../../CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](../../../CODE_OF_CONDUCT.md).
 
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
 file.
 
+<br><br>
+---
+
+**\*** Other names and brands may be claimed as the property of others.
