@@ -34,6 +34,15 @@ Save the configuration to a 'config.json' file. The `attest` command requires th
 > [!NOTE]
  > If you are in the European Union (EU) region, use the following Intel Trust Authority URLs:<br> Base URL — https://portal.eu.trustauthority.intel.com <br> API URL — https://api.eu.trustauthority.intel.com
 
+## Installation
+
+Refer to the main [README](..\README.md#installation) for installation instructions. You can check to see that the CLI is installed correctly by running the following command:
+
+```bash
+$trustauthority-pycli -h
+```
+This command should display the help message for the CLI.
+
 ## Usage
 
 The CLI provides several commands for different operations. Here are the available commands:

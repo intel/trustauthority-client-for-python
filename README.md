@@ -8,7 +8,7 @@ The Intel Trust Authority client is designed for use by both attesting applicati
 
 Both the connector and a TEE adapter (the platform-specific software that collects evidence from a TEE) must be installed on the attesting TEE to collect evidence for attestation. However, a TEE adapter is not required to use the client to verify a token, or to request attestation in background-check mode using a quote provided by the attester. 
 
-The Python client currently supports the following TEEs:
+The Python client (General Availability version) currently supports the following TEEs:
 
 - Intel® Software Guard Extensions (Intel® SGX).
 - Intel® Trust Domain Extensions (Intel® TDX) for on-premises Intel TDX platforms.
@@ -27,14 +27,25 @@ The Python client currently supports the following TEEs:
 
 ## System requirement
 
-- Ubuntu 22.04 LTS
+- Ubuntu 22.04 LTS. Other versions may work but are not tested
 - Python 3.8 or later
 
 ## Installation
+
  
-To install the latest version of the Intel Trust Authority Client for Python library:
- 
-1. Install **poetry** using the command `pip3 install --no-cache-dir poetry`
+To install the latest preview version of the Intel TDX + NVIDIA H100 client, follow these steps:
+
+1. Clone the client repository. The following commands clone the repository and creates a `trustauthority-pycli` alias to run the client. You must replace **\<path_to_python_cli\>** with the path to the directory where you'll install the client. You can customize the names in the sample below, of course. Don't change `$CLIPATH` or the **git clone** \<branch\> and \<repo\>.
+
+```bash
+git clone --branch tdx_h100-preview https://github.com/intel/trustauthority-client-for-python.git trustauthority-pycli-preview;
+cd trustauthority-pycli-preview/inteltrustauthorityclient;
+export CLIPATH=<path_to_python_cli>trustauthority-pycli-preview/inteltrustauthorityclient/cli/trustauthority-pycli;
+alias trustauthority-pycli="python3 $CLIPATH/trustauthority-cli.py" 
+```
+Run the following commands from the `inteltrustauthorityclient` directory.
+
+2. Install **poetry** using the command `pip3 install --no-cache-dir poetry`
 1. Create a wheel package using poetry:
     Spawn a poetry shell:
     ```bash
