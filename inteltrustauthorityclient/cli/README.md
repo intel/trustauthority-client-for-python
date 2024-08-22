@@ -1,5 +1,5 @@
 
-# Intel® Trust Authority CLI for Intel TDX and NVDIA GPU  
+# Intel® Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
 
 <p style="font-size: 0.875em;">· 08/19/2024 ·</p>
 
