@@ -14,6 +14,11 @@ The Python client (General Availability version) currently supports the followin
 - Intel® Trust Domain Extensions (Intel® TDX) for on-premises Intel TDX platforms.
 - Azure\* confidential VMs with Intel TDX.
 
+The Python client (Limited preview version, `tdx_h100-preview` branch) provides additional support for:
+
+- NVIDIA H100 GPU (for on-premises deployments with Intel® Trust Domain Extensions (Intel® TDX)).
+
+
 ## Library structure
 
 - [/inteltrustauthorityclient/connector](inteltrustauthorityclient/connector#readme): Contains the main ITAConnector class to connect to Intel Trust Authority. 
