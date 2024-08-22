@@ -35,14 +35,16 @@ The Python client (General Availability version) currently supports the followin
  
 To install the latest preview version of the Intel TDX + NVIDIA H100 client, follow these steps:
 
-1. The following commands clone the repository (only the tdx_h100_preview branch) and set up to build the wheel and run the CLI. You must replace **\<path_to_python_cli\>** with the path to the directory where you'll install the client. You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<branch\> and \<repo\>.
+1. The following commands clone the repository and check out the tdx_h100_preview branch and set up to build the wheel and run the CLI. You must replace **\<path_to_pythonclient\>** with the path to the directory where you'll install the client (e.g., pythonclient). You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<repo\> and \<branch\>.
 
 ```bash
-git clone --branch tdx_h100-preview https://github.com/intel/trustauthority-client-for-python.git trustauthority-pycli-preview;
-cd trustauthority-pycli-preview/inteltrustauthorityclient;
-export CLIPATH=<path_to_python_cli>trustauthority-pycli-preview/inteltrustauthorityclient/cli/trustauthority-pycli;
+git clone https://github.com/intel/trustauthority-client-for-python.git pythonclient -b tdx_h100-preview;
+
+# To use the Trust Authority CLI (inteltrustauthorityclient/cli)
+export CLIPATH=<path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli;
 alias trustauthority-pycli="python3 $CLIPATH/trustauthority-cli.py" 
 ```
+
 Run the following commands from the `inteltrustauthorityclient` directory.
 
 2. Install **poetry** using the command `pip3 install --no-cache-dir poetry`

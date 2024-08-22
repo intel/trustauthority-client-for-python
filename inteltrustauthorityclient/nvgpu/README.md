@@ -2,7 +2,7 @@
 
 <p style="font-size: 0.875em;">· 08/19/2024 ·</p>
 
-The Intel Trust Authority Client for NVIDIA\* H100 GPU is a Python package for collecting evidence for attestation from a NVIDIA H100 GPU. This library uses the NVIDIA Attestation SDK (https://github.com/NVIDIA/nvtrust/tree/main/guest_tools/attestation_sdk) for H100 GPU Evidence generation. This GPU adapter is used with the Intel Trust Authority [**connector**](../../connector/README.md) for Python to request an attestation token and verify the same. 
+The Intel Trust Authority Client for NVIDIA\* H100 GPU is a Python package for collecting evidence for attestation from a NVIDIA H100 GPU. This library uses the NVIDIA Attestation SDK (https://github.com/NVIDIA/nvtrust/tree/main/guest_tools/attestation_sdk) for H100 GPU Evidence generation. This GPU adapter is used with the Intel Trust Authority [**connector**](../connector/README.md) for Python to request an attestation token and verify the same. 
 
 This preview version of the GPU adapter works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
 
@@ -33,16 +33,9 @@ if evidence == None:
     return None #error condition
 ```
 
-## Unit Tests
-To run the tests, refer [Readme](../../../test/README.md).
-
-## Code of Conduct and Contributing
-
-See the [CONTRIBUTING](../../../CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](../../../CODE_OF_CONDUCT.md).
-
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../LICENSE)
 file.
 
 <br><br>

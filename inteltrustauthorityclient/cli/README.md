@@ -36,10 +36,10 @@ Save the configuration to a 'config.json' file. The `attest` command requires th
 
 ## Installation
 
-Refer to the main [README](..\README.md#installation) for installation instructions. You can check to see that the CLI is installed correctly by running the following command:
+Refer to the main [README](../../README.md#installation) for installation instructions. You can check to see that the CLI is installed correctly by running the following command:
 
 ```bash
-$trustauthority-pycli -h
+trustauthority-pycli -h
 ```
 This command should display the help message for the CLI.
 
@@ -52,7 +52,7 @@ The CLI provides several commands for different operations. Here are the availab
 Collects evidence for attestation from an Intel TDX trust domain or a NVIDIA H100 GPU (one at a time; evidence doesn't support both in a single call). This command collects evidence but doesn't send it to Intel Trust Authority for attestation. If successful, `evidence` prints the GPU evidence or Intel TDX quote to the screen (of course, output can also be piped to a file). This command can be used in Background-check attestation flow or in development and testing. 
 
 ```sh
-python3 trustauthority_pycli.py evidence -a <attest_type> [-n <nonce>] [-u <user_data>]
+trustauthority_pycli evidence -a <attest_type> [-n <nonce>] [-u <user_data>]
 ```
 Options:
 ```
@@ -66,7 +66,7 @@ Options:
 Collects evidence from the TEE or GPU and sends it to Intel Trust Authority for attestation. `attest` returns an attestation token in JWT format if the attestation is successful. This command can attest an Intel TDX trust domain, a NVIDIA H100 GPU, or both.
 
 ```sh
-python3 trustauthority_pycli.py attest -a <attest_type> -c <config_file> [-u <user_data>] [-p <policy_ids>] [-s <token_sign_alg> [--policy-must-match]
+trustauthority_pycli attest -a <attest_type> -c <config_file> [-u <user_data>] [-p <policy_ids>] [-s <token_sign_alg> [--policy-must-match]
 ```
 Options:
 ```
@@ -83,7 +83,7 @@ Options:
 Verifies an attestation token to ensure that the token is generated from a genuine Intel Trust Authority service. This command verifies the token signature and format, but it doesn't verify claims. If the token is valid, the command prints the token claims to the screen.
 
 ```sh
-python3 trustauthority_pycli.py verify -c <config_file> -t <token in JWT format>
+trustauthority_pycli verify -c <config_file> -t <token in JWT format>
 ```
 Options:
 ```
@@ -91,13 +91,9 @@ Options:
 -t, --token: An Intel Trust Authority attestation token in JWT format.
 ```
 
-## Code of Conduct and Contributing
-
-See the [CONTRIBUTING](../../../CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](../../../CODE_OF_CONDUCT.md).
-
 ## License
 
-This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../../LICENSE)
 file.
 
 <br><br>
