@@ -1,4 +1,6 @@
-# Intel® Trust Authority Python SGX Adapter
+# Intel® Trust Authority Client for Python Intel SGX Adapter
+
+<p style="font-size: 0.875em;">· 07/03/2024 ·</p>
 
 The **sgx/intel** adapter enables a confidential confidential computing client to collect a quote from an SGX enclave for attestation by Intel Trust Authority. This sgx adapter is used with the [**connector**](../../connector/README.md) to request an attestation token and verify the same. 
 

@@ -15,14 +15,17 @@ HTTP_PROXY = "HTTP_PROXY"
 HTTPS_PROXY = "HTTPS_PROXY"
 HTTP_HEADER_API_KEY = "x-api-key"
 HTTP_HEADER_APPLICATION_JSON = "application/json"
+NV_GPU_ADAPTER = "NV-GPU"
 HTTP_HEADER_KEY_ACCEPT = "Accept"
 HTTP_HEADER_KEY_CONTENT_TYPE = "Content-Type"
 HTTP_HEADER_REQUEST_ID = "Request-Id"
 
+
 # Intel Trust Authority URLs
-NONCE_URL = "appraisal/v1/nonce"
+NONCE_URL = "appraisal/v2/nonce"
 AZURE_TDX_ATTEST_URL = "appraisal/v1/attest/azure/tdxvm"
 INTEL_TDX_ATTEST_URL = "appraisal/v1/attest"
+COMPOSITE_ATTEST_URL = "appraisal/v2/attest"
 
 # GCP Specific
 TDX_ATTEST_DEV_PATH = "/dev/tdx_guest"

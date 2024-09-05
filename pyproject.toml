@@ -2,7 +2,7 @@
 name = "applications.security.amber.trustauthority-client-for-python"
 version = "1.0.0"
 description = "Intel Trust Authority Client in Python"
-authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manisai.bala@intel.com>"]
+authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manisai.bala@intel.com>", "Yoon, Eunjung <eunjung.yoon@intel.com>"]
 license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
 readme = "README.md"
 packages = [{include = "inteltrustauthorityclient"}]
@@ -10,12 +10,19 @@ exclude = ["inteltrustauthorityclient/examples"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "^2.32.0"
 validators = "^0.22.0"
 resources = "^0.0.1"
 staty = "^1.2.4"
-cryptography = "^42.0.2"
-pyjwt = "^2.8.0"
+requests = "^2.31.0"
+# NVIDIA verifier requires Cryptography 39.0.2. See https://github.com/NVIDIA/nvtrust/blob/01e29a10d951bc18edfce21d98308be909d9b9dd/guest_tools/gpu_verifiers/local_gpu_verifier/pyproject.toml
+cryptography = "^39.0.1"  
+ecdsa = "^0.18.0"
+lxml = "^4.9.1"
+signxml = "^3.2.0"
+xmlschema = "^2.2.3"
+pyOpenSSL = "^23.1.1"
+nvidia-ml-py = "^12.535.77"
+pyjwt = "^2.7.0"
 tenacity = "^8.2.3"
 coverage = "^7.4.2"
 pytest = "^8.0.2"

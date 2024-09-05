@@ -9,6 +9,7 @@ import json
 import uuid
 import jwt
 import os
+import http
 import requests
 import validators
 import logging as log
@@ -27,7 +28,6 @@ from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
 
 from inteltrustauthorityclient.connector.evidence import Evidence, EvidenceType
 from inteltrustauthorityclient.resources import constants as constants
-
 
 @dataclass
 class GetNonceArgs:
@@ -66,7 +66,7 @@ class AttestArgs:
 
 @dataclass
 class AttestResponse:
-    """AttestResponse holds the response parameters recieved during attestation flow"""
+    """AttestResponse holds the response parameters received during attestation flow"""
 
     token: str
     headers: str
@@ -83,14 +83,12 @@ class GetTokenArgs:
     token_signing_alg: str
     policy_must_match: bool
 
-
 @dataclass
 class GetTokenResponse:
-    """GetTokenResponse holds the response parameters recieved from attest endpoint"""
+    """GetTokenResponse holds the response parameters received from attest endpoint"""
 
     token: str
     headers: str
-
 
 @dataclass
 class TokenRequest:
@@ -108,6 +106,25 @@ class TokenRequest:
         if self.user_data is None:
             delattr(self, "user_data")
 
+@dataclass
+class TokenRequest_v2:
+    """TokenRequest_v2 holds all the data required for v2 attestation APIs"""
+    quote: str  #'json:"quote"'
+    verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
+    user_data: Optional[str]  #'json:"user_data"'
+    runtime_data: Optional[str]  #'json:"runtime_data"'
+    
+    def __post_init__(self):
+        if self.user_data is None:
+            delattr(self, "user_data")
+
+@dataclass
+class GPUTokenRequest_v2:
+    """GPUTokenRequest_v2 holds all the data required for v2 GPU attestation APIs"""
+    evidence: str                    #'json:"evidence"'
+    verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
+    gpu_nonce: str    #'json:"gpu_nonce"'
+    certificate: str                    #'json:"certificate"'
 
 class ITAConnector:
     """
@@ -198,6 +215,142 @@ class ITAConnector:
             nonce_data.get("signature"),
         )
         return GetNonceResponse(response.headers, nonce)
+
+    def get_token_v2(self, tdx_args: GetTokenArgs, gpu_args: GetTokenArgs) -> GetTokenResponse:
+        """This Function calls Intel Trust Authority rest api (v2/attest) to get Attestation Token.
+        Currently supported attestation is TDX, NVGPU, TDX+NVGPU 
+        Args:
+            tdx_args: GetTokenArgs() - Instance of GetTokenArgs class for Intel TDX 
+            gpu_args: GetTokenArgs() - Instance of GetTokenArgs class for NVGPU 
+
+        Returns:
+            GetTokenResponse: object to GetTokenResponse class
+        """
+        if tdx_args is None and gpu_args is None:
+            log.error("Token Arguments are not provided")
+            return None
+
+        if tdx_args:
+            request_id = tdx_args.request_id
+        elif gpu_args:
+            request_id = gpu_args.request_id
+
+        retry_call = Retrying(
+            stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
+            wait=self.cfg.retry_cfg.backoff,
+            retry=retry_if_exception_type(requests.exceptions.HTTPError),
+            reraise=True,
+        )
+       
+        def make_request():
+            url = urljoin(self.cfg.api_url, constants.COMPOSITE_ATTEST_URL)
+
+            headers = {
+                constants.HTTP_HEADER_API_KEY: self.cfg.api_key,
+                constants.HTTP_HEADER_KEY_ACCEPT: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_KEY_CONTENT_TYPE: constants.HTTP_HEADER_APPLICATION_JSON,
+                constants.HTTP_HEADER_REQUEST_ID: request_id,
+            }
+
+            if tdx_args is not None:
+                tdx_treq = TokenRequest_v2(
+                    quote=tdx_args.evidence.quote,
+                    verifier_nonce=VerifierNonce(
+                        tdx_args.nonce.val, tdx_args.nonce.iat, tdx_args.nonce.signature
+                    ).__dict__,
+                    user_data=base64.b64encode(tdx_args.evidence.user_data).decode("utf-8") if tdx_args.evidence.user_data is not None else None,
+                    runtime_data=base64.b64encode(tdx_args.evidence.runtime_data).decode("utf-8") if tdx_args.evidence.runtime_data is not None else None,
+                )
+                # TDX+NVGPU
+                if gpu_args is not None:
+                    gpu_treq = GPUTokenRequest_v2(
+                    evidence = gpu_args.evidence['evidence'],
+                    verifier_nonce=VerifierNonce(
+                        gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
+                    ).__dict__,
+                    gpu_nonce = gpu_args.evidence['nonce'],
+                    certificate = gpu_args.evidence['certificate'],
+                    )
+
+                    wrapped_req = {"policy_ids": tdx_args.policy_ids, 
+                            "token_signing_alg": tdx_args.token_signing_alg,
+                            "policy_must_match": tdx_args.policy_must_match,
+                            "tdx": tdx_treq.__dict__,
+                            "nvgpu": gpu_treq.__dict__}
+                # TDX Only
+                if gpu_args is None:
+                    wrapped_req = {"policy_ids": tdx_args.policy_ids, 
+                            "token_signing_alg": tdx_args.token_signing_alg,
+                            "policy_must_match": tdx_args.policy_must_match, 
+                            "tdx": tdx_treq.__dict__}
+            # NVGPU Only
+            elif gpu_args is not None:
+                gpu_treq = GPUTokenRequest_v2(
+                    evidence = gpu_args.evidence['evidence'],
+                    verifier_nonce=VerifierNonce(
+                        gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
+                    ).__dict__,
+                    gpu_nonce = gpu_args.evidence['nonce'],
+                    certificate = gpu_args.evidence['certificate'],
+                )
+                wrapped_req = {"policy_ids": gpu_args.policy_ids,
+                            "token_signing_alg": gpu_args.token_signing_alg,
+                            "policy_must_match": gpu_args.policy_must_match,
+                            "nvgpu": gpu_treq.__dict__}
+
+            try:
+                body = json.dumps(wrapped_req)
+            except TypeError as exc:
+                log.error(f"Unable to serialize the request: {exc}")
+                return None
+
+            log.info(
+                f"Requesting Attestation Token from Intel Trust Authority ... : {url}"
+            )
+
+            http_proxy = os.getenv(constants.HTTP_PROXY)
+            https_proxy = os.getenv(constants.HTTPS_PROXY)
+            proxies = {"http": http_proxy, "https": https_proxy}
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=body,
+                    proxies=proxies,
+                    timeout=self.cfg.retry_cfg.timeout_sec,
+                )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                log.error(f"Http Error occurred in get_token request: {exc}")
+                if self.cfg.retry_cfg.check_retry(response.status_code):
+                    raise exc
+                    return None
+            except requests.exceptions.ConnectionError as exc:
+                log.error(f"Connection Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.Timeout as exc:
+                log.error(f"Timeout Error occurred in get_token request: {exc}")
+                return None
+            except requests.exceptions.RequestException as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            except Exception as exc:
+                log.error(f"Error occurred in get_token request: {exc}")
+                return None
+            return response
+
+        try:
+            response = retry_call.__call__(make_request)
+        except requests.exceptions.HTTPError:
+            return None
+        except Exception as exc:
+            log.error(f"Error occurred in get_token request: {exc}")
+            return None
+
+        if response is None:
+            return None
+        return GetTokenResponse(response.json().get("token"), str(response.headers))
+
 
     def get_token(self, args: GetTokenArgs) -> GetTokenResponse:
         """This Function calls Intel Trust Authority rest api to get Attestation Token.
@@ -370,12 +523,18 @@ class ITAConnector:
         if not (crl.is_signature_valid(pub_key)):
             log.error("Invalid CRL signature")
             return False
-        dt = datetime.now(timezone.utc)
-        utc_time = dt.replace(tzinfo=timezone.utc)
-        utc_timestamp_now = utc_time.timestamp()
-        if crl.next_update_utc.timestamp() < utc_timestamp_now:
+
+        current_time = datetime.now(timezone.utc)
+        # make crl.next_update aware by adding timezone info
+        if crl.next_update.tzinfo is None:
+            crl_next_update_aware = crl.next_update.replace(tzinfo=timezone.utc)
+        else:
+            crl_next_update_aware = crl.next_update
+
+        if crl_next_update_aware < current_time:
             log.error("crl has been expired")
             return False
+
         if (
             crl.get_revoked_certificate_by_serial_number(leaf_cert.serial_number)
             != None
@@ -403,7 +562,7 @@ class ITAConnector:
 
         # Get the JWT Signing Certificates from Intel Trust Authority
         jwks_data = self.get_token_signing_certificates()
-        if jwks_data == None:
+        if jwks_data is None:
             log.error(
                 "Failed to get token signing certificates from Intel Trust Authority."
             )
@@ -455,7 +614,7 @@ class ITAConnector:
                 inter_ca_cert = cert_data
             else:
                 leaf_cert = cert_data
-
+        
         # Validate Intermediate CA Certificate against Root CA CRL
         cdp_list = inter_ca_cert.extensions.get_extension_for_oid(
             x509.ExtensionOID.CRL_DISTRIBUTION_POINTS
@@ -463,7 +622,7 @@ class ITAConnector:
         inter_ca_crl_url = cdp_list.value[0].full_name[0].value
         log.debug(f"inter ca crl url : {inter_ca_crl_url}")
         root_crl_obj = self.get_crl(inter_ca_crl_url)
-        if root_crl_obj == None:
+        if root_crl_obj is None:
             log.error("Failed to get ROOT CA CRL Object")
             return None
         if not self.verify_crl(root_crl_obj, inter_ca_cert, root_cert):
@@ -477,7 +636,7 @@ class ITAConnector:
         leaf_crl_url = cdp_list.value[0].full_name[0].value
         log.debug(f"leaf crl url : {leaf_crl_url}")
         intermediate_ca_crl_obj = self.get_crl(leaf_crl_url)
-        if intermediate_ca_crl_obj == None:
+        if intermediate_ca_crl_obj is None:
             log.error("Failed to get INTERMEDIATE CA CRL Object")
             return None
         if not self.verify_crl(intermediate_ca_crl_obj, leaf_cert, inter_ca_cert):
@@ -533,7 +692,6 @@ class ITAConnector:
 
     def get_token_signing_certificates(self):
         """This Function retrieve token signing certificates from Intel Trust Authority"""
-
         retry_call = Retrying(
             stop=stop_after_attempt(self.cfg.retry_cfg.retry_max_num),
             wait=self.cfg.retry_cfg.backoff,
@@ -557,7 +715,6 @@ class ITAConnector:
                     proxies=proxies,
                     timeout=self.cfg.retry_cfg.timeout_sec,
                 )
-
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
                 log.error(
@@ -602,7 +759,7 @@ class ITAConnector:
         return jwks
 
     def attest(self, args: AttestArgs) -> AttestResponse:
-        """This Function calls Intel Trust Authority Connector endpoints get_nonce(), collect evidence from adapter
+        """This Function calls Intel Trust Authority Connector V1 endpoint for get_nonce(), collect evidence from adapter
            class, get_token() and return the attestation token.
 
         Args:
@@ -613,7 +770,7 @@ class ITAConnector:
         """
         response = AttestResponse
         nonce_resp = self.get_nonce(GetNonceArgs(args.request_id))
-        if nonce_resp == None:
+        if nonce_resp is None:
             log.error("Get Nonce request failed")
             return None
         log.debug(f"Nonce : {nonce_resp.nonce}")
@@ -625,7 +782,7 @@ class ITAConnector:
         except RuntimeError as err:
             log.error(f"Runtime Error in Adapter collect_evidence Function :{err}")
             return None
-        if evidence == None:
+        if evidence is None:
             return None
         token_resp = self.get_token(
             GetTokenArgs(
@@ -637,16 +794,86 @@ class ITAConnector:
                 args.policy_must_match,
             )
         )
-        if token_resp == None:
-            log.debug("Get Token request failed")
+        if token_resp is None:
+            log.error("Get Token request failed")
             return None
         response.token = token_resp.token
         response.headers = token_resp.headers
         return response
 
+    # Supported Attestation Types - Intel TDX, NVGPU, TDX+NVGPU 
+    def attest_v2(self, tdx_args: AttestArgs, gpu_args: AttestArgs) -> AttestResponse:
+        """This Function calls Intel Trust Authority Connector V2 endpoints (Composite Attestation) for get_nonce(), collect evidence from adapter
+           class, get_token_v2() and return the attestation token.
+
+        Args:
+            Two instances of AttestArgs class (for TDX and NVGPU)
+
+        Returns:
+            AttestResponse: Instance of AttestResponse class
+        """
+
+        if tdx_args is None and gpu_args is None:
+            log.error("AttestArgs are not provided")
+            return None
+
+        if tdx_args:
+            request_id = tdx_args.request_id
+        elif gpu_args:
+            request_id = gpu_args.request_id
+
+        nonce_resp = self.get_nonce(GetNonceArgs(request_id))
+        if nonce_resp is None:
+             log.error("Get Nonce request failed")
+             return None
+        log.info("Nonce Retrieved Successfully")
+        log.debug(f"Nonce : {nonce_resp.nonce}")
+
+        decoded_val = base64.b64decode(nonce_resp.nonce.val)
+        decoded_iat = base64.b64decode(nonce_resp.nonce.iat)
+        concatenated_nonce = decoded_val + decoded_iat
+     
+        if tdx_args is None:
+            intel_tdx_args = None 
+        else:
+            try:
+                # Collect TDX evidence
+                tdx_evidence = tdx_args.adapter.collect_evidence(concatenated_nonce)
+            except RuntimeError as err:
+                log.error(f"Runtime Error in TDX Adapter collect_evidence Function :{err}")
+                return None
+            if tdx_evidence is None:
+                return None
+            intel_tdx_args = GetTokenArgs(nonce_resp.nonce, tdx_evidence, tdx_args.policy_ids, request_id, tdx_args.token_signing_alg, tdx_args.policy_must_match)
+      
+        if gpu_args is None:
+            nvidia_gpu_args = None
+        else:
+            try:
+                # Collect GPU evidence
+                gpu_evidence = gpu_args.adapter.collect_evidence(concatenated_nonce)
+            except RuntimeError as err:
+                log.error(f"Runtime Error in GPU Adapter collect_evidence Function :{err}")
+                return None
+            if gpu_evidence is None:
+                return None
+
+            log.debug("GPU Evidence : %s", gpu_evidence.evidence)
+            evidence_details = json.loads(gpu_evidence.evidence)
+            nvidia_gpu_args = GetTokenArgs(nonce_resp.nonce, evidence_details, gpu_args.policy_ids, request_id, gpu_args.token_signing_alg, gpu_args.policy_must_match)
+
+        # Get composite token
+        token_resp = self.get_token_v2(intel_tdx_args, nvidia_gpu_args)
+        if token_resp is None:
+            log.error("Get Token request failed")
+            return None
+        response = AttestResponse
+        response.token = token_resp.token
+        response.headers = token_resp.headers
+        return response
 
 def validate_token_signing_algorithm(signing_alg):
     # token signing algorithm should be one of RS256, PS384
-    if signing_alg in ["RS256", "PS384"]:
+    if signing_alg in ["RS256","PS384"]:
         return True
     return False
