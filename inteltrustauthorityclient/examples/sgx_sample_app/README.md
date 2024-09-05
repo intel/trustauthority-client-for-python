@@ -41,10 +41,10 @@ The [SGX Attestation Sample App](../sgx_sample_app/sgx_sample_app.py) can be enc
 
 ### Prerequisites
 
-- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running this application within Docker container.
+- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker compose</b>—essential tools for running this application within Docker container.
 
     - Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
-    - Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
+    - Use <b>docker compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker compose.
 - A production SGX host with the SGX driver Installed and can generate quotes.
 - A running instance of Intel Trust Authority.
 
@@ -52,7 +52,7 @@ The [SGX Attestation Sample App](../sgx_sample_app/sgx_sample_app.py) can be enc
 
 ### Build Instructions
 
-Once `docker` and `docker-compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/sgx_sample_app/** with the following command:
+Once `docker` and `docker compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/sgx_sample_app/** with the following command:
 
 ```sh
 cat <<EOF | tee .env
@@ -63,7 +63,7 @@ PSW_VERSION=<sgx sdk psw version>
 ADAPTER_TYPE="sgx"
 EOF
 
-docker-compose --env-file .env build
+docker compose --env-file .env build
 ```
 
 ### Deployment Instructions
@@ -80,7 +80,7 @@ docker load -i trust_authority_python_client_sgx_sample_app.tar.gz
 
 ### Running the Sample Application
 
-Once the image is built using the above `docker-compose build` command or loaded from the tar file,
+Once the image is built using the above `docker compose` command or loaded from the tar file,
 the `SGX Attestation Sample App` can be run using the following commands:
 
 ```sh

@@ -41,11 +41,11 @@ The [TDX Attestation Sample App](../tdx_sample_app/tdx_sample_app.py) can be enc
 
 ### Prerequisites
 
-- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker-compose</b>—essential tools for running these applications within Docker containers.
+- Kindly adhere to the outlined steps below for installing both <b>Docker</b> and <b>docker compose</b>—essential tools for running these applications within Docker containers.
 
   - Use <b>Docker version 20.10.17 or a more recent release</b>. Refer to the guide at https://docs.docker.com/engine/install/ubuntu/ for detailed instructions on Docker installation.
 
-  - Use <b>docker-compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker-compose.
+  - Use <b>docker compose version 1.29.2 or a more recent release</b>. Follow the steps outlined at https://docs.docker.com/compose/install/linux/#install-the-plugin-manually for installing docker compose.
 
 - A pre-production TDX host with the TDX kernel and TD installed.
 - The TDX host must be able to generate quotes.
@@ -54,7 +54,7 @@ The [TDX Attestation Sample App](../tdx_sample_app/tdx_sample_app.py) can be enc
 
 ### Build Instructions
 
-Once `Docker` and `docker-compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/tdx_sample_app/** with the following command:
+Once `Docker` and `docker compose` are installed, build the Sample Application Docker image in **/inteltrustauthorityclient/examples/tdx_sample_app/** with the following command:
 
 ```sh
 cat <<EOF | tee .env
@@ -63,7 +63,7 @@ TRUST_AUTHORITY_CLIENT_VERSION=<Sample app Docker Image version>
 ADAPTER_TYPE=<Adapter_type> ("tdx"/"aztdx")
 EOF
 
-docker-compose --env-file .env build
+docker compose --env-file .env build
 ```
 **change Adapter_type based on TD being used. Adapter_Type can be one of tdx, aztdx**
 
@@ -82,7 +82,7 @@ docker load -i trust_authority_python_client_tdx_sample_app.tar.gz
 
 ### Running the Sample Application
 
-Once the image is built using the above `docker-compose build` command or loaded from the tar file,
+Once the image is built using the above `docker compose` command or loaded from the tar file,
 the `TDX Attestation Sample App` image can be run using the following commands:
 
 ```sh
