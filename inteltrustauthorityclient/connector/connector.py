@@ -324,6 +324,8 @@ class ITAConnector:
                 log.error(f"Http Error occurred in get_token request: {exc}")
                 if self.cfg.retry_cfg.check_retry(response.status_code):
                     raise exc
+                else:
+                    log.error(f"Failed to collect token from Trust Authority: {response.content}")
                     return None
             except requests.exceptions.ConnectionError as exc:
                 log.error(f"Connection Error occurred in get_token request: {exc}")
