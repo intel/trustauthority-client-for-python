@@ -44,7 +44,7 @@ def cmd_evidence(args):
         if evidence is None:
             print("TDX Quote is not returned")
             return None
-        print(f"TDX Quote : {evidence.quote}")
+        print(f"TDX Quote : {evidence.evidence}")
 
     # Collect NVGPU evidence
     elif args.attest_type == 'nvgpu':
@@ -147,7 +147,6 @@ def cmd_attest(args):
         gpu_adapter = GPUAdapter()
         gpu_attest_args = connector.AttestArgs(gpu_adapter, args.token_sign_alg, args.policy_must_match, args.request_id, policyIds)
         tdx_attest_args = None
-
     elif args.attest_type =='tdx+nvgpu':
         tdx_adapter = TDXAdapter(user_data_bytes)
         gpu_adapter = GPUAdapter()
@@ -157,11 +156,21 @@ def cmd_attest(args):
         print("Attestation Type %s is unknown.", args.attest_type)
         exit(1)
 
-    attestation_token = ita_connector.attest_v2(tdx_attest_args, gpu_attest_args)
-    if attestation_token is None:
+    response = ita_connector.attest_v2(tdx_attest_args, gpu_attest_args)
+
+    if response is None:
         print("Attestation Token is not returned.")
         return None 
-    token = attestation_token.token
+
+    if response.headers:
+        response_headers_json = json.loads(response.headers.replace("'", '"'))
+        trace_id = response_headers_json.get("trace-id")
+        print(f"Trace Id: {trace_id}")
+        request_id = response_headers_json.get("request-id")
+        if request_id != None:
+            print(f"Request Id: {request_id}")
+
+    token = response.token
     print(f"Attestation token : {token}")
 
 

@@ -254,7 +254,7 @@ class ITAConnector:
 
             if tdx_args is not None:
                 tdx_treq = TokenRequest_v2(
-                    quote=tdx_args.evidence.quote,
+                    quote=tdx_args.evidence.evidence,
                     verifier_nonce=VerifierNonce(
                         tdx_args.nonce.val, tdx_args.nonce.iat, tdx_args.nonce.signature
                     ).__dict__,
@@ -381,7 +381,7 @@ class ITAConnector:
             if args.evidence.type == EvidenceType.AZTDX:
                 url = urljoin(self.cfg.api_url, constants.AZURE_TDX_ATTEST_URL)
             token_req = TokenRequest(
-                quote=args.evidence.quote,
+                quote=args.evidence.evidence,
                 verifier_nonce=VerifierNonce(
                     args.nonce.val, args.nonce.iat, args.nonce.signature
                 ).__dict__,
@@ -526,14 +526,11 @@ class ITAConnector:
             log.error("Invalid CRL signature")
             return False
 
-        current_time = datetime.now(timezone.utc)
         # make crl.next_update aware by adding timezone info
-        if crl.next_update.tzinfo is None:
-            crl_next_update_aware = crl.next_update.replace(tzinfo=timezone.utc)
-        else:
-            crl_next_update_aware = crl.next_update
-
-        if crl_next_update_aware < current_time:
+        dt = datetime.now(timezone.utc)
+        utc_time = dt.replace(tzinfo=timezone.utc)
+        utc_timestamp = utc_time.timestamp()
+        if crl.next_update_utc.timestamp() < utc_timestamp:
             log.error("crl has been expired")
             return False
 

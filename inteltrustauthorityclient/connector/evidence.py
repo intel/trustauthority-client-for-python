@@ -10,7 +10,7 @@ from enum import Enum
 class EvidenceType(Enum):
     """Enum for Evidence Type."""
 
-    SGX, TDX, AZTDX = range(3)
+    SGX, TDX, AZTDX, NVGPU = range(4)
 
     def __str__(self) -> str:
         if self == EvidenceType.SGX:
@@ -19,6 +19,8 @@ class EvidenceType(Enum):
             return "tdx"
         elif self == EvidenceType.AZTDX:
             return "aztdx"
+        elif self == EvidenceType.NVGPU:
+            return "nvgpu"
         else:
             return "unknown"
 
@@ -29,12 +31,12 @@ class Evidence:
     def __init__(
         self,
         type: EvidenceType,
-        quote: bytearray,
+        evidence: bytearray,
         user_data: bytearray,
         runtime_data: bytearray,
     ) -> None:
         self._type = type
-        self._quote = quote
+        self._evidence = evidence
         self._user_data = user_data
         self._runtime_data = runtime_data
 
@@ -44,8 +46,8 @@ class Evidence:
         return self._type
 
     @property
-    def quote(self):
-        return self._quote
+    def evidence(self):
+        return self._evidence
 
     @property
     def user_data(self):
@@ -56,26 +58,3 @@ class Evidence:
     def runtime_data(self):
         """Getter method."""
         return self._runtime_data
-
-
-class GPUEvidence:
-    """Contains the GPU attributes to be sent for attestation of platform."""
-
-    def __init__(
-        self,
-        type: str,
-        evidence: bytearray,
-        adapter_type: str,
-    ) -> None:
-        self._type = type
-        self._evidence = evidence
-        self.adapter_type = adapter_type
-
-    @property
-    def type(self):
-        """Getter method."""
-        return self._type
-
-    @property
-    def evidence(self):
-        return self._evidence

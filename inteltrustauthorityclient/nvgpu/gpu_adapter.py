@@ -12,7 +12,7 @@ import logging as log
 from nv_attestation_sdk.gpu import attest_gpu_remote
 from inteltrustauthorityclient.resources import constants as const
 from inteltrustauthorityclient.base.evidence_adapter import EvidenceAdapter
-from inteltrustauthorityclient.connector.evidence import GPUEvidence 
+from inteltrustauthorityclient.connector.evidence import Evidence, EvidenceType
 
 class GPUAdapter(EvidenceAdapter):
     def __init__(self):
@@ -31,6 +31,7 @@ class GPUAdapter(EvidenceAdapter):
            # Only single GPU attestaton is supported for now.
            raw_evidence = evidence_list[0] 
            log.debug("Collected GPU Evidence Successfully")
+           log.debug("GPU Nonce : {gpu_nonce}")
            log.info(f"GPU Evidence : {raw_evidence}")
         except Exception as e:
            log.exception(f"Caught Exception: {e}")
@@ -42,7 +43,7 @@ class GPUAdapter(EvidenceAdapter):
             log.error("GPU Evidence not returned")
             return None
 
-        gpu_evidence = GPUEvidence("H100", evidence_payload, const.NV_GPU_ADAPTER)
+        gpu_evidence = Evidence(EvidenceType.NVGPU, evidence_payload, None, None)
         return gpu_evidence
 
     def build_payload(self, nonce, evidence, cert_chain):

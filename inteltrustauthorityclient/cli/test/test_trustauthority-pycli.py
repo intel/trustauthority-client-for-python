@@ -10,10 +10,6 @@ import io
 import argparse
 import json
 from io import StringIO
-from inteltrustauthorityclient.resources import constants as const
-from inteltrustauthorityclient.connector import config, connector
-from inteltrustauthorityclient.tdx.tdx_adapter import TDXAdapter
-from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 from inteltrustauthorityclient.cli import * 
 
 
@@ -27,7 +23,7 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
 
         mock_tdx_adapter.assert_called_once_with('user_data', None)
         mock_tdx_adapter.return_value.collect_evidence.assert_called_once_with(None)
-        mock_print.assert_called_once_with('evidence.quote')
+        mock_print.assert_called_once_with('evidence.evidence')
 
     def test_cmd_evidence_tdx_without_user_data(self, mock_tdx_adapter):
         args = argparse.Namespace(attest_type='tdx', user_data=None, nonce='nonce')
@@ -37,17 +33,37 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
 
         mock_tdx_adapter.assert_called_once_with('', None)
         mock_tdx_adapter.return_value.collect_evidence.assert_called_once_with('nonce')
-        mock_print.assert_called_once_with('evidence.quote')
+        mock_print.assert_called_once_with('evidence.evidence')
 
 
-    def test_cmd_evidence_nvgpu(self, mock_gpu_adapter):
+    def test_cmd_evidence_tdx_with_user_data_nonce(self, mock_tdx_adapter):
+        args = argparse.Namespace(attest_type='tdx', user_data='user_data', nonce='nonce')
+        mock_tdx_adapter.return_value.collect_evidence.return_value = 'evidence'
+
+        trustauthority-pycli.cmd_evidence(args)
+
+        mock_tdx_adapter.assert_called_once_with('user_data', 'nonce')
+        mock_tdx_adapter.return_value.collect_evidence.assert_called_once_with('user_data', 'nonce')
+        mock_print.assert_called_once_with('evidence.evidence')
+
+    def test_cmd_evidence_nvgpu_without_user_data(self, mock_gpu_adapter):
         args = argparse.Namespace(attest_type='nvgpu', user_data=None, nonce='nonce')
         mock_gpu_adapter.return_value.collect_evidence.return_value = 'evidence'
         
         trustauthority-pycli.cmd_evidence(args)
         
         mock_gpu_adapter.assert_called_once_with()
-        mock_gpu_adapter.return_value.collect_evidence.assert_called_once_with('nonce')
+        mock_gpu_adapter.return_value.collect_evidence.assert_called_once_with(None)
+        mock_print.assert_called_once_with('evidence.evidence')
+
+    def test_cmd_evidence_nvgpu_without_nonce(self, mock_gpu_adapter):
+        args = argparse.Namespace(attest_type='nvgpu', user_data=None, nonce=None)
+        mock_gpu_adapter.return_value.collect_evidence.return_value = 'evidence'
+        
+        trustauthority-pycli.cmd_evidence(args)
+        
+        mock_gpu_adapter.assert_called_once_with()
+        mock_gpu_adapter.return_value.collect_evidence.assert_called_once_with(None)
         mock_print.assert_called_once_with('evidence.evidence')
 
     def test_cmd_attest_tdx(self, mock_tdx_adapter, mock_ita_connector, mock_config, mock_log, mock_json_load, mock_open):
@@ -121,7 +137,6 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_ita_connector().attest_composite.assert_called_once_with(None, mock_ita_connector.GPUAttestArgs())
         mock_ita_connector().attest_composite().token = 'token'
         self.assertEqual(mock_ita_connector().attest_composite().headers, "{'request-id': '123', 'trace-id': '456'}")
-
 
     def test_cmd_attest_tdx_nvgpu(self, mock_ita_connector, mock_config, mock_json_load, mock_open):
         args = MagicMock()
