@@ -16,29 +16,27 @@ from inteltrustauthorityclient.connector import config, connector
 from inteltrustauthorityclient.tdx.tdx_adapter import TDXAdapter
 from inteltrustauthorityclient.nvgpu.gpu_adapter import GPUAdapter
 
-
 def cmd_evidence(args):
     if args.nonce != None:
         try:
-            nonce_bytes = base64.b64decode(args.nonce)
+            nonce_bytes = base64.b64decode(args.nonce, validate=True)
         except Exception as err:
             print(f"Error while base64 decoding of nonce: : {err}")
             exit(1)
     else:
-        nonce_bytes = b"" 
+        nonce_bytes = None 
 
     # Collect Intel TDX evidence(quote)
     if args.attest_type == 'tdx':
         if args.user_data != None:
             try:
-                user_data_bytes = base64.b64decode(args.user_data)
+                user_data_bytes = base64.b64decode(args.user_data, validate=True)
             except Exception as err:
                 print(f"Error while base64 decoding of user data: : {err}")
                 exit(1)
         else:
             user_data_bytes = b"" 
 
-        # eventLogger is not used for Python CLI
         tdx_adapter = TDXAdapter(user_data_bytes)
         evidence = tdx_adapter.collect_evidence(nonce_bytes)
         if evidence is None:
@@ -48,6 +46,9 @@ def cmd_evidence(args):
 
     # Collect NVGPU evidence
     elif args.attest_type == 'nvgpu':
+        if args.user_data != None:
+            print("User Data (-u) is used in 'tdx' or 'tdx+nvgpu' attestaion")
+            exit(1)
         gpu_adapter = GPUAdapter()
         evidence = gpu_adapter.collect_evidence(nonce_bytes)
         if evidence is None:
@@ -88,6 +89,9 @@ def cmd_attest(args):
             exit(1)
        
     if args.user_data != None:
+        if args.attest_type =='nvgpu':
+            print("User Data (-u) is used in 'tdx' or 'tdx+nvgpu' attestaion")
+            exit(1)
         try:
             user_data_bytes = base64.b64decode(args.user_data)
         except Exception as err:
@@ -235,31 +239,31 @@ def cmd_verify(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Trust Authority CLI')
+    parser = argparse.ArgumentParser(description="Trust Authority Python CLI")
     subparsers = parser.add_subparsers(title="Commands", dest="command", help="Command to execute")
 
     # evidence command
     parser_evidence = subparsers.add_parser("evidence", help="Evidence command")
     parser_evidence.add_argument('-a', '--attest-type', choices=['tdx', 'nvgpu'], required=True, help='Attestation Type selection')
-    parser_evidence.add_argument('-n', '--nonce', help='Nonce in base64 encoded format')
-    parser_evidence.add_argument('-u', '--user-data', help='User Data in base64 encoded format')
+    parser_evidence.add_argument('-n', '--nonce', help="Nonce in base64 encoded format")
+    parser_evidence.add_argument('-u', '--user-data', help="User Data in base64 encoded format (*Use for 'tdx' or 'tdx+nvgpu' attestation)")
     parser_evidence.set_defaults(func=cmd_evidence)
 
     # attest command
     parser_attest = subparsers.add_parser("attest", help="Attest command")
-    parser_attest.add_argument('-a', '--attest-type', choices=['tdx','nvgpu','tdx+nvgpu'], required=True, help='Attestation Type selection')
-    parser_attest.add_argument('-c', '--config', type=str, required=True, help='ITA environment argument')
-    parser_attest.add_argument('-u', '--user-data', help='User Data in base64 encoded format')
-    parser_attest.add_argument('-p', '--policy-ids', help='Trust Authority Policy Ids, comma separated without space')
-    parser_attest.add_argument('-r', '--request-id', help='Trust Authority Request Id')
-    parser_attest.add_argument('-s', '--token-sign-alg', choices=["RS256","PS384"], help='Token Signing Algorithm to be used, support PS384 and RS256')
-    parser_attest.add_argument('--policy-must-match', default=False, action="store_true", help='Enforce policies match during attestation')
+    parser_attest.add_argument('-a', '--attest-type', choices=['tdx','nvgpu','tdx+nvgpu'], required=True, help="Attestation Type selection")
+    parser_attest.add_argument('-c', '--config', type=str, required=True, help="Trust Authority config in JSON format")
+    parser_attest.add_argument('-u', '--user-data', help="User Data in base64 encoded format (*Use for 'tdx' or 'tdx+nvgpu' attestation)")
+    parser_attest.add_argument('-p', '--policy-ids', help="Trust Authority Policy Ids, comma separated without space")
+    parser_attest.add_argument('-r', '--request-id', help="Request id to be associated with request")
+    parser_attest.add_argument('-s', '--token-sign-alg', choices=["RS256","PS384"], help="Token Signing Algorithm to be used, support PS384 and RS256")
+    parser_attest.add_argument('--policy-must-match', default=False, action="store_true", help="Enforce policies match during attestation")
     parser_attest.set_defaults(func=cmd_attest)
 
     # verify command
     parser_verify = subparsers.add_parser("verify", help="Verify command")
-    parser_verify.add_argument('-c', '--config', type=str, required=True, help='ITA environment argument')
-    parser_verify.add_argument('-t', '--token', type=str, required=True, help='Token in JWT format')
+    parser_verify.add_argument('-c', '--config', type=str, required=True, help="ITA environment argument")
+    parser_verify.add_argument('-t', '--token', type=str, required=True, help="Token in JWT format")
     parser_verify.set_defaults(func=cmd_verify)
 
     if len(sys.argv)==1:
