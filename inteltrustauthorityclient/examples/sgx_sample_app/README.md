@@ -20,7 +20,7 @@ it collects quote from the enclave and sends it to Intel Trust Authority to retr
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
 │    │    │applications_security_amber |    |    |                |    AUTHORITY   |
 |    |    | _trustauthority_client_    |    |    |                |     SERVER     |
-|    |    |  for_python-1.0.0-py3-none |    |    |                |                |
+|    |    |  for_python-1.1.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
 │    │    └────────────────────────────┘    │    │                │                │
@@ -72,7 +72,7 @@ The docker image must be present inside the TD vm.  For example, it can be expor
 from a build machine as follows...
 ```sh
 #Save the sgx sample app Docker image into trust_authority_python_client_sgx_sample_app.tar.gz
-docker save trust_authority_python_client_sgx_sample_app:v1.0.0 > trust_authority_python_client_sgx_sample_app.tar.gz
+docker save trust_authority_python_client_sgx_sample_app:v1.1.0 > trust_authority_python_client_sgx_sample_app.tar.gz
 #scp trust_authority_python_client_sgx_sample_app.tar.gz to the TD VM.
 #On the TD VM load/import trust_authority_python_client_sgx_sample_app.tar.gz docker image using below command
 docker load -i trust_authority_python_client_sgx_sample_app.tar.gz
@@ -112,7 +112,7 @@ sudo docker run \
         -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket  \
         --env-file sgx_token.env \
         --group-add $(getent group sgx_prv | cut -d: -f3) \
-        trust_authority_python_client_sgx_sample_app:v1.0.0
+        trust_authority_python_client_sgx_sample_app:v1.1.0
 
 ```
 
@@ -139,7 +139,7 @@ poetry build
 ### Compile the Sample App with the following command:
 
 - Goto  dist folder where a whl package is created.
-- pip install < whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-1.0.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
+- pip install < whl file name>. In this case it is applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl. inteltrustauthorityclient package is installed in site-packages:
 ```
 pip install <whl file name>
 ```

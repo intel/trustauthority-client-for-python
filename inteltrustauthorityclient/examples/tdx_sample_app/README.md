@@ -16,7 +16,7 @@ it collects a quote from the TD and sends it to Intel Trust Authority to retriev
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
 │    │    │applications_security_amber |    |    |                |    AUTHORITY   |
 |    |    | _trustauthority_client_    |    |    |                |     SERVER     |
-|    |    |  for_python-1.0.0-py3-none |    |    |                |                |
+|    |    |  for_python-1.1.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
 │    │    └────────────────────────────┘    │    │                │                │
@@ -74,7 +74,7 @@ The docker image must be present inside the TD vm.  For example, it can be expor
 from a build machine as follows...
 ```sh
 #Save the tdx sample app Docker image into trust_authority_python_client_tdx_sample_app.tar.gz
-docker save trust_authority_python_client_tdx_sample_app:v1.0.0 > trust_authority_python_client_tdx_sample_app.tar.gz
+docker save trust_authority_python_client_tdx_sample_app:v1.1.0 > trust_authority_python_client_tdx_sample_app.tar.gz
 #scp trust_authority_python_client_tdx_sample_app.tar.gz to the TD VM.
 #On the TD VM load/import trust_authority_python_client_tdx_sample_app.tar.gz docker image using below command
 docker load -i trust_authority_python_client_tdx_sample_app.tar.gz
@@ -111,7 +111,7 @@ sudo docker run \
 --device=/dev/tpmrm0 \
 --env-file tdx_token.env \
 --group-add $(getent group tss | cut -d: -f3) \
-trust_authority_python_client_tdx_sample_app:v1.0.0
+trust_authority_python_client_tdx_sample_app:v1.1.0
 
 
 For For Google Cloud / Intel® Developer Cloud TDX adapters:
@@ -121,7 +121,7 @@ docker run \
        --network host \
        -v /sys/kernel/config:/sys/kernel/config \
        --env-file tdx_token.env \
-       trust_authority_python_client_tdx_sample_app:v1.0.0     
+       trust_authority_python_client_tdx_sample_app:v1.1.0     
 ```
 
 > **Note:**
@@ -150,7 +150,7 @@ poetry build
 ```Python
 pip install <whl file name>
 ```
-- In this case it is `applications_security_amber_trustauthority_client_for_python-1.0.0-py3-none-any.whl` inteltrustauthorityclient package is installed in site-packages:
+- In this case it is `applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl` inteltrustauthorityclient package is installed in site-packages:
 
 
 ### Run the Sample App with the following command:
