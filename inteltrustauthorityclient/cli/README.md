@@ -6,16 +6,13 @@
 Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI 
 to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
 
-This preview version of the CLI works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
-
-> [!NOTE]
-> This feature is in limited preview status. Details of implementation and usage may change before general availability. Preview features are only available on the Intel® Trust Authority Pilot environment. Contact your Intel representative for access.
+This version of the CLI works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
 
 For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
 
 ## Prerequisites
 - Python 3.8 or newer.
-- Ubuntu 22.04. Other versions (24.04) may work but are not tested.
+- Ubuntu 24.04 and Linux kernel 6.8 or newer.
 - Intel TDX Attestation Primitives installed in the guest TD.
 - NVIDIA Attestation SDK in TD.
 

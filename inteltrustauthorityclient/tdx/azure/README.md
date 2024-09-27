@@ -1,19 +1,22 @@
-# Intel® Trust Authority Python Azure TDX Adapter
+# Intel® Trust Authority Python Adapter for Azure Confidential VMs with Intel® TDX
 
-Python package for collecting TDX Quote from MSFT Azure TDX enabled platform. This .py is specifically built to work with Azure TDX stack only. It leverages the TPM2 TSS library (specifically TSS2 ESYS APIs) and tpm2-tools for Quote generation. TPM2 TSS library: https://github.com/tpm2-software/tpm2-tss.
+<p style="font-size: 0.875em;">· 09/16/2024 ·</p>
 
-The TPM2 TSS library needs to be installed using [installation steps](https://github.com/tpm2-software/tpm2-tss/blob/master/INSTALL.md) in the build environment to build the adapter. This Azure tdx adapter is used with the [**connector**](../../connector/README.md) to request an attestation token and verify the same. 
+There are two types of Intel® Trust Authority adapters for Intel® Trust Domain Extensions (Intel® TDX) platforms:
+
+1. An adapter for systems that use the configfs/TSM report subsystem to collect evidence for attestation. Supported platforms include bare-metal Intel TDX hosts and and Google Cloud Platform (GCP) confidential VMs with Intel TDX. The `./tdx` folder contains the Intel Trust Authority Intel TDX adapter for Intel TDX platforms.
+2. An adapter for use with Microsoft Azure\* confidential VMs with Intel TDX. The `./tdx/azure` folder contains a the Intel Trust Authority Intel TDX adapter for Azure confidential VMs.
+
+This README is for the Microsoft Azure adapter, **azure-tdx-adapter.py**. It is specifically built to work with the Microsoft Azure implementation of the Intel TDX stack. The Azure adapter requires the TPM2 TSS library (specifically TSS2 ESYS APIs) and tpm2-tools to be installed on the TD for quote generation. For more information, see [TPM2 TSS library](https://github.com/tpm2-software/tpm2-tss).
+
+The TPM2 TSS library must be installed in the build environment to build the adapter. For more information, see [TPM2 TSS library installation steps](https://github.com/tpm2-software/tpm2-tss/blob/master/INSTALL.md). 
 
 ## Requirements
 
-- Use **Python 3.8 or newer**.
+- Python 3.8 or newer
+- TPM2 TSS library
 
-- ### Tools Requirement
-    Please install tpm2-tools before using the library to generate quote.
-
-    ```
-    apt-get install tpm2-tools=4.1.1-1ubuntu0.20.04.1
-    ```
+Install tpm2-tools on the Azure confidential VM with Intel TDX before using the adapter to generate a quote.
 
 ## Unit Tests
 To run the tests, refer [Readme](../../../test/README.md).
@@ -36,3 +39,8 @@ if evidence == None:
 
 This source is distributed under the BSD-style license found in the [LICENSE](../../../LICENSE)
 file.
+
+<br><br>
+---
+
+**\*** Other names and brands may be claimed as the property of others.

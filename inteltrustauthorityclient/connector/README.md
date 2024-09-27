@@ -8,13 +8,13 @@ The **ITAConnector** class includes the following methods for attestation and ve
 
   [**`attest`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#attest)<br> Collects evidence and requests an attestation token from Intel Trust Authority for clients using a Passport validation model.
 
-  ** For Intel TDX and NVIDIA H100 Attesation (tdx_h100-preview), please use `attest_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
+  ** For Intel TDX and NVIDIA H100 Attestation use `attest_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
 
   [**`get_nonce`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_nonce)<br> Gets a nonce and parses it to JSON.
 
   [**`get_token`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_token)<br> Requests an attestation token from Intel Trust Authority. `get_token` Provides more control than `attest` by allowing a confidential app to include user data, provide a nonce, and modify evidence structures before requesting a token. `get_token` supports both Passport and Background-check attestation models.
 
-  ** For NVIDIA H100 Attesation and Unified Attesation (tdx_h100-preview), please use `get_token_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
+  ** For NVIDIA H100 Attesation and Unified Attesation please use `get_token_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
 
   [**`get_token_signing_certificates`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_token_signing_certificates)<br> Retrieves a JSON Web Key Set (JWKS) that contains the collection of signing certificates used by Intel Trust Authority to sign attestation tokens.
 
@@ -40,25 +40,4 @@ For more information, see the [Python Connector Reference](https://docs.trustaut
 <br><br>
 ---
 
-### To attest and verify TEE with Intel Trust Authority using TEE Adapter
-To create adapter refer:
-- **TDX**
-    - [TDX](../tdx/README.md)
-    - [Azure TDX](../tdx/azure/README.md)
-- **SGX**
-    - [Intel SGX](../sgx/intel/README.md)
-
-- **NVIDIA GPU**
-    - [NVIDIA GPU](../nvgpu/README.md)
-      
-```python
-// Initialize AttestArgs required for attestation
-attest_args = AttestArgs(adapter , policy_ids, request_id)
-
-// Invoke the attest API of the connector
-attestation_token = ita_connector.attest(attest_args)
-
-// Verify the received token
-pub_key = ita_connector.verify_token(token)
-```
 **\*\*** Intel Trust Authority subscription region determines the base URL you must use. In the European Union region, the base URL is `https://portal.eu.trustauthority.intel.com`, and the API URL is `https://api.eu.trustauthority.intel.com`. <br> For subscriptions outside the EU, the base URL is `https://portal.trustauthority.intel.com`, and the API URL is `https://api.trustauthority.intel.com`. Subscriptions, URLs, and API keys are region-specific. 

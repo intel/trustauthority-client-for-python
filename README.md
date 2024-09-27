@@ -1,6 +1,6 @@
 # Intel® Trust Authority Client for Python 
 
-<p style="font-size: 0.875em;">· 08/15/2024 ·</p>
+<p style="font-size: 0.875em;">· 09/13/2024 ·</p>
 
 The Intel® Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
 
@@ -8,42 +8,39 @@ The Intel Trust Authority client is designed for use by both attesting applicati
 
 Both the connector and a TEE adapter (the platform-specific software that collects evidence from a TEE) must be installed on the attesting TEE to collect evidence for attestation. However, a TEE adapter is not required to use the client to verify a token, or to request attestation in background-check mode using a quote provided by the attester. 
 
-The Python client (General Availability version) currently supports the following TEEs:
+The Python client currently supports the following TEEs:
 
 - Intel® Software Guard Extensions (Intel® SGX).
 - Intel® Trust Domain Extensions (Intel® TDX) for on-premises Intel TDX platforms.
+- Google Cloud Platform\* (GCP) confidential VMs with Intel TDX.
 - Azure\* confidential VMs with Intel TDX.
-
-The Python client (Limited preview version, `tdx_h100-preview` branch) provides additional support for:
-
-- NVIDIA H100 GPU (for on-premises deployments with Intel® Trust Domain Extensions (Intel® TDX)).
-
+- NVIDIA\* H100 GPUs with Intel TDX 
 
 ## Library structure
 
 - [/inteltrustauthorityclient/connector](inteltrustauthorityclient/connector#readme): Contains the main ITAConnector class to connect to Intel Trust Authority. 
-- [/inteltrustauthorityclient/nvgpu](inteltrustauthorityclient/nvgpu#readme): Contains the NVIDIA H100 GPU adapter. This feature is in limited preview status. 
+- [/inteltrustauthorityclient/nvgpu](inteltrustauthorityclient/nvgpu#readme): Contains the NVIDIA H100 GPU adapter. 
 - [/inteltrustauthorityclient/cli](inteltrustauthorityclient/cli#readme): Contains the Intel Trust Authority Python CLI. This version of the CLI includes support for NVIDIA H100 GPU attestation. This feature is in limited preview status. 
 - [/inteltrustauthorityclient/examples](inteltrustauthorityclient/examples): Contains sample applications to demonstrate the usage of the client. See [Sample applications](#sample-applications) for more information.
 - [inteltrustauthorityclient/sgx/intel](inteltrustauthorityclient/sgx/intel/README.md): Contains the Intel SGX adapter.
-- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX and Azure TDX adapters. See the READMEs in the subfolders for more information.
+- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX bare metal and Google Cloud Platform (GCP) adapter, and Azure TDX adapters. See the READMEs in the subfolders for more information.
 - [test](test/README.md): Contains unit tests for the client.
 
 
 ## System requirement
 
-- Ubuntu 22.04 LTS. Other versions may work but are not tested
+- Ubuntu 24.04 LTS with kernel 6.8 or later
 - Python 3.8 or later
 
 ## Installation
 
  
-To install the latest preview version of the Intel TDX + NVIDIA H100 client, follow these steps:
+To install the latest version of the Intel TDX + NVIDIA H100 client, follow these steps:
 
-1. The following commands clone the repository and check out the tdx_h100_preview branch and set up to build the wheel and run the CLI. You must replace **\<path_to_pythonclient\>** with the path to the directory where you'll install the client (e.g., pythonclient). You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<repo\> and \<branch\>.
+1. The following commands clone the repository and check out the main branch and set up to build the wheel and run the CLI. You must replace **\<path_to_pythonclient\>** with the path to the directory where you'll install the client (e.g., pythonclient). You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<repo\> and \<branch\>.
 
 ```bash
-git clone https://github.com/intel/trustauthority-client-for-python.git pythonclient -b tdx_h100-preview;
+git clone https://github.com/intel/trustauthority-client-for-python.git;
 
 # To use the Trust Authority CLI (inteltrustauthorityclient/cli)
 export CLIPATH=<path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli;
@@ -65,7 +62,7 @@ Run the following commands from the `inteltrustauthorityclient` directory.
 1. Change to the distribution folder where the wheel package was created.
 1. Run pip install <whl file name> to install the **inteltrustauthorityclient** package in site-packages:
     ```bash
-    pip install applications_security_amber_trustauthority_client_for_python-0.1.0-py3-none-any.whl
+    pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
     ```
 ## Usage
 
@@ -73,7 +70,6 @@ More information about how to use this library is available in the READMEs for e
 
 The primary documentation is the [Python Connector Reference](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html) in the Intel Trust Authority documentation. 
 
-In general, the Python Connector Reference has more detail and context than the READMES. However, the READMES are updated with every release and may contain updates that haven't been added to the documentation yet. It's a good idea to check both.
 
 ### Sample applications
 
@@ -94,6 +90,9 @@ For more information on how to use the client, see the sample applications in th
 
 For more information on how to run the unit tests, see the [Unit Tests README](./test/README.md).
 
+## Code of Conduct and Contributing
+
+See the [Contributing](./CONTRIBUTING.md) file for more information on how to contribute to this project. This project follows the [Code of Conduct](./CODE_OF_CONDUCT.md).
 ## License
 
 This library is distributed under the BSD-style license found in the [LICENSE](./LICENSE)
@@ -103,3 +102,6 @@ file.
 ---
 
 **\*** Other names and brands may be claimed as the property of others.
+
+
+
