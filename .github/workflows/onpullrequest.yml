@@ -3,6 +3,9 @@ name: OnPullRequest
 on:
   pull_request:
 
+
+permissions: read-all
+
 jobs:
 
   security-file-check:

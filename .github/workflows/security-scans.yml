@@ -1,12 +1,17 @@
 name: "Security Scans"
 on:
   workflow_dispatch:
+
+permissions: read-all
   
 jobs:
     bandit-scan:
         runs-on: [ self-hosted, taas ]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+              with:
+                fetch-depth: 0
+
             - name: Bandit Scan
               uses: intel-innersource/frameworks.devops.github.actions.bandit@main
               with:
@@ -17,7 +22,7 @@ jobs:
     Checkmarx:
         runs-on: [ self-hosted, taas ]
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
             - name: Scan
               uses: intel-innersource/frameworks.devops.github.actions.checkmarx@main
               with:
