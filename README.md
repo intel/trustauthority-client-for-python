@@ -33,7 +33,6 @@ The Python client currently supports the following TEEs:
 - Python 3.8 or later
 
 ## Installation
-
  
 To install the latest version of the Intel TDX + NVIDIA H100 client, follow these steps:
 
@@ -44,13 +43,18 @@ git clone https://github.com/intel/trustauthority-client-for-python.git;
 
 # To use the Trust Authority CLI (inteltrustauthorityclient/cli)
 export CLIPATH=<path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli;
-alias trustauthority-pycli="python3 $CLIPATH/trustauthority-cli.py" 
+alias trustauthority-pycli="sudo python3 $CLIPATH/trustauthority-cli.py" 
 ```
+Sudo is optional in the alias defined above, but it's required to run the CLI commands that collect evidence from the TEE and it's convenient to have it in the alias.
 
 Run the following commands from the `inteltrustauthorityclient` directory.
 
-2. Install **poetry** using the command `pip3 install --no-cache-dir poetry`
+2. Install **poetry** by running the following command:
+    ```sh
+    pip3 install --no-cache-dir poetry
+    ```
 1. Create a wheel package using poetry:
+
     Spawn a poetry shell:
     ```bash
     poetry shell
@@ -59,9 +63,9 @@ Run the following commands from the `inteltrustauthorityclient` directory.
     ```bash
     poetry build
     ```
-1. Change to the distribution folder where the wheel package was created.
 1. Run pip install <whl file name> to install the **inteltrustauthorityclient** package in site-packages:
     ```bash
+    cd dist
     pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
     ```
 ## Usage

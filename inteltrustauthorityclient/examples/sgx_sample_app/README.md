@@ -1,6 +1,6 @@
 # Intel SGX Attestation Sample Application
 
-<p style="font-size: 0.875em;">· 09/17/2024 ·</p> 
+<p style="font-size: 0.875em;">· 09/28/2024 ·</p> 
 
 The Intel® Software Guard Extensions (Intel® SGX) attestation sample app is a Python application that uses the Intel® Trust Authority Client for Python packages to attest an Intel SGX enclave. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
 
@@ -91,7 +91,7 @@ The Intel SGX attestation sample application can be encapsulated as a container,
 
 ```sh
 cat <<EOF | tee .env
-UBUNTU_VERSION=24.04
+UBUNTU_VERSION=20.04
 TRUST_AUTHORITY_CLIENT_VERSION=v1.1.0
 DCAP_VERSION=1.19.100.3-focal1
 PSW_VERSION=2.22.100.3
@@ -100,7 +100,7 @@ EOF
 
 docker compose --env-file .env build
 ```
-UBUNTU_VERSION — Use Ubuntu 24.04 LTS or later.<br>
+UBUNTU_VERSION — This example has a dependency on Ubuntu 20.04.<br>
 TRUST_AUTHORITY_CLIENT_VERSION — The version of the sample app Docker image. This version number is used to tag the Docker image.<br>
 DCAP_VERSION — The version of Intel® SGX DCAP installed on the Intel SGX host.<br>
 PSW_VERSION — The version of Intel® SGX PSW installed on the Intel SGX host.<br>

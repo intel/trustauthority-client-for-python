@@ -1,6 +1,6 @@
 # Intel TDX Attestation Sample Application
 
-<p style="font-size: 0.875em;">· 09/16/2024 ·</p>
+<p style="font-size: 0.875em;">· 09/28/2024 ·</p>
 
 The Intel® Trust Domain Extensions (Intel® TDX) attestation sample app is a Python application that uses the Intel® Trust Authority Client for Python packages to attest an Intel TDX trust domain. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
 
@@ -97,7 +97,6 @@ docker compose --env-file .env build
 
 UBUNTU_VERSION — Use Ubuntu 24.04 LTS with kernel 6.8 or later.<br>
 TRUST_AUTHORITY_CLIENT_VERSION — The version of the sample app Docker image. This version number is used to tag the Docker image.<br>
-DCAP_VERSION — The version of Intel® TDX DCAP installed on the Intel TDX host. <br>
 
 2. The docker image must be present inside the TD vm.  For example, it can be exported or copied from a build machine as follows.
 
@@ -161,7 +160,7 @@ If the sample application runs successfully, the attestation token returned from
 
 - Python 3.8 or later
 - Poetry. Install **poetry** using the command `pip3 install --no-cache-dir poetry`.
-- An Intel TDX TD VM running on a local Intel TDX host or as a confidential VM in the cloud. The TD VM must have the Intel TDX client installed to generate quotes. If the TD VM is in the cloud, the CSP provides its own Intel TDX client to generate quotes, and Intel TDX DCAP is not required.
+- An Intel TDX TD VM running on a local Intel TDX host or as a confidential VM in the cloud. 
 - A subscription to Intel Trust Authority. If you don't have a subscription, you can find out how to get one at [Intel Trust Authority](https://trustauthority.intel.com).
 
 #### Build Instructions
