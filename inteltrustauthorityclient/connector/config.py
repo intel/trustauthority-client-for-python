@@ -107,7 +107,7 @@ def validate_url(url):
     parsed_url = validators.url(url)
     if parsed_url:
         if urlparse(url).scheme != "https":
-            log.error("URL scheme has to https")
+            log.error("URL scheme has to be https")
             return False
         return True
     return False
