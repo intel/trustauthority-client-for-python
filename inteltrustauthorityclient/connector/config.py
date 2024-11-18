@@ -4,6 +4,7 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
+import re
 import binascii
 from urllib.parse import urlparse
 import uuid
@@ -126,13 +127,9 @@ def validate_uuid(uuid_str):
 
 
 def validate_requestid(req_id):
-    # request_id is of maximum of 128 characters, including a-z, A-Z, 0-9, and - (hyphen). Special characters are not allowed
-    if len(req_id) > constants.REQUEST_ID_MAX_LEN:
-        return False
-    for req_char in req_id:
-        if req_char != "-" and req_char.isalnum() == False:
-            return False
-    return True
+    # Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \
+    request_id_pattern = r'^[a-zA-Z0-9\s\-_\.\\\/]{1,128}$'
+    return bool(re.fullmatch(request_id_pattern, req_id))
 
 def validate_apikey(api_key):
     # api_key has to be a valid base64 encoded string
