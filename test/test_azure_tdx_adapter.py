@@ -73,8 +73,12 @@ class AzureTDXAdapterTestCase(unittest.TestCase):
     def test_collect_evidence_with_exception_in_requests_post(self):
         """Test method to test collect_evidence with exception in requests.post"""
         tdx_adapter = AzureTDXAdapter(user_data=b"user_data")
-        with patch("requests.post") as mock_post:
-            mock_post.side_effect = requests.HTTPError()
+        with patch("subprocess.run") as mock_run, patch(
+            "requests.post"
+        )as mock_post:
+            mock_run.return_value = MagicMock(stdout=b"tpm_report")
+            mock_post.side_effect = requests.HTTPError("Mocked HTTP Error")
+            mock_post.side_effect.response = MagicMock(status_code=500, reason="Not Found")
             evidence = tdx_adapter.collect_evidence(nonce=b"nonce")
         self.assertIsNone(evidence)
 

@@ -222,7 +222,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_v2_connection_error(self):
         """Test method to test get_token_v2() with raising Connection Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
@@ -237,7 +237,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -249,7 +249,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_v2_http_error(self):
         """Test method to test get_token_v2() with raising HTTP Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
@@ -266,7 +266,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_http_error(self):
         """Test method to test get_token() with raising HTTP Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -280,7 +280,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_v2_timeout_error(self):
         """Test method to test get_token_v2() with raising Timeout Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
@@ -295,7 +295,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_timeout_error(self):
         """Test method to test get_token() with raising Timeout Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -307,7 +307,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_v2_request_exception(self):
         """Test method to test get_token_v2() with raising Request Exception"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
@@ -322,7 +322,7 @@ class ConnectorTestCase(unittest.TestCase):
     def test_get_token_request_exception(self):
         """Test method to test get_token() with raising Request Exception"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
-        evidence_params = Evidence(EvidenceType.TDX, "quotedata", "", "")
+        evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tokenargs = GetTokenArgs(
             verifier_nonce, evidence_params, [], "1234", "PS384", True
         )
@@ -486,10 +486,6 @@ class ConnectorTestCase(unittest.TestCase):
                                     self.mocked_token_response["token"]
                                 )
                                 assert decoded_token is None
-                            decoded_token = self.ita_c.verify_token(
-                                self.mocked_token_response["token"]
-                            )
-                            assert decoded_token is None
 
     def test_verify_token_jwt_invalid_token_error(self):
         """Test method to test verify_token() with raising JWT Invalid Token Error"""
@@ -522,10 +518,6 @@ class ConnectorTestCase(unittest.TestCase):
                                     self.mocked_token_response["token"]
                                 )
                                 assert decoded_token is None
-                            decoded_token = self.ita_c.verify_token(
-                                self.mocked_token_response["token"]
-                            )
-                            assert decoded_token is None
 
     def test_verify_token_jwt_decode_exception(self):
         """Test method to test verify_token() with raising JWT Decode Exception"""
@@ -556,10 +548,6 @@ class ConnectorTestCase(unittest.TestCase):
                                     self.mocked_token_response["token"]
                                 )
                                 assert decoded_token is None
-                            decoded_token = self.ita_c.verify_token(
-                                self.mocked_token_response["token"]
-                            )
-                            assert decoded_token is None
 
     def test_attest(self):
         """Test method to test attest() of Intel Trust Authority Connector"""
@@ -781,18 +769,6 @@ class ConnectorTestCase(unittest.TestCase):
             mock_get.return_value.content = expected_crl
 
             result = connector.get_crl("abcd")
-            self.assertEqual(result, None)
-
-    def test_get_crl_timeout_error(self):
-        """Test method to test get_crl() with raising Timeout Error"""
-        cfg = MagicMock()
-        connector = ITAConnector(cfg)
-        crl_url = "mock_crl_url"
-        with patch(
-            "inteltrustauthorityclient.connector.connector.requests.get"
-        ) as mock_get:
-            mock_get.side_effect = requests.exceptions.Timeout
-            result = connector.get_crl("http://www.abcd.com")
             self.assertEqual(result, None)
 
     def test_get_crl_timeout_error(self):

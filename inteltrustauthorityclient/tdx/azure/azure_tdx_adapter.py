@@ -121,8 +121,9 @@ class AzureTDXAdapter:
             response = requests.post(
                 url, data=payload_json, headers=headers, timeout=timeout_sec
             )
+            response.raise_for_status()
         except requests.HTTPError as e:
-            log.error(f"got http error: {e.code} {e.reason}")
+            log.error(f"got http error: {e.response.status_code} {e}")
             return None
         except Exception as e:
             log.error(f"got error in post request: {e}")
