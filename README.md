@@ -72,7 +72,7 @@ Run the following commands from the `inteltrustauthorityclient` directory.
     ```
 1. Run pip install <whl file name> to install the **inteltrustauthorityclient** package in site-packages:
     ```bash
-    cd dist
+    cd ../dist
     pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
     ```
 
