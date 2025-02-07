@@ -1,12 +1,8 @@
 # Intel® Trust Authority Client for Python 
 
-<p style="font-size: 0.875em;">· 09/19/2024 ·</p>
+<p style="font-size: 0.875em;">· 02/04/2025 ·</p>
 
 The Intel® Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
-
-The Intel Trust Authority client is designed for use by both attesting applications and relying parties. It can be used in either Passport or Background-check [attestation patterns](https://docs.trustauthority.intel.com/main/articles/concept-patterns.html?tabs=passport). The client is [available in several languages](https://docs.trustauthority.intel.com/main/articles/integrate-overview.html), including Go, C, and Java. All the clients share a common API.
-
-Both the connector and a TEE adapter (the platform-specific software that collects evidence from a TEE) must be installed on the attesting TEE to collect evidence for attestation. However, a TEE adapter is not required to use the client to verify a token, or to request attestation in background-check mode using a quote provided by the attester. 
 
 The Python client currently supports the following TEEs:
 
@@ -23,19 +19,14 @@ The Python client currently supports the following TEEs:
 - [/inteltrustauthorityclient/cli](inteltrustauthorityclient/cli#readme): Contains the Intel Trust Authority Python CLI. This version of the CLI includes support for NVIDIA H100 GPU attestation. This feature is in limited preview status. 
 - [/inteltrustauthorityclient/examples](inteltrustauthorityclient/examples): Contains sample applications to demonstrate the usage of the client. See [Sample applications](#sample-applications) for more information.
 - [inteltrustauthorityclient/sgx/intel](inteltrustauthorityclient/sgx/intel/README.md): Contains the Intel SGX adapter.
-- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX bare metal and Google Cloud Platform (GCP) adapter, and Azure TDX adapters. See the READMEs in the subfolders for more information.
+- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX bare metal and Google Cloud Platform (GCP) adapter (one adapter supports both platforms), and Azure TDX adapters. See the READMEs for more information.
 - [test](test/README.md): Contains unit tests for the client.
 
 
 ## System requirement
 
-
 - Python 3.8 or newer.
-- Ubuntu 24.04 and Linux kernel 6.8 or newer with support for the ConfigFS-TSM subsystem.
-- [Intel SGX DCAP 1.21](https://github.com/intel/SGXDataCenterAttestationPrimitives/releases/tag/DCAP_1.21) or later installed on the server's host OS. (Yes, it says "SGX", but Intel DCAP works for Intel TDX too. v1.21 introduces support for configfs/tsm.)
-- [NVIDIA Attestation SDK v1.4.0](https://docs.nvidia.com/attestation/technical-docs-sdk/latest/sdk_releases.html#v1-4-0) installed in the guest TD. NVIDIA Attestation SDK v2.0.0 is _not_ supported. 
-
-
+- Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 
 ## Installation
 

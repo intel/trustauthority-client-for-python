@@ -1,6 +1,6 @@
 # Intel® Trust Authority Python NVIDIA\* H100\* GPU Adapter
 
-<p style="font-size: 0.875em;">· 09/17/2024 ·</p>
+<p style="font-size: 0.875em;">· 02/04/2025 ·</p>
 
 The Intel Trust Authority Client for NVIDIA\* H100 GPU is a Python package for collecting evidence for attestation from a NVIDIA H100 GPU. This library uses the NVIDIA Attestation SDK (https://github.com/NVIDIA/nvtrust/tree/main/guest_tools/attestation_sdk) for H100 GPU Evidence generation. This GPU adapter is used with the Intel Trust Authority [**connector**](../connector/README.md) for Python to request an attestation token and verify the same. 
 
@@ -13,8 +13,12 @@ For more information, see [GPU Remote Attestation](https://docs.trustauthority.i
 ## Requirements
 
 - Use **Python 3.8 or newer**.
-- Ubuntu 24.04 with kernel version 6.8 or newer.
+- Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 - NVIDIA H100 GPU
+- [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0) installed in the guest TD. NVIDIA Attestation SDK v2.0.0 is _not_ supported. 
+
+> [!NOTE]
+> The NVIDIA Attestation SDK requires the GPU Local Verifier. The version must match the SDK v1.4
 
 ## Usage
 
