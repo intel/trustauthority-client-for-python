@@ -31,10 +31,6 @@ jobs:
       no_proxy: ${{ secrets.NO_PROXY }}
       PYTHONPATH: ${{ github.workspace }}:$PYTHONPATH
     steps:
-
-      #- name: python linter TODO: Check if innersource provides aby linter.
-       # uses: psf/black@stable
-
       - name: Setup Python
         uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4.7.1
         with:
