@@ -1,6 +1,6 @@
 # Intel® Trust Authority Client for Python 
 
-<p style="font-size: 0.875em;">· 02/04/2025 ·</p>
+<p style="font-size: 0.875em;">· 02/13/2025 ·</p>
 
 The Intel® Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
 
@@ -10,7 +10,7 @@ The Python client currently supports the following TEEs:
 - Intel® Trust Domain Extensions (Intel® TDX) for on-premises Intel TDX platforms.
 - Google Cloud Platform\* (GCP) confidential VMs with Intel TDX.
 - Azure\* confidential VMs with Intel TDX.
-- NVIDIA\* H100 GPUs with Intel TDX 
+- NVIDIA\* H100 GPU and Intel TDX Trust Domain.
 
 ## Library structure
 
@@ -19,7 +19,7 @@ The Python client currently supports the following TEEs:
 - [/inteltrustauthorityclient/cli](inteltrustauthorityclient/cli#readme): Contains the Intel Trust Authority Python CLI. This version of the CLI includes support for NVIDIA H100 GPU attestation. This feature is in limited preview status. 
 - [/inteltrustauthorityclient/examples](inteltrustauthorityclient/examples): Contains sample applications to demonstrate the usage of the client. See [Sample applications](#sample-applications) for more information.
 - [inteltrustauthorityclient/sgx/intel](inteltrustauthorityclient/sgx/intel/README.md): Contains the Intel SGX adapter.
-- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX bare metal and Google Cloud Platform (GCP) adapter (one adapter supports both platforms), and Azure TDX adapters. See the READMEs for more information.
+- [inteltrustauthorityclient/tdx](inteltrustauthorityclient/tdx): Contains the Intel TDX bare metal and Google Cloud Platform (GCP) adapter (one adapter supports both platforms), and Azure TDX adapters. 
 - [test](test/README.md): Contains unit tests for the client.
 
 
@@ -30,20 +30,15 @@ The Python client currently supports the following TEEs:
 
 ## Installation
 
-For information about how to prepare the Intel TDX host server and install attestation primitives for remote attestation, see [Setup Remote Attestation on Host OS and Inside TD](https://github.com/canonical/tdx?tab=readme-ov-file#8-setup-remote-attestation-on-host-os-and-inside-td) in the [Canonical/TDX](https://github.com/canonical/tdx) repo on GitHub.
- 
-To install the latest version of the Intel TDX + NVIDIA H100 client, follow these steps:
+The following installation steps assume that you are installing the Intel Trust Authority Client for Python on an Intel TDX TD, running on an Intel TDX-enabled host server. For information about how to prepare the Intel TDX host server, see [Setup Remote Attestation on Host OS and Inside TD](https://github.com/canonical/tdx?tab=readme-ov-file#8-setup-remote-attestation-on-host-os-and-inside-td) in the [Canonical/TDX](https://github.com/canonical/tdx) repo on GitHub.
 
-1. The following commands clone the repository and check out the main branch and set up to build the wheel and run the CLI. You must replace **\<path_to_pythonclient\>** with the path to the directory where you'll install the client (e.g., pythonclient). You can customize the epic names in the sample below, or copy it as-is and run it. Don't change `$CLIPATH` or the **git clone** \<repo\> and \<branch\>.
+To install the latest version of the Intel TDX + NVIDIA H100 client on a TD:
+
+1. Clone the repository, which automatically checks out the main branch.
 
 ```bash
-git clone https://github.com/intel/trustauthority-client-for-python.git;
-
-# To use the Trust Authority CLI (inteltrustauthorityclient/cli)
-export CLIPATH=<path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli;
-alias trustauthority-pycli="sudo python3 $CLIPATH/trustauthority-cli.py" 
+git clone https://github.com/intel/trustauthority-client-for-python.git
 ```
-Sudo is optional in the alias defined above, but it's required to run the CLI commands that collect evidence from the TEE and it's convenient to have it in the alias.
 
 Run the following commands from the `inteltrustauthorityclient` directory.
 

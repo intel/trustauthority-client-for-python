@@ -1,22 +1,30 @@
 
 # Intel® Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
 
-<p style="font-size: 0.875em;">· 11/20/2024 ·</p>
+<p style="font-size: 0.875em;">· 02/13/2025 ·</p>
 
 Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI 
-to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
+to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with [Intel Trust Authority](https://www.intel.com/content/www/us/en/security/trust-authority.html). 
 
 This version of the CLI works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
 
 For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
 
 ## Prerequisites
+
+Intel Trust Authority Client for Python CLI requirements for the TD are:
 - Python 3.8 or newer.
-- Ubuntu 24.04 and Linux kernel 6.8 or newer with support for the ConfigFS-TSM subsystem.
-- [Intel SGX DCAP 1.21](https://github.com/intel/SGXDataCenterAttestationPrimitives/releases/tag/DCAP_1.21) or later installed on the server's host OS. 
-- [NVIDIA Attestation SDK v1.4.0](https://docs.nvidia.com/attestation/technical-docs-sdk/latest/sdk_releases.html#v1-4-0) installed in the guest TD. NVIDIA Attestation SDK v2.0.0 is _not_ supported. 
+- Ubuntu 22.04 (requires a kernel update) or Ubuntu 24.04. 
+- Linux kernel 6.7 or later. Kernel support for the ConfigFS-TSM subsystem is required for Intel TDX attestation and UEFI-based logs.
+- Required for the H100 adapter: [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0). 
+
+
+## Installation
+
+The Python CLI for Intel TDX is part of the Intel Trust Authority Client for Python. Refer to the main [README](../../README.md#installation) for installation instructions. 
 
 ## Intel Trust Authority Configuration
+
 The CLI requires a configuration file (config.json) to be provided for the CLI operations. The following is an example of the configuration file:
 
 ```
@@ -31,21 +39,32 @@ Save the configuration to a 'config.json' file. The `attest` command requires th
 > [!NOTE]
  > If you are in the European Union (EU) region, use the following Intel Trust Authority URLs:<br> Base URL — https://portal.eu.trustauthority.intel.com <br> API URL — https://api.eu.trustauthority.intel.com
 
-## Installation
+### Optional steps
 
-Refer to the main [README](../../README.md#installation) for installation instructions. You can check to see that the CLI is installed correctly by running the following command:
+You can use the following commands to create an environment variable and alias to run the ClI, for convenience during development and testing. Run the following command after replacing _<path_to_pythonclient>_ with the path to the directory where `inteltrustauthorityclient` is installed:
+
+```
+alias trustauthority-pycli="sudo python3 <path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli/trustauthority-cli.py" 
+```
+Sudo is optional in the alias defined above. (`Evidence` and `Attest` require **sudo**;  `Verify` does not.)
+
+Check to see that the CLI is installed by displaying the Help message:
 
 ```bash
 trustauthority-pycli -h
 ```
-This command should display the help message for the CLI.
+If you didn't define an alias, use the following commands. 
+
+```bash
+cd <path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli
+python3 trustauthority_cli.py -h
+```
 
 ## Usage
 
-> [!NOTE]
-> **Sudo** or root is required to run the `evidence` and `attest` commands. That's because root permission is needed to access **config/tsm** to collect evidence for a quote. The `verify` command doesn't require root privileges.
+**Sudo** or root is required to run the `evidence` and `attest` commands. That's because root permission is needed to access **config/tsm** to collect evidence for an Intel TDX quote. The `verify` command doesn't require root privileges.
 
-The CLI provides several commands for different operations. Here are the available commands:
+The following examples assume that you've defined a `trustauthority_pycli` alias.
 
 ### `evidence`
 
@@ -63,7 +82,7 @@ Options:
 
 ### `attest`
 
-Collects evidence from the TEE or GPU and sends it to Intel Trust Authority for attestation. `attest` returns an attestation token in JWT format if the attestation is successful. This command can attest an Intel TDX trust domain, a NVIDIA H100 GPU, or both.
+Collects evidence from the TEE or GPU and sends it to Intel Trust Authority for attestation. `attest` returns an attestation token in JWT format if the attestation is successful. This command can attest an Intel TDX trust domain, a NVIDIA H100 GPU, or both. `attest` uses values set in the `config.json` file to locate the Trust Authority REST API gateway and authenticate requests.
 
 ```sh
 trustauthority_pycli attest -a <attest_type> -c <config_file> [-u <user_data>] [-p <policy_ids>] [-s <token_sign_alg> [--policy-must-match]
