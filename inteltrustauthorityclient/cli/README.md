@@ -1,27 +1,25 @@
 
 # Intel® Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
 
-<p style="font-size: 0.875em;">· 02/13/2025 ·</p>
+<p style="font-size: 0.875em;">· 02/27/2025 ·</p>
 
-Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI 
-to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with [Intel Trust Authority](https://www.intel.com/content/www/us/en/security/trust-authority.html). 
+Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
 
-This version of the CLI works with on-premises Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. A future version may support cloud-based platforms.
+This version of the CLI works with Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. 
 
 For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
 
 ## Prerequisites
 
-Intel Trust Authority Client for Python CLI requirements for the TD are:
-- Python 3.8 or newer.
-- Ubuntu 22.04 (requires a kernel update) or Ubuntu 24.04. 
-- Linux kernel 6.7 or later. Kernel support for the ConfigFS-TSM subsystem is required for Intel TDX attestation and UEFI-based logs.
-- Required for the H100 adapter: [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0). 
+The following prerequisites must be installed on the CVM (Confidential VM with Intel TDX):
 
+- Use **Python 3.8 or newer**.
+- Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
+- NVIDIA H100 GPU
+- [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0) installed in the guest TD. NVIDIA Attestation SDK v2.x is _not_ supported. 
 
-## Installation
-
-The Python CLI for Intel TDX is part of the Intel Trust Authority Client for Python. Refer to the main [README](../../README.md#installation) for installation instructions. 
+> [!NOTE]
+> The NVIDIA Attestation SDK requires the GPU Local Verifier. The version must match the SDK v1.4
 
 ## Intel Trust Authority Configuration
 
@@ -34,23 +32,28 @@ The CLI requires a configuration file (config.json) to be provided for the CLI o
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
 ```
-Save the configuration to a 'config.json' file. The `attest` command requires the configuration file path as an argument, and allows you to specify a path to the file so that it doesn't need to be in the same directory as the CLI binary.
-
 > [!NOTE]
  > If you are in the European Union (EU) region, use the following Intel Trust Authority URLs:<br> Base URL — https://portal.eu.trustauthority.intel.com <br> API URL — https://api.eu.trustauthority.intel.com
 
-### Optional steps
+Save the configuration to a 'config.json' file. The `attest` command requires the configuration file path as an argument, and allows you to specify a path to the file so that it doesn't need to be in the same directory as the CLI binary.
 
-You can use the following commands to create an environment variable and alias to run the ClI, for convenience during development and testing. Run the following command after replacing _<path_to_pythonclient>_ with the path to the directory where `inteltrustauthorityclient` is installed:
+## Installation
 
-```
-alias trustauthority-pycli="sudo python3 <path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli/trustauthority-cli.py" 
-```
-Sudo is optional in the alias defined above. (`Evidence` and `Attest` require **sudo**;  `Verify` does not.)
+Refer to the main [README](../../README.md#installation) for installation instructions. 
 
-Check to see that the CLI is installed by displaying the Help message:
+For convenience, you may want to define an alias to run the CLI by running the following commands. You must replace **\<path_to_pythonclient\>** with the path to the directory where you'll install the client (e.g., pythonclient).
 
 ```bash
+# Create an alias for the Trust Authority CLI (inteltrustauthorityclient/cli)
+export CLIPATH=<path_to_pythonclient>/inteltrustauthorityclient/cli/trustauthority-pycli;
+alias trustauthority-pycli="sudo python3 $CLIPATH/trustauthority-cli.py" 
+```
+Sudo is optional in the alias defined above, but it's required to run the CLI commands that collect evidence from the TEE and it's convenient to have it in the alias.
+
+You can check to see that the CLI is installed correctly by running the following command.
+
+```bash
+# Print the help message
 trustauthority-pycli -h
 ```
 If you didn't define an alias, use the following commands. 
