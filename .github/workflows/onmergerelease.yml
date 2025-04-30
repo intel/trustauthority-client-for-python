@@ -11,8 +11,23 @@ on:
 permissions: read-all
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      runner: ${{ steps.step1.outputs.runner }}
+    steps:
+      - name: Check repository
+        id: step1
+        run: |
+          if [ ${{ github.repository }} == 'intel/trustauthority-client-for-python' ]; then
+            echo "runner=ubuntu-latest" >> $GITHUB_OUTPUT
+          else
+            echo "runner=self-hosted" >> $GITHUB_OUTPUT
+          fi
+
   build-test-scan:
-    runs-on: [ ubuntu-20.04 ]
+    needs: [setup]
+    runs-on: ${{ needs.setup.outputs.runner }}
     env:
       http_proxy: ${{ secrets.HTTP_PROXY }}
       https_proxy: ${{ secrets.HTTPS_PROXY }}
