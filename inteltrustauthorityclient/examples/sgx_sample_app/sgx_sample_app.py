@@ -98,10 +98,9 @@ def main():
         exit(1)
 
     trust_authority_request_id = os.getenv("TRUSTAUTHORITY_REQUEST_ID")
-    if trust_authority_request_id is not None:
-        if not config.validate_requestid(trust_authority_request_id):
-            log.error(f"Invalid Request ID :{trust_authority_request_id}")
-            exit(1)
+    if trust_authority_request_id and not config.validate_requestid(trust_authority_request_id):
+        log.error(f"Invalid Request ID: {trust_authority_request_id}")
+        exit(1)
 
     trust_authority_policy_id = os.getenv("TRUSTAUTHORITY_POLICY_ID")
     if trust_authority_policy_id != None:
@@ -110,8 +109,8 @@ def main():
             log.error("policy count in request must be between 1 - 10")
             exit(1)
         for uuid_str in policy_ids:
-            if not config.validate_uuid(uuid_str):
-                log.error(f"Invalid policy UUID :{uuid_str}")
+            if uuid_str and not config.validate_uuid(uuid_str):
+                log.error(f"Invalid policy UUID: {uuid_str}")
                 exit(1)
 
     retry_max = os.getenv("RETRY_MAX")
