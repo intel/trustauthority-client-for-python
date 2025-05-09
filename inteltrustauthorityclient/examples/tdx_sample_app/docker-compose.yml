@@ -10,7 +10,7 @@ services:
     image: trust_authority_python_client_tdx_sample_app:${TRUST_AUTHORITY_CLIENT_VERSION}
     container_name: trust_authority_python_client_tdx_sample_app
     cap_drop:
-      - NET_RAW
+      - ALL
     security_opt:
       - no-new-privileges:true
     read_only: true

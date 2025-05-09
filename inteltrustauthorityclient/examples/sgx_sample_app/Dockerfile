@@ -47,9 +47,9 @@ RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu foc
 
 WORKDIR /opt/intel
 # Download SGX SDK binary
-RUN wget -q https://download.01.org/intel-sgx/sgx-linux/2.22/distro/ubuntu20.04-server/sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
+RUN /bin/bash -c "set -o pipefail && wget -q https://download.01.org/intel-sgx/sgx-linux/2.22/distro/ubuntu20.04-server/sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
     chmod +x sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
-    echo 'yes' | ./sgx_linux_x64_sdk_${PSW_VERSION}.bin
+    echo 'yes' | ./sgx_linux_x64_sdk_${PSW_VERSION}.bin"
 
 # Installing Linux SGX SDK
 RUN apt-get update && apt-get install -y --no-install-recommends \
