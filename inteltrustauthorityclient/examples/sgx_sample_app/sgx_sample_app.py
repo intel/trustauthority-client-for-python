@@ -102,6 +102,7 @@ def main():
         log.error(f"Invalid Request ID: {trust_authority_request_id}")
         exit(1)
 
+    policy_ids = []
     trust_authority_policy_id = os.getenv("TRUSTAUTHORITY_POLICY_ID")
     if trust_authority_policy_id != None:
         policy_ids = json.loads(trust_authority_policy_id)
@@ -109,8 +110,8 @@ def main():
             log.error("policy count in request must be between 1 - 10")
             exit(1)
         for uuid_str in policy_ids:
-            if uuid_str and not config.validate_uuid(uuid_str):
-                log.error(f"Invalid policy UUID: {uuid_str}")
+            if not config.validate_uuid(uuid_str):
+                log.error(f"Invalid policy UUID: \"{uuid_str}\"")
                 exit(1)
 
     retry_max = os.getenv("RETRY_MAX")
@@ -183,21 +184,13 @@ def main():
         exit(1)
     c_lib = ctypes.CDLL("./minimal-enclave/libutils.so")
     adapter = SGXAdapter(eid, c_lib.enclave_create_report, pub_bytes)
-    if trust_authority_policy_id != None:
-        attest_args = connector.AttestArgs(
-            adapter,
-            token_signing_algorithm,
-            policy_must_match,
-            trust_authority_request_id,
-            policy_ids,
-        )
-    else:
-        attest_args = connector.AttestArgs(
-            adapter,
-            token_signing_algorithm,
-            policy_must_match,
-            trust_authority_request_id,
-        )
+    attest_args = connector.AttestArgs(
+        adapter,
+        token_signing_algorithm,
+        policy_must_match,
+        trust_authority_request_id,
+        policy_ids,
+    )
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:
