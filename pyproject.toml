@@ -3,7 +3,7 @@ name = "applications.security.amber.trustauthority-client-for-python"
 version = "1.1.0"
 description = "Intel Trust Authority Client in Python"
 authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manisai.bala@intel.com>", "Yoon, Eunjung <eunjung.yoon@intel.com>"]
-license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
+license = "Copyright (c) 2024-2025 Intel Corporation. All rights reserved."
 readme = "README.md"
 packages = [{include = "inteltrustauthorityclient"}]
 exclude = ["inteltrustauthorityclient/examples"]
@@ -20,6 +20,7 @@ pyjwt = "^2.9.0"
 tenacity = "^8.2.3"
 coverage = "^7.4.2"
 pytest = "^8.0.2"
+nvidia-ml-py = "^12.550.52"
 
 [build-system]
 requires = ["poetry-core"]
