@@ -51,7 +51,11 @@ def main():
     policy_ids = []
     trust_authority_policy_id = os.getenv("TRUSTAUTHORITY_POLICY_ID")
     if trust_authority_policy_id != None:
-        policy_ids = json.loads(trust_authority_policy_id)
+        try:
+            policy_ids = json.loads(trust_authority_policy_id)
+        except json.JSONDecodeError as exc:
+            log.error(f"Invalid TRUSTAUTHORITY_POLICY_ID: {trust_authority_policy_id}")
+            exit(1)
         if len(policy_ids) > const.POLICY_IDS_MAX_LEN:
             log.error("policy count in request must be between 1 - 10")
             exit(1)
