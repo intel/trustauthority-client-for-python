@@ -7,6 +7,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 import argparse
 import json
+import logging as log
 import uuid
 import sys
 import os
