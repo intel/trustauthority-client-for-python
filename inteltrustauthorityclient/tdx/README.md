@@ -1,8 +1,8 @@
-# Intel® Trust Authority Intel TDX Adapter
+# Intel® Tiber™ Trust Authority Intel TDX Adapter
 
-<p style="font-size: 0.875em;">· 09/13/2024 ·</p>
+<p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-There are two types of Intel Trust Authority adapters for Intel® Trust Domain Extensions (Intel® TDX) platforms:
+There are two types of Intel® Tiber™ Trust Authority adapters for Intel® Trust Domain Extensions (Intel® TDX) platforms:
 
 1. An adapter for systems that use the configfs/TSM report subsystem to collect evidence for attestation. Supported platforms include bare-metal Intel TDX hosts and and Google Cloud Platform (GCP) confidential VMs with Intel TDX. The `./tdx` folder contains the Intel Trust Authority Intel TDX adapter for Intel TDX platforms.
 2. An adapter for use with Microsoft Azure confidential VMs with Intel TDX. The `./tdx/azure` folder contains a the Intel Trust Authority Intel TDX adapter for Azure confidential VMs.

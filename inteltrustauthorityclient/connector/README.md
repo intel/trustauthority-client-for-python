@@ -1,24 +1,24 @@
-# Intel® Trust Authority Client Connector for Python
+# Intel® Tiber™ Trust Authorityy Client Connector for Python
 
-<p style="font-size: 0.875em;">· 08/14/2024 ·</p> 
+<p style="font-size: 0.875em;">· 05/21/2025 ·</p> 
 
-The Intel® Trust Authority Client Connector for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The "connector" (as we call it) is an interface for the Intel Trust Authority REST API. The process logic for attestation and verification is implemented in the Intel Trust Authority service, not in the connector. The connector is a client that sends requests to the Intel Trust Authority service and processes the responses.
+The Intel® Tiber™ Trust Authority Client Connector for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The "connector" (as we call it) is an interface for the Intel Trust Authority REST API. The process logic for attestation and verification is implemented in the Intel Trust Authority service, not in the connector. The connector is a client that sends requests to the Intel Trust Authority service and processes the responses.
 
 The **ITAConnector** class includes the following methods for attestation and verification:
 
-  [**`attest`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#attest)<br> Collects evidence and requests an attestation token from Intel Trust Authority for clients using a Passport validation model.
+  [**`attest`**](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html#attest)<br> Collects evidence and requests an attestation token from Intel Trust Authority for clients using a Passport validation model.
 
-  ** For Intel TDX and NVIDIA H100 Attestation use `attest_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
+  ** For Intel TDX and NVIDIA H100 Attestation use `attest_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/articles/ita/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
 
-  [**`get_nonce`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_nonce)<br> Gets a nonce and parses it to JSON.
+  [**`get_nonce`**](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html#get_nonce)<br> Gets a nonce and parses it to JSON.
 
-  [**`get_token`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_token)<br> Requests an attestation token from Intel Trust Authority. `get_token` Provides more control than `attest` by allowing a confidential app to include user data, provide a nonce, and modify evidence structures before requesting a token. `get_token` supports both Passport and Background-check attestation models.
+  [**`get_token`**](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html#get_token)<br> Requests an attestation token from Intel Trust Authority. `get_token` Provides more control than `attest` by allowing a confidential app to include user data, provide a nonce, and modify evidence structures before requesting a token. `get_token` supports both Passport and Background-check attestation models.
 
   ** For NVIDIA H100 Attesation and Unified Attesation please use `get_token_v2`. For more information, see the [GPU attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation. 
 
-  [**`get_token_signing_certificates`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#get_token_signing_certificates)<br> Retrieves a JSON Web Key Set (JWKS) that contains the collection of signing certificates used by Intel Trust Authority to sign attestation tokens.
+  [**`get_token_signing_certificates`**](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html#get_token_signing_certificates)<br> Retrieves a JSON Web Key Set (JWKS) that contains the collection of signing certificates used by Intel Trust Authority to sign attestation tokens.
 
-  [**`verify_token`**](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html#verify_token)<br> Verifies that an Intel Trust Authority attestation token is properly formatted and signed. 
+  [**`verify_token`**](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html#verify_token)<br> Verifies that an Intel Trust Authority attestation token is properly formatted and signed. 
 
 A connector requires a TEE adapter (`adapter: EvidenceAdapter` in **AttestArgs**) to collect evidence from the attesting platform. However, a relying party can use the connector to verify a token or perform a background-check attestation without a TEE adapter. The only ITAConnector method that requires a TEE adapter is **attest**.
 
@@ -35,7 +35,7 @@ Follow this basic workflow, modifying it as necessary for your use case:
 1. If you need to collect evidence from the TEE, you'll need to create an adapter object of the correct type for your TEE. `attest` requires an adapter object in **AttestArgs**, and `collect_evidence` is a method of the adapter object.
 1. Use the connector object (and adapter object, if required) to call the desired method.
 
-For more information, see the [Python Connector Reference](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html) in the Intel Trust Authority documentation. Also see the sample applications in the [examples](../../inteltrustauthorityclient/examples) folder. 
+For more information, see the [Python Connector Reference](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html) in the Intel Trust Authority documentation. Also see the sample applications in the [examples](../../inteltrustauthorityclient/examples) folder. 
 
 <br><br>
 ---

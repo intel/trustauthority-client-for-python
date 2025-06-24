@@ -1,8 +1,8 @@
 # Intel SGX Attestation Sample Application
 
-<p style="font-size: 0.875em;">· 09/28/2024 ·</p> 
+<p style="font-size: 0.875em;">· 05/21/2025 ·</p> 
 
-The Intel® Software Guard Extensions (Intel® SGX) attestation sample app is a Python application that uses the Intel® Trust Authority Client for Python packages to attest an Intel SGX enclave. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
+The Intel® Software Guard Extensions (Intel® SGX) attestation sample app is a Python application that uses the Intel® Tiber™ Trust Authority Client for Python packages to attest an Intel SGX enclave. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
 
 The sample application runs in a minimal Intel SGX enclave. When the sample app is run, it does the following:
 
@@ -58,9 +58,9 @@ Many of these variables are optional but several are required as indicated.
 | `HTTPS_PROXY` | String | No | HTTPS proxy host. [1]|
 | `TRUSTAUTHORITY_BASE_URL` | String | Yes | Base URL for the Intel Trust Authority service. [2]|
 | `TRUSTAUTHORITY_API_URL` | String | Yes | API URL for the Intel Trust Authority service. [2] |
-| `TRUSTAUTHORITY_API_KEY` | String | Yes | Attestation API key required for authorization. [3] For more information, see [User roles and API keys](https://docs.trustauthority.intel.com/main/articles/concept-user-roles-and-api-keys.html) in the Intel Trust Authority Documentation.  |
+| `TRUSTAUTHORITY_API_KEY` | String | Yes | Attestation API key required for authorization. [3] For more information, see [User roles and API keys](https://docs.trustauthority.intel.com/main/articles/articles/ita/concept-user-roles-and-api-keys.html) in the Intel Trust Authority Documentation.  |
 | `TRUSTAUTHORITY_REQUEST_ID` | String | No | If not provided, a request ID will be created by the API gateway. An auto-generated request ID is not guaranteed to be unique.|
-| `TRUSTAUTHORITY_POLICY_ID` | String | No | If supplied, the value can be a single policy ID (UUID) or a list of policy IDs separated by commas. For more information, see [Attestation Policies](https://docs.trustauthority.intel.com/main/articles/concept-policy-v2.html) in the Intel Trust Authority documentation.|
+| `TRUSTAUTHORITY_POLICY_ID` | String | No | If supplied, the value can be a single policy ID (UUID) or a list of policy IDs separated by commas. For more information, see [Attestation Policies](https://docs.trustauthority.intel.com/main/articles/articles/ita/concept-policy-v2.html) in the Intel Trust Authority documentation.|
 | `RETRY_MAX` | Integer | No | Maximum number of retries. |
 | `RETRY_WAIT_TIME_MAX` | Integer | No | Maximum retry wait time. |
 | `RETRY_WAIT_TIME_MIN` | Integer | No | Minimum retry wait time. |
