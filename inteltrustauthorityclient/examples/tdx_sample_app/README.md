@@ -88,7 +88,7 @@ The Intel TDX attestation sample can be encapsulated as a container, enabling it
 
 ```sh
 cat <<EOF | tee .env
-UBUNTU_VERSION=24.04
+UBUNTU_VERSION=22.04
 TRUST_AUTHORITY_CLIENT_VERSION=v1.1.0
 EOF
 

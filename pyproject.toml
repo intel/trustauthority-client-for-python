@@ -9,11 +9,11 @@ packages = [{include = "inteltrustauthorityclient"}]
 exclude = ["inteltrustauthorityclient/examples"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 validators = "^0.22.0"
 resources = "^0.0.1"
 staty = "^1.2.4"
-requests = "^2.32.3"
+requests = "^2.32.4"
 cryptography = {version = "^44.0.1", python = ">=3.8,<3.9.0 || >3.9.1,<4.0"}
 pyjwt = "^2.9.0"
 tenacity = "^8.2.3"

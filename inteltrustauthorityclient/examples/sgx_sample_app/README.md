@@ -91,9 +91,9 @@ The Intel SGX attestation sample application can be encapsulated as a container,
 
 ```sh
 cat <<EOF | tee .env
-UBUNTU_VERSION=20.04
+UBUNTU_VERSION=22.04
 TRUST_AUTHORITY_CLIENT_VERSION=v1.1.0
-DCAP_VERSION=1.19.100.3-focal1
+DCAP_VERSION=1.19.100.3-jammy1
 PSW_VERSION=2.22.100.3
 ADAPTER_TYPE="sgx"
 EOF
