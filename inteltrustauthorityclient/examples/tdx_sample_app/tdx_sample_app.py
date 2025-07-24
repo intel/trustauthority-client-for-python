@@ -101,11 +101,16 @@ def main():
             "CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value."
         )
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
+    else:
+        if not timeout_second.isnumeric():
+            log.error("Invalid CLIENT_TIMEOUT_SEC format: CLIENT_TIMEOUT_SEC must be an Integer.")
+            exit(1)
 
     token_signing_algorithm = os.getenv("TOKEN_SIGNING_ALGORITHM")
     policy_must_match = os.getenv("POLICY_MUST_MATCH")
-    if policy_must_match is not None and policy_must_match.lower() in {"true", "false"}:
-        policy_must_match = True if policy_must_match.lower() == "true" else False
+    policy_must_match = config.validate_policymustmatch(policy_must_match)
+    if policy_must_match == -1:
+        exit(1)
 
     try:
         # Populate config object

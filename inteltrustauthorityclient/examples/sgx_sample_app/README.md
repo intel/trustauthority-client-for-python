@@ -160,7 +160,7 @@ Begin by copying the Intel Trust Authority Client for Python repository to a loc
 
 #### Prerequisites
 
-- Python 3.8 or later
+- Python 3.9 or later
 - Poetry. You can install **poetry** using the command `pip3 install --no-cache-dir poetry`.
 - An Intel SGX host with the Intel SGX driver.
 - A subscription to Intel Trust Authority. If you don't have a subscription, you can find out how to get one at [Intel Trust Authority](https://trustauthority.intel.com).

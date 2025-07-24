@@ -158,7 +158,7 @@ If the sample application runs successfully, the attestation token returned from
 
 #### Prerequisites
 
-- Python 3.8 or later
+- Python 3.9 or later
 - Poetry. Install **poetry** using the command `pip3 install --no-cache-dir poetry`.
 - An Intel TDX TD VM running on a local Intel TDX host or as a confidential VM in the cloud. 
 - A subscription to Intel Trust Authority. If you don't have a subscription, you can find out how to get one at [Intel Trust Authority](https://trustauthority.intel.com).

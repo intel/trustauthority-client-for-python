@@ -13,7 +13,7 @@ For more information, see [GPU Remote Attestation](https://docs.trustauthority.i
 
 The following prerequisites must be installed on the CVM (Confidential VM with Intel TDX):
 
-- Use **Python 3.8 or newer**.
+- Use **Python 3.9 or newer**.
 - Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 - NVIDIA H100 GPU
 - [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0) installed in the guest TD. NVIDIA Attestation SDK v2.x is _not_ supported. 

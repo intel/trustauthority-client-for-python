@@ -25,7 +25,7 @@ The Python client currently supports the following TEEs:
 
 ## System requirement
 
-- Python 3.8 or newer.
+- Python 3.9 or newer.
 - Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 
 ## Installation
