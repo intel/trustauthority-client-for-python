@@ -1,19 +1,19 @@
 
-# Intel® Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
+# IIntel® Tiber™ Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
 
-<p style="font-size: 0.875em;">· 02/27/2025 ·</p>
+<p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
+Intel® Tiber™ Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
 
 This version of the CLI works with Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. 
 
-For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
+For more information, see [GPU Remote Attestation](https://docs.trustauthority.intel.com/main/articles/articles/ita/concept-gpu-attestation.html) in the Intel Trust Authority documentation.
 
 ## Prerequisites
 
 The following prerequisites must be installed on the CVM (Confidential VM with Intel TDX):
 
-- Use **Python 3.8 or newer**.
+- Use **Python 3.9 or newer**.
 - Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 - NVIDIA H100 GPU
 - [NVIDIA Attestation SDK v1.4.0](https://github.com/NVIDIA/nvtrust/releases/tag/v1.4.0) installed in the guest TD. NVIDIA Attestation SDK v2.x is _not_ supported. 

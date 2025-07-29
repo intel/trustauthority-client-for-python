@@ -9,6 +9,11 @@ services:
   trust_authority_python_client_tdx_sample_app:
     image: trust_authority_python_client_tdx_sample_app:${TRUST_AUTHORITY_CLIENT_VERSION}
     container_name: trust_authority_python_client_tdx_sample_app
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
     build:
       context: ../../..
       dockerfile: inteltrustauthorityclient/examples/tdx_sample_app/Dockerfile

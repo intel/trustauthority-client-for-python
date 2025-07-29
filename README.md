@@ -1,8 +1,8 @@
-# Intel® Trust Authority Client for Python 
+# Intel® Tiber™ Trust Authority Client for Python 
 
-<p style="font-size: 0.875em;">· 02/13/2025 ·</p>
+<p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-The Intel® Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
+The Intel® Tiber™ Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
 
 The Python client currently supports the following TEEs:
 
@@ -25,7 +25,7 @@ The Python client currently supports the following TEEs:
 
 ## System requirement
 
-- Python 3.8 or newer.
+- Python 3.9 or newer.
 - Ubuntu 22.04 with *kernel 6.7 or later,* or Ubuntu 24.04. Support for the ConfigFS-TSM subsystem is required for Intel TDX attestation.
 
 ## Installation
@@ -63,14 +63,14 @@ Run the following commands from the `inteltrustauthorityclient` directory.
     ```
 
 >[!NOTE]
-> When you install the client, you might see the following error: "ERROR: pip's dependency resolver does not currently take into account all the packages that are installed." That is followed by a list of version mismatch messages. You can safely ignore this error. The client uses newer versions of the Python libraries than the NVIDIA SDK.
+> When you install the client, you might see the following error: "ERROR: pip's dependency resolver does not currently take into account all the packages that are installed." That is followed by a list of version mismatch messages. You can safely ignore this error. 
 
 
 ## Usage
 
 More information about how to use this library is available in the READMEs for each package. [Library structure](#library-structure), above, has links to the READMEs for each package.
 
-The primary documentation is the [Python Connector Reference](https://docs.trustauthority.intel.com/main/articles/integrate-python-client.html) in the Intel Trust Authority documentation. 
+The primary documentation is the [Python Connector Reference](https://docs.trustauthority.intel.com/main/articles/articles/ita/integrate-python-client.html) in the Intel Trust Authority documentation. 
 
 
 ### Sample applications

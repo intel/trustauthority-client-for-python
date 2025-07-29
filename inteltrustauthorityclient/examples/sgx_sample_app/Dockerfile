@@ -39,28 +39,26 @@ ARG ADAPTER_TYPE
 ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 RUN apt update && apt install -y --no-install-recommends gnupg wget python3 pip build-essential
 
-# Adding SGX repo to Ubuntu focal
-RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list && \
-    wget https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key -O /tmp/intel-sgx-deb.key && \
-    apt-key add /tmp/intel-sgx-deb.key && \
-    rm /tmp/intel-sgx-deb.key
+# Adding SGX repo to Ubuntu jammy
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
+    wget https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key && apt-key add intel-sgx-deb.key && cat intel-sgx-deb.key | tee /etc/apt/keyrings/intelsgx-keyring.asc > /dev/null
 
 WORKDIR /opt/intel
 # Download SGX SDK binary
-RUN wget -q https://download.01.org/intel-sgx/sgx-linux/2.22/distro/ubuntu20.04-server/sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
+RUN /bin/bash -c "set -o pipefail && wget -q https://download.01.org/intel-sgx/sgx-linux/2.22/distro/ubuntu22.04-server/sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
     chmod +x sgx_linux_x64_sdk_${PSW_VERSION}.bin && \
-    echo 'yes' | ./sgx_linux_x64_sdk_${PSW_VERSION}.bin
+    echo 'yes' | ./sgx_linux_x64_sdk_${PSW_VERSION}.bin"
 
 # Installing Linux SGX SDK
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsgx-urts=${PSW_VERSION}-focal1 \
+    libsgx-urts=${PSW_VERSION}-jammy1 \
     libsgx-qe3-logic=${DCAP_VERSION} \
     libsgx-pce-logic=${DCAP_VERSION} \
     libsgx-dcap-ql=${DCAP_VERSION} \
     libsgx-dcap-ql-dev=${DCAP_VERSION} \
     libcurl4-openssl-dev \
     libsgx-dcap-default-qpl=${DCAP_VERSION} \
-    libsgx-quote-ex=${PSW_VERSION}-focal1
+    libsgx-quote-ex=${PSW_VERSION}-jammy1
 
 COPY --from=build_base /app/dist/applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl .
 RUN pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl

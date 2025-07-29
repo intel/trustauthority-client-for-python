@@ -139,3 +139,13 @@ def validate_apikey(api_key):
         return True
     except binascii.Error as exc:
         log.error(f"Error in apikey validation :{exc}, API key must be a valid Base64 Encoded string")
+
+def validate_policymustmatch(policy_must_match):
+    # policy_must_match should be a boolean value
+    if policy_must_match is None:
+        return False
+    if isinstance(policy_must_match, str):
+        if policy_must_match.lower() in {"true", "false"}:
+            return True if policy_must_match.lower() == "true" else False
+    log.error("Unsupported Policy Must Match value provided, supported values are true/false")
+    return -1

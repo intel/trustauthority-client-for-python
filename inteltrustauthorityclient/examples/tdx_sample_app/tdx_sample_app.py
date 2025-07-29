@@ -44,20 +44,24 @@ def main():
         exit(1)
 
     trust_authority_request_id = os.getenv("TRUSTAUTHORITY_REQUEST_ID")
-    if trust_authority_request_id is not None:
-        if not config.validate_requestid(trust_authority_request_id):
-            log.error(f"Invalid Request ID :{trust_authority_request_id}")
-            exit(1)
+    if trust_authority_request_id and not config.validate_requestid(trust_authority_request_id):
+        log.error(f"Invalid Request ID: {trust_authority_request_id}")
+        exit(1)
 
+    policy_ids = []
     trust_authority_policy_id = os.getenv("TRUSTAUTHORITY_POLICY_ID")
     if trust_authority_policy_id != None:
-        policy_ids = json.loads(trust_authority_policy_id)
+        try:
+            policy_ids = json.loads(trust_authority_policy_id)
+        except json.JSONDecodeError as exc:
+            log.error(f"Invalid TRUSTAUTHORITY_POLICY_ID: {trust_authority_policy_id}")
+            exit(1)
         if len(policy_ids) > const.POLICY_IDS_MAX_LEN:
             log.error("policy count in request must be between 1 - 10")
             exit(1)
         for uuid_str in policy_ids:
             if not config.validate_uuid(uuid_str):
-                log.error(f"Invalid policy UUID :{uuid_str}")
+                log.error(f"Invalid policy UUID: \"{uuid_str}\"")
                 exit(1)
 
     retry_max = os.getenv("RETRY_MAX")
@@ -97,11 +101,16 @@ def main():
             "CLIENT_TIMEOUT_SEC is not provided. Hence, setting to default value."
         )
         timeout_second = const.DEFAULT_CLIENT_TIMEOUT_SEC
+    else:
+        if not timeout_second.isnumeric():
+            log.error("Invalid CLIENT_TIMEOUT_SEC format: CLIENT_TIMEOUT_SEC must be an Integer.")
+            exit(1)
 
     token_signing_algorithm = os.getenv("TOKEN_SIGNING_ALGORITHM")
     policy_must_match = os.getenv("POLICY_MUST_MATCH")
-    if policy_must_match is not None and policy_must_match.lower() in {"true", "false"}:
-        policy_must_match = True if policy_must_match.lower() == "true" else False
+    policy_must_match = config.validate_policymustmatch(policy_must_match)
+    if policy_must_match == -1:
+        exit(1)
 
     try:
         # Populate config object
@@ -139,21 +148,13 @@ def main():
         log.error(f"Invalid Adapter Type Provided: {adapter_type}.")
         exit(1)
     log.debug(f"adapter type: {adapter_type}")
-    if trust_authority_policy_id != None:
-        attest_args = connector.AttestArgs(
-            adapter,
-            token_signing_algorithm,
-            policy_must_match,
-            trust_authority_request_id,
-            policy_ids,
-        )
-    else:
-        attest_args = connector.AttestArgs(
-            adapter,
-            token_signing_algorithm,
-            policy_must_match,
-            trust_authority_request_id,
-        )
+    attest_args = connector.AttestArgs(
+        adapter,
+        token_signing_algorithm,
+        policy_must_match,
+        trust_authority_request_id,
+        policy_ids,
+    )
     # Fetch Attestation Token from ITA
     attestation_token = ita_connector.attest(attest_args)
     if attestation_token is None:

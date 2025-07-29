@@ -8,7 +8,12 @@ version: '3'
 services:
   trust_authority_python_client_sgx_sample_app:
     image: trust_authority_python_client_sgx_sample_app:${TRUST_AUTHORITY_CLIENT_VERSION}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     container_name: trust_authority_python_client_sgx_sample_app
+    read_only: true
     build:
       context: ../../..
       dockerfile: inteltrustauthorityclient/examples/sgx_sample_app/Dockerfile

@@ -3,23 +3,23 @@ name = "applications.security.amber.trustauthority-client-for-python"
 version = "1.1.0"
 description = "Intel Trust Authority Client in Python"
 authors = ["Kamal, Shefali <shefali.kamal@intel.com>", "Bala, K Manisai <k.manisai.bala@intel.com>", "Yoon, Eunjung <eunjung.yoon@intel.com>"]
-license = "Copyright (c) 2024 Intel Corporation. All rights reserved."
+license = "Copyright (c) 2024-2025 Intel Corporation. All rights reserved."
 readme = "README.md"
 packages = [{include = "inteltrustauthorityclient"}]
 exclude = ["inteltrustauthorityclient/examples"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 validators = "^0.22.0"
 resources = "^0.0.1"
 staty = "^1.2.4"
 requests = "^2.32.4"
-cryptography = "^43.0.1"  
-pyOpenSSL = "24.2.1"
+cryptography = {version = "^44.0.1", python = ">=3.8,<3.9.0 || >3.9.1,<4.0"}
 pyjwt = "^2.9.0"
 tenacity = "^8.2.3"
 coverage = "^7.4.2"
 pytest = "^8.0.2"
+nvidia-ml-py = "^12.550.52"
 
 [build-system]
 requires = ["poetry-core"]
