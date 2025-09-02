@@ -40,8 +40,8 @@ ENV ADAPTER_TYPE=${ADAPTER_TYPE}
 RUN apt update && apt install -y --no-install-recommends gnupg wget python3 pip build-essential
 
 # Adding SGX repo to Ubuntu jammy
-RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
-    wget https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key && apt-key add intel-sgx-deb.key && cat intel-sgx-deb.key | tee /etc/apt/keyrings/intelsgx-keyring.asc > /dev/null
+RUN /bin/bash -c "set -o pipefail && echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
+    wget https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key && apt-key add intel-sgx-deb.key && cat intel-sgx-deb.key | tee /etc/apt/keyrings/intelsgx-keyring.asc > /dev/null"
 
 WORKDIR /opt/intel
 # Download SGX SDK binary
