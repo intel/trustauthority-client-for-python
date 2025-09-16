@@ -61,13 +61,9 @@ def cmd_evidence(args):
 def cmd_attest(args):
     # Check if request id is valid
     if args.request_id != None:
-        if len(args.request_id) > const.REQUEST_ID_MAX_LEN:
-            print("Request ID should be atmost 128 characters long.") 
+        if not config.validate_requestid(args.request_id):
+            log.error(f"Invalid Request ID: {args.request_id}")
             exit(1)
-        for req_char in args.request_id:
-            if req_char != '-' and req_char.isalnum() == False:
-                print("Request ID should contain only a-z, A-Z, 0-9, and - (hyphen), Special characters are not allowed.")
-                exit(1)
 
     # Check if policy uuid is valid and the number of policy counts not exceeded.
     if args.policy_ids != None:
@@ -94,7 +90,7 @@ def cmd_attest(args):
             print("User Data (-u) is used in 'tdx' or 'tdx+nvgpu' attestaion")
             exit(1)
         try:
-            user_data_bytes = base64.b64decode(args.user_data)
+            user_data_bytes = base64.b64decode(args.user_data, validate=True)
         except Exception as err:
             print(f"Error while base64 decoding of user data: : {err}")
             exit(1)

@@ -127,8 +127,8 @@ def validate_uuid(uuid_str):
 
 
 def validate_requestid(req_id):
-    # Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \
-    request_id_pattern = r'^[a-zA-Z0-9\s\-_\.\\\/]{1,128}$'
+    # Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., /
+    request_id_pattern = r'^[a-zA-Z0-9_ /.-]{1,128}$'
     return bool(re.fullmatch(request_id_pattern, req_id))
 
 def validate_apikey(api_key):
