@@ -1,8 +1,8 @@
-# Intel® Tiber™ Trust Authority Python NVIDIA\* H100\* GPU Adapter
+# Intel® Trust Authority Python NVIDIA\* H100\* GPU Adapter
 
 <p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-The Intel® Tiber™ Trust Authority Client for NVIDIA\* H100 GPU is a Python package for collecting evidence for attestation from a NVIDIA H100 GPU. This GPU adapter is used with the Intel Trust Authority [**connector**](../connector/README.md) for Python to request an attestation token and verify the same. 
+The Intel® Trust Authority Client for NVIDIA\* H100 GPU is a Python package for collecting evidence for attestation from a NVIDIA H100 GPU. This GPU adapter is used with the Intel Trust Authority [**connector**](../connector/README.md) for Python to request an attestation token and verify the same. 
 
 This version of the GPU adapter works with Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing platforms. 
 

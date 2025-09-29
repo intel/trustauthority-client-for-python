@@ -1,8 +1,8 @@
-# Intel® Tiber™ Trust Authority Client for Python 
+# Intel® Trust Authority Client for Python 
 
 <p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-The Intel® Tiber™ Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
+The Intel® Trust Authority Client for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The client packages enable you to collect evidence from the TEE, request an attestation token (JWT), and verify the cryptographic signature of the token.
 
 The Python client currently supports the following TEEs:
 

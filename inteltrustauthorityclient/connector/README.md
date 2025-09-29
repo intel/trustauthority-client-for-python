@@ -1,8 +1,8 @@
-# Intel® Tiber™ Trust Authorityy Client Connector for Python
+# Intel® Trust Authorityy Client Connector for Python
 
 <p style="font-size: 0.875em;">· 05/21/2025 ·</p> 
 
-The Intel® Tiber™ Trust Authority Client Connector for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The "connector" (as we call it) is an interface for the Intel Trust Authority REST API. The process logic for attestation and verification is implemented in the Intel Trust Authority service, not in the connector. The connector is a client that sends requests to the Intel Trust Authority service and processes the responses.
+The Intel® Trust Authority Client Connector for Python is a library of Python modules used to perform remote attestation of a Trusted Execution Environment (TEE) using Intel Trust Authority as the verifier. The "connector" (as we call it) is an interface for the Intel Trust Authority REST API. The process logic for attestation and verification is implemented in the Intel Trust Authority service, not in the connector. The connector is a client that sends requests to the Intel Trust Authority service and processes the responses.
 
 The **ITAConnector** class includes the following methods for attestation and verification:
 

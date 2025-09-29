@@ -2,7 +2,7 @@
 
 <p style="font-size: 0.875em;">· 05/21/2025 ·</p> 
 
-The Intel® Software Guard Extensions (Intel® SGX) attestation sample app is a Python application that uses the Intel® Tiber™ Trust Authority Client for Python packages to attest an Intel SGX enclave. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
+The Intel® Software Guard Extensions (Intel® SGX) attestation sample app is a Python application that uses the Intel® Trust Authority Client for Python packages to attest an Intel SGX enclave. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
 
 The sample application runs in a minimal Intel SGX enclave. When the sample app is run, it does the following:
 

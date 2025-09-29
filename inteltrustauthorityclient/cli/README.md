@@ -1,9 +1,9 @@
 
-# IIntel® Tiber™ Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
+# IIntel® Trust Authority CLI for Intel TDX and NVIDIA H100 GPU  
 
 <p style="font-size: 0.875em;">· 05/21/2025 ·</p>
 
-Intel® Tiber™ Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
+Intel® Trust Authority Python CLI ("CLI") for Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA\* H100\* GPU [**trustauthority-pycli**](../cli) provides a CLI to attest an Intel TDX trust domain (TD) and a NVIDIA H100 GPU with Intel Trust Authority. 
 
 This version of the CLI works with Intel® Trust Domain Extensions (Intel® TDX) and NVIDIA H100 Confidential Computing enabled platforms. 
 

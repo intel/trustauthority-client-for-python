@@ -2,7 +2,7 @@
 
 <p style="font-size: 0.875em;">· 09/28/2024 ·</p>
 
-The Intel® Trust Domain Extensions (Intel® TDX) attestation sample app is a Python application that uses the Intel® Tiber™ Trust Authority Client for Python packages to attest an Intel TDX trust domain. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
+The Intel® Trust Domain Extensions (Intel® TDX) attestation sample app is a Python application that uses the Intel® Trust Authority Client for Python packages to attest an Intel TDX trust domain. The attestation verifier is [Intel® Trust Authority](https://trustauthority.intel.com). 
 
 The sample can be run as a Docker container or as a native application on an Intel TDX Trust Domain (TD) VM. Supported platforms are Intel TDX ("INTEL-TDX"), Azure confidential VMs with TDX ("AZURE-TDX"), and Google Cloud Platform confidential VMs with TDX ("GCP-TDX"). When the sample is run, it does the following:
 
