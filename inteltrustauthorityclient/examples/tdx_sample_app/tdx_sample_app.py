@@ -4,7 +4,7 @@ All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 """
 
-import json
+import json5 as json
 import os
 import uuid
 import logging as log
@@ -162,7 +162,7 @@ def main():
         exit(1)
     token = attestation_token.token
     log.info(f"Attestation token : {token}")
-    token_headers_json = json.loads(attestation_token.headers.replace("'", '"'))
+    token_headers_json = json.loads(attestation_token.headers)
     log.info(
         "Request id and Trace id are: %s, %s",
         token_headers_json.get("request-id"),

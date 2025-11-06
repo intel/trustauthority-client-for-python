@@ -5,7 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 """
 
 import ctypes
-import json
+import json5 as json
 import os
 from inteltrustauthorityclient.connector import config, connector
 from inteltrustauthorityclient.resources import logger as logger
@@ -208,7 +208,7 @@ def main():
         exit(1)
     token = attestation_token.token
     log.info(f"Attestation token : {token}")
-    token_headers_json = json.loads(attestation_token.headers.replace("'", '"'))
+    token_headers_json = json.loads(attestation_token.headers)
     log.info(
         "Request id and Trace id are: %s, %s",
         token_headers_json.get("request-id"),
