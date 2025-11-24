@@ -1,5 +1,5 @@
 import unittest
-import subprocess
+import subprocess #nosec: B404
 import requests
 from unittest.mock import patch, MagicMock
 from inteltrustauthorityclient.tdx.azure.azure_tdx_adapter import AzureTDXAdapter

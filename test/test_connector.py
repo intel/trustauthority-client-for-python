@@ -36,9 +36,10 @@ class ConnectorTestCase(unittest.TestCase):
     """class ConnectorTestCase that inherits from unittest.TestCase"""
 
     ita_c = get_connector()
-    ita_c.nonce_url = "appraisal/v2/nonce"
-    ita_c.token_url = "appraisal/v1/attest"
-    ita_c.token_url_v2 = "appraisal/v2/attest"
+    # This is not a hardcoded password
+    ita_c.nonce_url = "appraisal/v2/nonce" #nosec: B105
+    ita_c.token_url = "appraisal/v1/attest" #nosec: B105
+    ita_c.token_url_v2 = "appraisal/v2/attest" #nosec: B105
     mocked_nonce = {
         "val": "g9QC7VxV0n8dID0zSJeVLSULqYCJuv4iMepby91xukrhXgKrKscGXB5lxmT2s3POjxVOG+fSPCYpOKYWRRWAyQ==",
         "iat": "MjAyMi0wOC0yNCAxMjozNjozMi45Mjk3MjIwNzUgKzAwMDAgVVRD",
@@ -75,11 +76,9 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mock_get.return_value = mocked_response
             nonce = self.ita_c.get_nonce(nonceargs)
-            assert (
-                nonce.nonce.val.replace(".", "") == self.mocked_nonce["val"]
-                and nonce.nonce.iat.replace(".", "") == self.mocked_nonce["iat"]
-                and nonce.nonce.signature == self.mocked_nonce["signature"]
-            )
+            self.assertEqual(nonce.nonce.val.replace(".", ""), self.mocked_nonce["val"])
+            self.assertEqual(nonce.nonce.iat.replace(".", ""), self.mocked_nonce["iat"])
+            self.assertEqual(nonce.nonce.signature, self.mocked_nonce["signature"])
 
     def test_get_nonce_connection_error(self):
         """Test method to test get_nonce() with raising Connection Error"""
@@ -87,7 +86,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.get", url=self.ita_c.nonce_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.ConnectionError
             nonce = self.ita_c.get_nonce(nonceargs)
-            assert nonce is None
+            self.assertIsNone(nonce)
 
     def test_get_nonce_http_error(self):
         """Test method to test get_nonce() with raising HTTP Error"""
@@ -105,7 +104,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.get", url=self.ita_c.nonce_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.Timeout
             nonce = self.ita_c.get_nonce(nonceargs)
-            assert nonce is None
+            self.assertIsNone(nonce)
 
     def test_get_nonce_request_exception(self):
         """Test method to test get_nonce() with raising Request Exception"""
@@ -113,7 +112,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.get", url=self.ita_c.nonce_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.RequestException
             nonce = self.ita_c.get_nonce(nonceargs)
-            assert nonce is None
+            self.assertIsNone(nonce)
 
     def test_get_token(self):
         """Test method to test get_token() from Intel Trust Authority Connector"""
@@ -128,7 +127,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_with_policy(self):
         """Test method to test get_token() with policy from Intel Trust Authority Connector"""
@@ -143,7 +142,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_v2(self):
         """Test method to test get_token_v2() from Intel Trust Authority Connector"""
@@ -159,7 +158,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_v2_with_policy(self):
         """Test method to test get_token_v2() with policy from Intel Trust Authority Connector"""
@@ -175,7 +174,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_v2_nvgpu(self):
         """Test method to test get_token_v2() from Intel Trust Authority Connector"""
@@ -191,7 +190,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_v2_tdx(self):
         """Test method to test get_token_v2() from Intel Trust Authority Connector"""
@@ -205,7 +204,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token.token == self.mocked_token_response["token"]
+            self.assertEqual(token.token, self.mocked_token_response["token"])
 
     def test_get_token_v2_with_noargs(self):
         """Test method to test get_token_v2() from Intel Trust Authority Connector"""
@@ -217,7 +216,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_get.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_v2_connection_error(self):
         """Test method to test get_token_v2() with raising Connection Error"""
@@ -232,7 +231,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.ConnectionError
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_connection_error(self):
         """Test method to test get_token() with raising Connection Error"""
@@ -244,7 +243,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.ConnectionError
             token = self.ita_c.get_token(tokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_v2_http_error(self):
         """Test method to test get_token_v2() with raising HTTP Error"""
@@ -261,7 +260,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 400
             mocked_request.return_value = mocked_response
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_http_error(self):
         """Test method to test get_token() with raising HTTP Error"""
@@ -275,7 +274,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 400
             mocked_request.return_value = mocked_response
             token = self.ita_c.get_token(tokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_v2_timeout_error(self):
         """Test method to test get_token_v2() with raising Timeout Error"""
@@ -290,7 +289,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.Timeout
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_timeout_error(self):
         """Test method to test get_token() with raising Timeout Error"""
@@ -302,7 +301,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.Timeout
             token = self.ita_c.get_token(tokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_v2_request_exception(self):
         """Test method to test get_token_v2() with raising Request Exception"""
@@ -317,7 +316,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.RequestException
             token = self.ita_c.get_token_v2(tdxtokenargs, gputokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_request_exception(self):
         """Test method to test get_token() with raising Request Exception"""
@@ -329,7 +328,7 @@ class ConnectorTestCase(unittest.TestCase):
         with patch("requests.post", url=self.ita_c.token_url) as mocked_request:
             mocked_request.side_effect = requests.exceptions.RequestException
             token = self.ita_c.get_token(tokenargs)
-            assert token is None
+            self.assertIsNone(token)
 
     def test_get_token_signing_certificates(self):
         """Test method to test get_token_signing_certificates() from Intel Trust Authority Connector"""
@@ -339,7 +338,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 200
             mocked_request.return_value = mocked_response
             cert_data = self.ita_c.get_token_signing_certificates()
-            assert cert_data == self.mocked_cert_data
+            self.assertEqual(cert_data, self.mocked_cert_data)
 
     def test_get_token_signing_certificates_connection_error(self):
         """Test method to test get_token_signing_certificates() with raising Connection Error"""
@@ -349,7 +348,7 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_request.return_value = mocked_response
             mocked_request.side_effect = requests.exceptions.ConnectionError
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
-            assert token_signing_certificates is None
+            self.assertIsNone(token_signing_certificates)
 
     def test_get_token_signing_certificates_http_error(self):
         """Test method to test get_token_signing_certificates() with raising HTTP Error"""
@@ -358,21 +357,21 @@ class ConnectorTestCase(unittest.TestCase):
             mocked_response.status_code = 400
             mocked_request.return_value = mocked_response
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
-            assert token_signing_certificates is None
+            self.assertIsNone(token_signing_certificates)
 
     def test_get_token_signing_certificates_timeout_error(self):
         """Test method to test get_token_signing_certificates() with raising Timeout Error"""
         with patch("requests.get", url="certs") as mocked_request:
             mocked_request.side_effect = requests.exceptions.Timeout
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
-            assert token_signing_certificates is None
+            self.assertIsNone(token_signing_certificates)
 
     def test_get_token_signing_certificates_request_exception(self):
         """Test method to test get_token_signing_certificates() with raising Request Exception"""
         with patch("requests.get", url="certs") as mocked_request:
             mocked_request.side_effect = requests.exceptions.RequestException
             token_signing_certificates = self.ita_c.get_token_signing_certificates()
-            assert token_signing_certificates is None
+            self.assertIsNone(token_signing_certificates)
 
     def mock_get_crl(arg1, arg2):
         return ""
@@ -417,7 +416,7 @@ class ConnectorTestCase(unittest.TestCase):
                                 decoded_token = self.ita_c.verify_token(
                                     self.mocked_token_response["token"]
                                 )
-                                assert decoded_token is None
+                                self.assertIsNone(decoded_token)
 
     def test_verify_token_invalid_token_signing_algorithm(self):
         """Test method to test verify_token() with Invalid Token Signing Algorithm"""
@@ -428,7 +427,7 @@ class ConnectorTestCase(unittest.TestCase):
                 "kid": "3fd751f2e0d0f52846c0ecd4972c6e99dfc642051cd339dd9b04381af8c0ddb804514a7a1fee4673ac844fd5db7f15fb",
             }
             decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
-            assert decoded_token is None
+            self.assertIsNone(decoded_token)
 
     def test_verify_token_invalid_get_certs(self):
         """Test method to test verify_token() with Invalid Certificate"""
@@ -446,14 +445,14 @@ class ConnectorTestCase(unittest.TestCase):
                 decoded_token = self.ita_c.verify_token(
                     self.mocked_token_response["token"]
                 )
-                assert decoded_token is None
+                self.assertIsNone(decoded_token)
 
     def test_verify_token_missing_kid(self):
         """Test method to test verify_token() with missing kid"""
         with patch("jwt.get_unverified_header") as mock_header_decode:
             mock_header_decode.return_value = {"alg": "RS256"}
             decoded_token = self.ita_c.verify_token(self.mocked_token_response["token"])
-            assert decoded_token is None
+            self.assertIsNone(decoded_token)
 
     def test_verify_token_jwt_expired_signature_error(self):
         """Test method to test verify_token() with raising JWT Signature Expired Error"""
@@ -485,7 +484,7 @@ class ConnectorTestCase(unittest.TestCase):
                                 decoded_token = self.ita_c.verify_token(
                                     self.mocked_token_response["token"]
                                 )
-                                assert decoded_token is None
+                                self.assertIsNone(decoded_token)
 
     def test_verify_token_jwt_invalid_token_error(self):
         """Test method to test verify_token() with raising JWT Invalid Token Error"""
@@ -517,7 +516,7 @@ class ConnectorTestCase(unittest.TestCase):
                                 decoded_token = self.ita_c.verify_token(
                                     self.mocked_token_response["token"]
                                 )
-                                assert decoded_token is None
+                                self.assertIsNone(decoded_token)
 
     def test_verify_token_jwt_decode_exception(self):
         """Test method to test verify_token() with raising JWT Decode Exception"""
@@ -547,7 +546,7 @@ class ConnectorTestCase(unittest.TestCase):
                                 decoded_token = self.ita_c.verify_token(
                                     self.mocked_token_response["token"]
                                 )
-                                assert decoded_token is None
+                                self.assertIsNone(decoded_token)
 
     def test_attest(self):
         """Test method to test attest() of Intel Trust Authority Connector"""
@@ -565,7 +564,7 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
-                    assert decoded_token is not None
+                    self.assertIsNotNone(decoded_token)
 
     def test_attest_with_policy(self):
         """Test method to test attest() with policy"""
@@ -583,7 +582,7 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
-                    assert decoded_token is not None
+                    self.assertIsNotNone(decoded_token)
 
     def test_attest_v2_with_policy(self):
         """Test method to test attest_v2() with policy"""
@@ -600,7 +599,7 @@ class ConnectorTestCase(unittest.TestCase):
             with patch.object(TDXAdapter, "collect_evidence", new=mock_collect_evidence_tdx):
                 with patch.object(ITAConnector, "get_token_v2", new=mock_get_token_v2):
                     decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
-                    assert decoded_token is not None
+                    self.assertIsNotNone(decoded_token)
 
     def test_attest_v2(self):
         """Test method to test attest_v2()"""
@@ -617,7 +616,7 @@ class ConnectorTestCase(unittest.TestCase):
             with patch.object(TDXAdapter, "collect_evidence", new=mock_collect_evidence_tdx):
                 with patch.object(ITAConnector, "get_token_v2", new=mock_get_token_v2):
                     decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
-                    assert decoded_token is not None
+                    self.assertIsNotNone(decoded_token)
 
     def test_attest_empty_nonce(self):
         """Test method to test attest() with empty Nonce"""
@@ -628,7 +627,7 @@ class ConnectorTestCase(unittest.TestCase):
 
         with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
             decoded_token = self.ita_c.attest(attest_args)
-            assert decoded_token is None
+            self.assertIsNone(decoded_token)
 
     def test_attest_v2_empty_nonce(self):
         """Test method to test attest_v2() with empty Nonce"""
@@ -640,7 +639,7 @@ class ConnectorTestCase(unittest.TestCase):
 
         with patch.object(ITAConnector, "get_nonce", new=mock_get_nonce):
             decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
-            assert decoded_token is None
+            self.assertIsNone(decoded_token)
 
     def test_attest_empty_evidence(self):
         """Test method to test attest() with empty Evidence"""
@@ -664,7 +663,7 @@ class ConnectorTestCase(unittest.TestCase):
                 TDXAdapter, "collect_evidence", new=mock_collect_evidence
             ):
                 decoded_token = self.ita_c.attest(attest_args)
-                assert decoded_token is None
+                self.assertIsNone(decoded_token)
 
     def test_attest_v2_empty_evidence(self):
         """Test method to test attest_v2() with empty Evidence"""
@@ -692,7 +691,7 @@ class ConnectorTestCase(unittest.TestCase):
                     MockGPUAdapter, "collect_evidence", new=mock_collect_evidence,
                 ):
                     decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
-                    assert decoded_token is None
+                    self.assertIsNone(decoded_token)
 
     def test_attest_empty_token(self):
         """Test method to test attest() with empty Token"""
@@ -720,7 +719,7 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 with patch.object(ITAConnector, "get_token", new=mock_get_token):
                     decoded_token = self.ita_c.attest(attest_args)
-                    assert decoded_token is None
+                    self.assertIsNone(decoded_token)
 
     def test_attest_v2_empty_token(self):
         """Test method to test attest_v2() with empty Token"""
@@ -739,7 +738,7 @@ class ConnectorTestCase(unittest.TestCase):
             ):
                 with patch.object(ITAConnector, "get_token_v2", new=mock_get_token_v2):
                     decoded_token = self.ita_c.attest_v2(tdx_attest_args, gpu_attest_args)
-                    assert decoded_token is None
+                    self.assertIsNone(decoded_token)
 
     def test_get_crl_null(self):
         cfg = MagicMock()

@@ -9,7 +9,7 @@ import requests
 import time
 import json
 import io
-import subprocess
+import subprocess #nosec: B404
 import struct
 import hashlib
 import tempfile
@@ -61,12 +61,14 @@ class AzureTDXAdapter:
         # If not then define it
         command = ["tpm2_nvreadpublic", "0x01400002"]
         try:
-            subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
+            # Safe: command uses hardcoded arguments only, no user input
+            subprocess.run(command, check=True, stdout=subprocess.DEVNULL) #nosec: B603
         except Exception as e:
             log.info("Creating nv_index as it is not defined already")
             try:
                 command = ["tpm2_nvdefine", "-C", "o", "0x01400002", "-s", "64"]
-                subprocess.run(command, check=True)
+                # Safe: command uses hardcoded arguments only, no user input
+                subprocess.run(command, check=True) #nosec: B603
             except subprocess.CalledProcessError as e:
                 log.error(f"issue in creating nv_index: {e}")
                 return None
@@ -80,7 +82,8 @@ class AzureTDXAdapter:
                 temp_filename = temp_file.name
                 temp_file.write(digest)
             command = ["tpm2_nvwrite", "-C", "o", "0x01400002", "-i", temp_filename]
-            result = subprocess.run(command, check=True)
+            # Safe: command uses hardcoded arguments only, no user input
+            result = subprocess.run(command, check=True) #nosec: B603
         except subprocess.CalledProcessError as e:
             log.error(f"issue in writing to nv_index: {e}")
             return None
@@ -94,7 +97,8 @@ class AzureTDXAdapter:
         # Read the final report at "0x01400001"
         try:
             command = ["tpm2_nvread", "-C", "o", "0x01400001"]
-            result = subprocess.run(command, capture_output=True)
+            # Safe: command uses hardcoded arguments only, no user input
+            result = subprocess.run(command, capture_output=True) #nosec: B603
             tpm_report = result.stdout
         except subprocess.CalledProcessError as e:
             log.error(f"error while reading TDReport from NVIndex.: {e}")

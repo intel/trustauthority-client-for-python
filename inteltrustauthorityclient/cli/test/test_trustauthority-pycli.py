@@ -83,7 +83,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_config.return_value = MagicMock()
         mock_tdx_adapter.return_value = MagicMock()
         mock_ita_connector.return_value = MagicMock()
-        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}")
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}") #nosec: B106
 
         trustauthority-pycli.cmd_attest(args)
 
@@ -99,7 +100,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_ita_connector.assert_called_once_with(mock_config())
         mock_tdx_adapter.assert_called_once_with('user_data', None)
         mock_ita_connector().attest_composite.assert_called_once_with(mock_ita_connector.TDXAttestArgs(), None)
-        mock_ita_connector().attest_composite().token = 'token'
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector().attest_composite().token = 'token' #nosec: B105
         self.assertEqual(mock_ita_connector().attest_composite().headers, "{'request-id': '123', 'trace-id': '456'}")
 
     def test_cmd_attest_nvgpu(self, mock_gpu_adapter, mock_ita_connector, mock_config, mock_log, mock_json_load, mock_open):
@@ -119,7 +121,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_config.return_value = MagicMock()
         mock_tdx_adapter.return_value = MagicMock()
         mock_ita_connector.return_value = MagicMock()
-        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}")
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}") #nosec: B106
 
         trustauthority-pycli.cmd_attest(args)
 
@@ -135,7 +138,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_ita_connector.assert_called_once_with(mock_config())
         mock_gpu_adapter.assert_called_once_with('user_data', None)
         mock_ita_connector().attest_composite.assert_called_once_with(None, mock_ita_connector.GPUAttestArgs())
-        mock_ita_connector().attest_composite().token = 'token'
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector().attest_composite().token = 'token' #nosec: B105
         self.assertEqual(mock_ita_connector().attest_composite().headers, "{'request-id': '123', 'trace-id': '456'}")
 
     def test_cmd_attest_tdx_nvgpu(self, mock_ita_connector, mock_config, mock_json_load, mock_open):
@@ -156,7 +160,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_tdx_adapter.return_value = MagicMock()
         mock_gpu_adapter.return_value = MagicMock()
         mock_ita_connector.return_value = MagicMock()
-        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}")
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector.return_value.attest_composite.return_value = MagicMock(token='token', headers="{'request-id': '123', 'trace-id': '456'}") #nosec: B106
 
         trustauthority-pycli.cmd_attest(args)
 
@@ -173,7 +178,8 @@ class TestIntelTrustAuthorityCLI(unittest.TestCase):
         mock_tdx_adapter.assert_called_once_with('user_data', None)
         mock_gpu_adapter.assert_called_once_with('user_data', None)
         mock_ita_connector().attest_composite.assert_called_once_with(mock_ita_connector.TDXAttestArgs(), mock_ita_connector.GPUAttestArgs())
-        mock_ita_connector().attest_composite().token = 'token'
+        # This is not a hardcoded password, just a mock return value
+        mock_ita_connector().attest_composite().token = 'token' #nosec: B105
         self.assertEqual(mock_ita_connector().attest_composite().headers, "{'request-id': '123', 'trace-id': '456'}")
 
     def test_cmd_verify_success(self, mock_config, mock_exit, mock_open):

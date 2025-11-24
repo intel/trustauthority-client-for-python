@@ -32,7 +32,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                     with patch("base64.b64encode") as mock_encode:
                         mock_encode.return_value = b"SGVsbG8sIFdvcmxkIQ=="
                         evidence = sgx_adapter.collect_evidence("nonce")
-                        assert evidence is not None
+                        self.assertIsNotNone(evidence)
 
     def test_adpater_cdll_os_error(self):
         """Test method to test SGX Adapter with raising OS Error while loading dcap library"""
@@ -44,7 +44,7 @@ class SGXAdapterTestCase(unittest.TestCase):
         with patch.object(ctypes, "CDLL", new=mock_cdll):
             # mock_cdll.return_value = OSError("mock os error")
             evidence = sgx_adapter.collect_evidence("nonce")
-            assert evidence is None
+            self.assertIsNone(evidence)
 
     def test_adpater_cdll_exception(self):
         """Test method to test SGX Adapter with raising Exception while loading dcap library"""
@@ -56,7 +56,7 @@ class SGXAdapterTestCase(unittest.TestCase):
         with patch.object(ctypes, "CDLL", new=mock_cdll):
             # mock_cdll.return_value = OSError("mock os error")
             evidence = sgx_adapter.collect_evidence("nonce")
-            assert evidence is None
+            self.assertIsNone(evidence)
 
     def test_adpater_get_target_info(self):
         """Test method to test sgx_qe_get_target_info function"""
@@ -67,6 +67,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                 mock_cdll.return_value.sgx_qe_get_target_info.return_value = 1
                 with self.assertRaises(RuntimeError):
                     evidence = sgx_adapter.collect_evidence("nonce")
+                    self.assertIsNone(evidence)
 
     def test_adpater_report_function(self):
         """Test method to test SGX Adapter Report Function"""
@@ -80,6 +81,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                     mock_string_buffer.return_value = b"mock_string_buffer"
                     with self.assertRaises(RuntimeError):
                         evidence = sgx_adapter.collect_evidence("nonce")
+                        self.assertIsNone(evidence)
 
     def test_adpater_get_quote_size_function(self):
         """Test method to test SGX Adapter sgx_qe_get_quote_size Function"""
@@ -93,6 +95,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                     mock_cdll.return_value.sgx_qe_get_quote_size.return_value = 1
                     with self.assertRaises(RuntimeError):
                         evidence = sgx_adapter.collect_evidence("nonce")
+                        self.assertIsNone(evidence)
 
     def test_adpater_get_quote_function(self):
         """Test method to test SGX Adapter sgx_qe_get_quote Function"""
@@ -107,6 +110,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                     mock_cdll.return_value.sgx_qe_get_quote.return_value = 1
                     with self.assertRaises(RuntimeError):
                         evidence = sgx_adapter.collect_evidence("nonce")
+                        self.assertIsNone(evidence)
 
     def test_adpater_base64_b64encode(self):
         """Test method to test SGX Adapter base64.b64encode Function with unencoded string buffer"""
@@ -122,7 +126,7 @@ class SGXAdapterTestCase(unittest.TestCase):
                     mock_cdll.return_value.sgx_qe_get_quote_size.return_value = 0
                     mock_cdll.return_value.sgx_qe_get_quote.return_value = 0
                     evidence = sgx_adapter.collect_evidence("nonce")
-                    assert evidence is None
+                    self.assertIsNone(evidence)
 
 
 if __name__ == "__main__":
