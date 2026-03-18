@@ -15,7 +15,7 @@ resources = "^0.0.1"
 staty = "^1.2.4"
 requests = "^2.32.5"
 cryptography = {version = "^46.0.5", python = ">=3.8,<3.9.0 || >3.9.1,<4.0"}
-pyjwt = "^2.9.0"
+pyjwt = "^2.12.0"
 tenacity = "^8.2.3"
 coverage = "^7.4.2"
 pytest = "^8.0.2"
