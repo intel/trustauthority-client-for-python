@@ -41,9 +41,11 @@ def generate_nvgpu_evidence(user_nonce):
     try:
         nvmlInit()
         state = nvmlSystemGetConfComputeState()
+        print(state.ccFeature)
         if state.ccFeature == 0:
-            err_msg = "The confidential compute feature is disabled !!\nQuitting now."
-            raise Error(err_msg)
+            print("WARNING: state.ccFeature = 0 (disabled), but library needs PPCIE support")
+            #err_msg = "The confidential compute feature is disabled !!\nQuitting now."
+            #raise Error(err_msg)
         if state.devToolsMode != 0:
             log.warning("The system is running in CC DevTools mode !!")
         evidence_nonce = bytes.fromhex(user_nonce)
@@ -51,46 +53,50 @@ def generate_nvgpu_evidence(user_nonce):
         if number_of_available_gpus == 0:
             err_msg = "No NV GPU found ! \nQuitting now."
             raise Error(err_msg)
-        if number_of_available_gpus > 1:
-            log.warning("There are more than one NVGPU found, but only the first one used")
-        gpu_handle = nvmlDeviceGetHandleByIndex(0)
+        #if number_of_available_gpus > 1:
+        #    log.warning("There are more than one NVGPU found, but only the first one used")
 
-        try:
-            attestation_report_struct = nvmlDeviceGetConfComputeGpuAttestationReport(gpu_handle,
-                                                                                    evidence_nonce)
-            length_of_attestation_report = attestation_report_struct.attestationReportSize
-            attestation_report = attestation_report_struct.attestationReport
-            attestation_report_data = list()
+        for gpu_index in range(number_of_available_gpus):
+            print("gathering report for gpu index %d" % gpu_index)
+            gpu_handle = nvmlDeviceGetHandleByIndex(gpu_index)
 
-            for i in range(length_of_attestation_report):
-                attestation_report_data.append(attestation_report[i])
+            try:
+                attestation_report_struct = nvmlDeviceGetConfComputeGpuAttestationReport(gpu_handle,
+                                                                                        evidence_nonce)
+                length_of_attestation_report = attestation_report_struct.attestationReportSize
+                attestation_report = attestation_report_struct.attestationReport
+                attestation_report_data = list()
 
-            bin_attestation_report_data = bytes(attestation_report_data)
-        except Exception as err:
-            log.error(err)
-            err_msg = "Something went wrong while fetching the attestation report from the gpu."
-            raise PynvmlError(err_msg)
+                for i in range(length_of_attestation_report):
+                    attestation_report_data.append(attestation_report[i])
 
-        try:
-            cert_struct = nvmlDeviceGetConfComputeGpuCertificate(gpu_handle)
-            # fetching the attestation cert chain.
-            length_of_attestation_cert_chain = cert_struct.attestationCertChainSize
-            attestation_cert_chain = cert_struct.attestationCertChain
-            attestation_cert_data = list()
+                bin_attestation_report_data = bytes(attestation_report_data)
+            except Exception as err:
+                log.error(err)
+                err_msg = "Something went wrong while fetching the attestation report from the gpu."
+                raise PynvmlError(err_msg)
 
-            for i in range(length_of_attestation_cert_chain):
-                attestation_cert_data.append(attestation_cert_chain[i])
+            try:
+                cert_struct = nvmlDeviceGetConfComputeGpuCertificate(gpu_handle)
+                # fetching the attestation cert chain.
+                length_of_attestation_cert_chain = cert_struct.attestationCertChainSize
+                attestation_cert_chain = cert_struct.attestationCertChain
+                attestation_cert_data = list()
 
-            bin_attestation_cert_data = bytes(attestation_cert_data)
+                for i in range(length_of_attestation_cert_chain):
+                    attestation_cert_data.append(attestation_cert_chain[i])
 
-        except Exception as err:
-            log.error(err)
-            err_msg = "Something went wrong while fetching the certificate chains from the gpu."
-            raise PynvmlError(err_msg)
+                bin_attestation_cert_data = bytes(attestation_cert_data)
 
-        gpu_evidence = {'certChainBase64Encoded': base64.b64encode(bin_attestation_cert_data),
-                        'attestationReportHexStr': bin_attestation_report_data.hex()}
-        evidence_list.append(gpu_evidence)
+            except Exception as err:
+                log.error(err)
+                err_msg = "Something went wrong while fetching the certificate chains from the gpu."
+                raise PynvmlError(err_msg)
+
+            gpu_evidence = {'certChainBase64Encoded': base64.b64encode(bin_attestation_cert_data),
+                            'attestationReportHexStr': bin_attestation_report_data.hex()}
+            evidence_list.append(gpu_evidence)
+
         nvmlShutdown()
     except Exception as error:
         log.error(error)
