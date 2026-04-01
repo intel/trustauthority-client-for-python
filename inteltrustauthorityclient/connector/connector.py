@@ -121,10 +121,10 @@ class TokenRequest_v2:
 @dataclass
 class GPUTokenRequest_v2:
     """GPUTokenRequest_v2 holds all the data required for v2 GPU attestation APIs"""
-    evidence: str                    #'json:"evidence"'
     verifier_nonce: Optional[VerifierNonce]  #'json:"verifier_nonce"'
-    gpu_nonce: str    #'json:"gpu_nonce"'
-    certificate: str                    #'json:"certificate"'
+    gpu_nonce: str                           #'json:"gpu_nonce"'
+    arch: str                                #'json:"arch"'
+    evidence_list: list                      #'json:"evidence_list"'
 
 class ITAConnector:
     """
@@ -264,12 +264,12 @@ class ITAConnector:
                 # TDX+NVGPU
                 if gpu_args is not None:
                     gpu_treq = GPUTokenRequest_v2(
-                    evidence = gpu_args.evidence['evidence'],
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
-                    certificate = gpu_args.evidence['certificate'],
+                    arch = gpu_args.evidence['arch'],
+                    evidence_list = gpu_args.evidence['evidence_list'],
                     )
 
                     wrapped_req = {"policy_ids": tdx_args.policy_ids, 
@@ -286,12 +286,12 @@ class ITAConnector:
             # NVGPU Only
             elif gpu_args is not None:
                 gpu_treq = GPUTokenRequest_v2(
-                    evidence = gpu_args.evidence['evidence'],
                     verifier_nonce=VerifierNonce(
                         gpu_args.nonce.val, gpu_args.nonce.iat, gpu_args.nonce.signature
                     ).__dict__,
                     gpu_nonce = gpu_args.evidence['nonce'],
-                    certificate = gpu_args.evidence['certificate'],
+                    arch = gpu_args.evidence['arch'],
+                    evidence_list = gpu_args.evidence['evidence_list'],
                 )
                 wrapped_req = {"policy_ids": gpu_args.policy_ids,
                             "token_signing_alg": gpu_args.token_signing_alg,

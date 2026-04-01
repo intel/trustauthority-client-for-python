@@ -29,8 +29,9 @@ class MockGPUAdapter:
     def collect_evidence(self, nonce):
         return Evidence(EvidenceType.NVGPU, \
                     '{"nonce": "c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85", \
-                    "evidence": "MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri", \
-                    "certificate": "LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo"}', None, None)
+                    "arch": "hopper", \
+                    "evidence_list": [{"evidence": "MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri", \
+                    "certificate": "LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo="}]}', None, None)
 
 class ConnectorTestCase(unittest.TestCase):
     """class ConnectorTestCase that inherits from unittest.TestCase"""
@@ -148,7 +149,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True)
         gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params.evidence, [], "1234", "PS384", True)
@@ -164,7 +165,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() with policy from Intel Trust Authority Connector"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(verifier_nonce, tdx_evidence_params, "123e4567-e89b-12d3-a456-426614174000", "1234", "PS384", True)
         gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params.evidence, "123e4567-e89b-12d3-a456-426614174000", "1234", "PS384", True)
@@ -181,7 +182,7 @@ class ConnectorTestCase(unittest.TestCase):
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
         tdxtokenargs = None 
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         gputokenargs = GetTokenArgs(verifier_nonce, gpu_evidence_params.evidence, [], "1234", "PS384", True)
         with patch("requests.post", url=self.ita_c.token_url_v2) as mocked_get:
@@ -222,7 +223,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() with raising Connection Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'arch': 'HOPPER', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
             verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True
@@ -249,7 +250,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() with raising HTTP Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
             verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True
@@ -280,7 +281,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() with raising Timeout Error"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
             verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True
@@ -307,7 +308,7 @@ class ConnectorTestCase(unittest.TestCase):
         """Test method to test get_token_v2() with raising Request Exception"""
         verifier_nonce = VerifierNonce("g9QC7Vx", "g9QC7Vx", "g9QC7Vx")
         tdx_evidence_params = Evidence(EvidenceType.TDX, "quotedata", b"", b"")
-        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}
+        gpu_evidence = {'nonce': 'c3fe7ca1c93b6b557cee91ea94d6c3c1e06d4d43c4fea982cded3b0d3d761d85', 'arch': 'hopper', 'evidence_list': [{'evidence': 'MTFlMDAxZmZjM2ZlN2NhJkYTFmYzA5NDY1MmZlNjY1M2Ri', 'certificate': 'LS0tLS1CRUdJTiBDRVDZmY4YkZtVjRaeGpDUnI0V1hUTEZIQktqYmZuZUdTQl0tLQo='}]}
         gpu_evidence_params = Evidence(EvidenceType.NVGPU, gpu_evidence, None, None)
         tdxtokenargs = GetTokenArgs(
             verifier_nonce, tdx_evidence_params, [], "1234", "PS384", True

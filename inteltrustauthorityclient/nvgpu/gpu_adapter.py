@@ -26,6 +26,35 @@ from pynvml import (
     nvmlSystemGetConfComputeState,
 )
 
+# NVML device architecture constants (from nvml.h)
+NVML_DEVICE_ARCH_KEPLER    = 2
+NVML_DEVICE_ARCH_MAXWELL   = 3
+NVML_DEVICE_ARCH_PASCAL    = 4
+NVML_DEVICE_ARCH_VOLTA     = 5
+NVML_DEVICE_ARCH_TURING    = 6
+NVML_DEVICE_ARCH_AMPERE    = 7
+NVML_DEVICE_ARCH_ADA       = 8
+NVML_DEVICE_ARCH_HOPPER    = 9
+NVML_DEVICE_ARCH_BLACKWELL = 10
+
+# Supported architectures for confidential compute attestation
+NVML_SUPPORTED_ARCHS = {NVML_DEVICE_ARCH_HOPPER, NVML_DEVICE_ARCH_BLACKWELL}
+
+def arch_to_string(arch):
+    """Maps an NVML device architecture integer to its lowercase string name."""
+    arch_map = {
+        NVML_DEVICE_ARCH_KEPLER:    "kepler",
+        NVML_DEVICE_ARCH_MAXWELL:   "maxwell",
+        NVML_DEVICE_ARCH_PASCAL:    "pascal",
+        NVML_DEVICE_ARCH_VOLTA:     "volta",
+        NVML_DEVICE_ARCH_TURING:    "turing",
+        NVML_DEVICE_ARCH_AMPERE:    "ampere",
+        NVML_DEVICE_ARCH_ADA:       "ada",
+        NVML_DEVICE_ARCH_HOPPER:    "hopper",
+        NVML_DEVICE_ARCH_BLACKWELL: "blackwell",
+    }
+    return arch_map.get(arch, "unknown")
+
 class Error(Exception):
     """ Base class for other exceptions.
     """
@@ -37,6 +66,14 @@ class PynvmlError(Error):
     pass
 
 def generate_nvgpu_evidence(user_nonce):
+    """Collects attestation evidence and certificate chain from all supported GPUs.
+
+    Iterates over all available GPU devices, checks for confidential compute support,
+    and retrieves attestation reports and certificates for each supported device.
+    Only Hopper and Blackwell architectures are supported; unsupported devices cause
+    an immediate error. The attestation report and certificate chain are base64-encoded
+    and returned as a list of evidence dicts.
+    """
     evidence_list = []
     try:
         nvmlInit()
@@ -51,46 +88,45 @@ def generate_nvgpu_evidence(user_nonce):
         if number_of_available_gpus == 0:
             err_msg = "No NV GPU found ! \nQuitting now."
             raise Error(err_msg)
-        if number_of_available_gpus > 1:
-            log.warning("There are more than one NVGPU found, but only the first one used")
-        gpu_handle = nvmlDeviceGetHandleByIndex(0)
 
-        try:
-            attestation_report_struct = nvmlDeviceGetConfComputeGpuAttestationReport(gpu_handle,
-                                                                                    evidence_nonce)
-            length_of_attestation_report = attestation_report_struct.attestationReportSize
-            attestation_report = attestation_report_struct.attestationReport
-            attestation_report_data = list()
+        for i in range(number_of_available_gpus):
+            gpu_handle = nvmlDeviceGetHandleByIndex(i)
 
-            for i in range(length_of_attestation_report):
-                attestation_report_data.append(attestation_report[i])
+            device_arch = nvmlDeviceGetArchitecture(gpu_handle)
+            if device_arch not in NVML_SUPPORTED_ARCHS:
+                err_msg = f"Device at index {i} is not supported (arch={device_arch})"
+                raise Error(err_msg)
 
-            bin_attestation_report_data = bytes(attestation_report_data)
-        except Exception as err:
-            log.error(err)
-            err_msg = "Something went wrong while fetching the attestation report from the gpu."
-            raise PynvmlError(err_msg)
+            try:
+                attestation_report_struct = nvmlDeviceGetConfComputeGpuAttestationReport(
+                    gpu_handle, evidence_nonce)
+                length_of_attestation_report = attestation_report_struct.attestationReportSize
+                attestation_report = attestation_report_struct.attestationReport
+                bin_attestation_report_data = bytes(
+                    attestation_report[j] for j in range(length_of_attestation_report))
+            except Exception as err:
+                log.error(err)
+                raise PynvmlError(
+                    f"Something went wrong while fetching the attestation report from GPU {i}.")
 
-        try:
-            cert_struct = nvmlDeviceGetConfComputeGpuCertificate(gpu_handle)
-            # fetching the attestation cert chain.
-            length_of_attestation_cert_chain = cert_struct.attestationCertChainSize
-            attestation_cert_chain = cert_struct.attestationCertChain
-            attestation_cert_data = list()
+            try:
+                cert_struct = nvmlDeviceGetConfComputeGpuCertificate(gpu_handle)
+                length_of_attestation_cert_chain = cert_struct.attestationCertChainSize
+                attestation_cert_chain = cert_struct.attestationCertChain
+                bin_attestation_cert_data = bytes(
+                    attestation_cert_chain[j] for j in range(length_of_attestation_cert_chain))
+            except Exception as err:
+                log.error(err)
+                raise PynvmlError(
+                    f"Something went wrong while fetching the certificate chain from GPU {i}.")
 
-            for i in range(length_of_attestation_cert_chain):
-                attestation_cert_data.append(attestation_cert_chain[i])
+            gpu_evidence = {
+                'evidence':    base64.b64encode(bin_attestation_report_data).decode('utf-8'),
+                'certificate': base64.b64encode(bin_attestation_cert_data).decode('utf-8'),
+                'arch':        arch_to_string(device_arch),
+            }
+            evidence_list.append(gpu_evidence)
 
-            bin_attestation_cert_data = bytes(attestation_cert_data)
-
-        except Exception as err:
-            log.error(err)
-            err_msg = "Something went wrong while fetching the certificate chains from the gpu."
-            raise PynvmlError(err_msg)
-
-        gpu_evidence = {'certChainBase64Encoded': base64.b64encode(bin_attestation_cert_data),
-                        'attestationReportHexStr': bin_attestation_report_data.hex()}
-        evidence_list.append(gpu_evidence)
         nvmlShutdown()
     except Exception as error:
         log.error(error)
@@ -104,24 +140,25 @@ class GPUAdapter(EvidenceAdapter):
 
     def collect_evidence(self, nonce):
         if nonce != None:
-            # If ITA verifier nonce is used or user provides a nonce, transform it to 32-byte Hex string nonce (NVDIA SDK accepts nonce in 32-byte Hex only )
+            # If ITA verifier nonce is used or user provides a nonce, transform it to 32-byte Hex string nonce (NVIDIA SDK accepts nonce in 32-byte Hex only)
             gpu_nonce = hashlib.sha256(nonce).hexdigest()
         else:
             # If nonce is not provided, generate random nonce in size of 32byte hex string
             gpu_nonce = secrets.token_bytes(32).hex()
         try:
-           evidence_list = generate_nvgpu_evidence(gpu_nonce)
-           # Only single GPU attestaton is supported for now.
-           raw_evidence = evidence_list[0] 
-           log.debug("Collected GPU Evidence Successfully")
-           log.debug("GPU Nonce : {gpu_nonce}")
-           log.info(f"GPU Evidence : {raw_evidence}")
+            evidence_list = generate_nvgpu_evidence(gpu_nonce)
+            if not evidence_list:
+                log.error("No GPU evidence collected")
+                return None
+            log.debug("Collected GPU Evidence Successfully")
+            log.debug(f"GPU Nonce : {gpu_nonce}")
+            log.info(f"GPU Evidence count: {len(evidence_list)}")
         except Exception as e:
-           log.exception(f"Caught Exception: {e}")
-           return None
-        
-        # Build GPU evidence payload to be sent to Intel Trust Authority Service 
-        evidence_payload = self.build_payload(gpu_nonce, raw_evidence['attestationReportHexStr'], raw_evidence['certChainBase64Encoded'])
+            log.exception(f"Caught Exception: {e}")
+            return None
+
+        # Build GPU evidence payload to be sent to Intel Trust Authority Service
+        evidence_payload = self.build_payload(gpu_nonce, evidence_list)
         if evidence_payload is None:
             log.error("GPU Evidence not returned")
             return None
@@ -129,21 +166,16 @@ class GPUAdapter(EvidenceAdapter):
         gpu_evidence = Evidence(EvidenceType.NVGPU, evidence_payload, None, None)
         return gpu_evidence
 
-    def build_payload(self, nonce, evidence, cert_chain):
+    def build_payload(self, nonce, evidence_list):
         data = dict()
         data['nonce'] = nonce
-
-        try:
-            encoded_evidence_bytes = evidence.encode("ascii")
-            encoded_evidence = base64.b64encode(encoded_evidence_bytes)
-            encoded_evidence = encoded_evidence.decode('utf-8')
-        except Exception as exc:
-            log.error(f"Error while encoding data :{exc}")
-            return None
-
-        data['evidence'] = encoded_evidence
-        data['arch'] = 'HOPPER'
-        data['certificate'] = cert_chain.decode('utf-8')
+        # Use the architecture from the first GPU
+        data['arch'] = evidence_list[0]['arch']
+        # Build the evidence_list with per-GPU evidence and certificate
+        data['evidence_list'] = [
+            {'evidence': e['evidence'], 'certificate': e['certificate']}
+            for e in evidence_list
+        ]
 
         try:
             payload = json.dumps(data)
