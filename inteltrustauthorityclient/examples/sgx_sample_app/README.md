@@ -29,7 +29,7 @@ The following retro, ASCII-like diagram depicts the components used in the Intel
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
 │    │    │applications_security_amber |    |    |                |    AUTHORITY   |
 |    |    | _trustauthority_client_    |    |    |                |     SERVICE    |
-|    |    |  for_python-1.1.0-py3-none |    |    |                |                |
+|    |    |  for_python-1.2.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
 │    │    └────────────────────────────┘    │    │                │                │
@@ -92,7 +92,7 @@ The Intel SGX attestation sample application can be encapsulated as a container,
 ```sh
 cat <<EOF | tee .env
 UBUNTU_VERSION=22.04
-TRUST_AUTHORITY_CLIENT_VERSION=v1.1.0
+TRUST_AUTHORITY_CLIENT_VERSION=v1.2.0
 DCAP_VERSION=1.19.100.3-jammy1
 PSW_VERSION=2.22.100.3
 ADAPTER_TYPE="sgx"
@@ -110,7 +110,7 @@ ADAPTER_TYPE — "sgx" is the only allowable value for this example.
 from a build machine as follows...
 ```sh
 #Save the sgx sample app Docker image into trust_authority_python_client_sgx_sample_app.tar.gz
-docker save trust_authority_python_client_sgx_sample_app:v1.1.0 > trust_authority_python_client_sgx_sample_app.tar.gz
+docker save trust_authority_python_client_sgx_sample_app:v1.2.0 > trust_authority_python_client_sgx_sample_app.tar.gz
 #scp trust_authority_python_client_sgx_sample_app.tar.gz to the TD VM.
 #On the TD VM load/import trust_authority_python_client_sgx_sample_app.tar.gz docker image using below command
 docker load -i trust_authority_python_client_sgx_sample_app.tar.gz
@@ -148,7 +148,7 @@ sudo docker run \
         -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket  \
         --env-file sgx_token.env \
         --group-add $(getent group sgx_prv | cut -d: -f3) \
-        trust_authority_python_client_sgx_sample_app:v1.1.0
+        trust_authority_python_client_sgx_sample_app:v1.2.0
 
 ```
 
@@ -178,7 +178,7 @@ poetry build
 2. Go to the distribution folder where the whl package was created and install the package using the following command.
 
 ```python
-pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
+pip install applications_security_amber_trustauthority_client_for_python-1.2.0-py3-none-any.whl
 ```
 
 3. Export environment variables.

@@ -26,7 +26,7 @@ The following diagram depicts the components of the sample application.
 |    │    ┌────────────────────────────┐    │◄───┼───────────────►│   INTEL TRUST  │
 │    │    │applications_security_amber |    |    |                |    AUTHORITY   |
 |    |    | _trustauthority_client_    |    |    |                |     SERVICE    |
-|    |    |  for_python-1.1.0-py3-none |    |    |                |                |
+|    |    |  for_python-1.2.0-py3-none |    |    |                |                |
 |    |    |  -any.whl                  |    |    |                |                |
 |    │    |                            │    │    │                |                │
 │    │    └────────────────────────────┘    │    │                │                │
@@ -89,7 +89,7 @@ The Intel TDX attestation sample can be encapsulated as a container, enabling it
 ```sh
 cat <<EOF | tee .env
 UBUNTU_VERSION=22.04
-TRUST_AUTHORITY_CLIENT_VERSION=v1.1.0
+TRUST_AUTHORITY_CLIENT_VERSION=v1.2.0
 EOF
 
 docker compose --env-file .env build
@@ -102,7 +102,7 @@ TRUST_AUTHORITY_CLIENT_VERSION — The version of the sample app Docker image. T
 
 ```sh
 #Save the tdx sample app Docker image into trust_authority_python_client_tdx_sample_app.tar.gz
-docker save trust_authority_python_client_tdx_sample_app:v1.1.0 > trust_authority_python_client_tdx_sample_app.tar.gz
+docker save trust_authority_python_client_tdx_sample_app:v1.2.0 > trust_authority_python_client_tdx_sample_app.tar.gz
 #scp trust_authority_python_client_tdx_sample_app.tar.gz to the TD VM.
 #On the TD VM load/import trust_authority_python_client_tdx_sample_app.tar.gz docker image using below command
 docker load -i trust_authority_python_client_tdx_sample_app.tar.gz
@@ -139,7 +139,7 @@ sudo docker run \
 --device=/dev/tpmrm0 \
 --env-file tdx_token.env \
 --group-add $(getent group tss | cut -d: -f3) \
-trust_authority_python_client_tdx_sample_app:v1.1.0
+trust_authority_python_client_tdx_sample_app:v1.2.0
 ```
 For Google Cloud / Intel® Developer Cloud TDX adapters:
 ```sh
@@ -149,7 +149,7 @@ docker run \
        --network host \
        -v /sys/kernel/config:/sys/kernel/config \
        --env-file tdx_token.env \
-       trust_authority_python_client_tdx_sample_app:v1.1.0     
+       trust_authority_python_client_tdx_sample_app:v1.2.0     
 ```
 
 If the sample application runs successfully, the attestation token returned from Intel Trust Authority and other information will be displayed.
@@ -178,7 +178,7 @@ Begin by copying the Intel Trust Authority Client for Python repository to a loc
 2. Go to the distribution folder where the whl package was created and install the package using the following command.
 
 ```python
-pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
+pip install applications_security_amber_trustauthority_client_for_python-1.2.0-py3-none-any.whl
 ```
 
 3. Set environment variables.

@@ -62,8 +62,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip3 install --no-cache-dir json5
 
-COPY --from=build_base /app/dist/applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl .
-RUN pip install applications_security_amber_trustauthority_client_for_python-1.1.0-py3-none-any.whl
+COPY --from=build_base /app/dist/applications_security_amber_trustauthority_client_for_python-1.2.0-py3-none-any.whl .
+RUN pip install applications_security_amber_trustauthority_client_for_python-1.2.0-py3-none-any.whl
 WORKDIR /app
 COPY . .
 
